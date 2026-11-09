@@ -62,12 +62,14 @@ if command -v go &>/dev/null; then
                         fi
                         dir=$(dirname "$dir")
                     done
-                | sort -u
+                done |
+                sort -u
         )
 
         if [ -z "$STAGED_GOMODS" ] && [ -f ./go.mod ]; then
             STAGED_GOMODS="./go.mod"
         fi
+    fi
     for gomod in $STAGED_GOMODS; do
         (
             cd "$(dirname "$gomod")"
