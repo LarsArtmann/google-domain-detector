@@ -1,5 +1,7 @@
 package scanstore
 
+//cqrs-lint:ignore(F032) deliberate: single-user CLI, the event contract is documented in README + events.go; catalog wiring lands when the journal grows external consumers
+
 import (
 	"time"
 
