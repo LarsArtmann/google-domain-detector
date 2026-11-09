@@ -112,18 +112,23 @@ type Result struct {
 // SPF or DKIM alone is likely (free Gmail "send as" can produce both).
 func (r Result) WorkspaceVerdict() Verdict {
 	anyWorkspace := false
+
 	for _, e := range r.Evidences {
 		if e.Platform != PlatformWorkspace {
 			continue
 		}
+
 		if e.Weight == WeightStrong { // MX: mail is delivered to Google
 			return Verdict{Detected: true, Confidence: ConfidenceCertain}
 		}
+
 		anyWorkspace = true
 	}
+
 	if anyWorkspace { // SPF/DKIM: free Gmail "send as" can produce both
 		return Verdict{Detected: true, Confidence: ConfidenceLikely}
 	}
+
 	return Verdict{Detected: false, Confidence: ConfidenceNone}
 }
 
@@ -135,6 +140,7 @@ func (r Result) GCPVerdict() Verdict {
 			return Verdict{Detected: true, Confidence: ConfidenceCertain}
 		}
 	}
+
 	return Verdict{Detected: false, Confidence: ConfidenceNone}
 }
 
@@ -145,12 +151,14 @@ func (r Result) GenericGoogle() bool {
 			return true
 		}
 	}
+
 	return false
 }
 
 // ClassifyMX flags mail exchangers hosted by Google.
 func ClassifyMX(host string, records []*net.MX) []Evidence {
 	var out []Evidence
+
 	for _, mx := range records {
 		target := normalizeHost(mx.Host)
 		if isSubdomainOf(target, "google.com") || isSubdomainOf(target, "googlemail.com") {
@@ -160,6 +168,7 @@ func ClassifyMX(host string, records []*net.MX) []Evidence {
 			})
 		}
 	}
+
 	return out
 }
 
@@ -167,6 +176,7 @@ func ClassifyMX(host string, records []*net.MX) []Evidence {
 // for google-site-verification tokens.
 func ClassifyTXT(host string, records []string) []Evidence {
 	var out []Evidence
+
 	for _, record := range records {
 		if spfIncludesGoogle(record) {
 			out = append(out, Evidence{
@@ -174,6 +184,7 @@ func ClassifyTXT(host string, records []string) []Evidence {
 				Host: host, Record: record,
 			})
 		}
+
 		if strings.HasPrefix(record, "google-site-verification=") {
 			out = append(out, Evidence{
 				Kind: EvidenceSiteVerification, Platform: PlatformGoogle, Weight: WeightWeak,
@@ -181,6 +192,7 @@ func ClassifyTXT(host string, records []string) []Evidence {
 			})
 		}
 	}
+
 	return out
 }
 
@@ -190,6 +202,7 @@ func ClassifyDKIM(host string, records []string) []Evidence {
 	if len(records) == 0 {
 		return nil
 	}
+
 	return []Evidence{{
 		Kind: EvidenceDKIMGoogle, Platform: PlatformWorkspace, Weight: WeightWeak,
 		Host: host, Record: records[0],
@@ -205,6 +218,7 @@ func ClassifyCNAME(host, target string) []Evidence {
 	}
 
 	kind := EvidenceKind("")
+
 	switch {
 	case isSubdomainOf(target, "run.app"):
 		kind = EvidenceCNAMERunApp
@@ -219,6 +233,7 @@ func ClassifyCNAME(host, target string) []Evidence {
 	case isSubdomainOf(target, "storage.googleapis.com"):
 		kind = EvidenceCNAMEGCS
 	}
+
 	if kind == "" {
 		return nil
 	}
@@ -232,6 +247,7 @@ func ClassifyCNAME(host, target string) []Evidence {
 // ClassifyNS flags nameservers operated by Google Cloud DNS.
 func ClassifyNS(host string, records []*net.NS) []Evidence {
 	var out []Evidence
+
 	for _, ns := range records {
 		target := normalizeHost(ns.Host)
 		if isSubdomainOf(target, "googledomains.com") {
@@ -241,6 +257,7 @@ func ClassifyNS(host string, records []*net.NS) []Evidence {
 			})
 		}
 	}
+
 	return out
 }
 
@@ -250,7 +267,9 @@ func ClassifyIPs(host string, ips []net.IP, gcp *ranges.Set) []Evidence {
 	if gcp == nil {
 		return nil
 	}
+
 	var out []Evidence
+
 	for _, ip := range ips {
 		if gcp.Contains(ip) {
 			out = append(out, Evidence{
@@ -259,6 +278,7 @@ func ClassifyIPs(host string, ips []net.IP, gcp *ranges.Set) []Evidence {
 			})
 		}
 	}
+
 	return out
 }
 
@@ -269,15 +289,18 @@ func spfIncludesGoogle(record string) bool {
 	if len(fields) == 0 || !strings.EqualFold(fields[0], "v=spf1") {
 		return false
 	}
+
 	for _, field := range fields[1:] {
 		include, ok := strings.CutPrefix(field, "include:")
 		if !ok {
 			continue
 		}
+
 		if isSubdomainOf(normalizeHost(include), "_spf.google.com") || normalizeHost(include) == "_spf.google.com" {
 			return true
 		}
 	}
+
 	return false
 }
 

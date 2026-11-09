@@ -36,6 +36,7 @@ func ParseFilter(s string) (Filter, error) {
 	case FilterAll, FilterWorkspace, FilterGCP, FilterGoogle:
 		return Filter(s), nil
 	}
+
 	return Filter(""), fmt.Errorf("unknown filter %q (want all, workspace, gcp, or google)", s)
 }
 
@@ -61,6 +62,7 @@ func Filtered(results []classify.Result, f Filter) []classify.Result {
 			out = append(out, r)
 		}
 	}
+
 	return out
 }
 
@@ -77,6 +79,7 @@ func Table(w io.Writer, results []classify.Result, format output.Format) error {
 			r.Err,
 		})
 	}
+
 	return output.RenderTable(data, format, output.RenderOptions{Writer: w})
 }
 
@@ -96,6 +99,7 @@ func JSON(w io.Writer, results []classify.Result) error {
 	}
 
 	enc := jsontext.NewEncoder(w)
+
 	return json.MarshalEncode(enc, dto)
 }
 
@@ -118,6 +122,7 @@ func (v jsonVerdict) MarshalJSON() ([]byte, error) {
 	if !v.Detected {
 		return []byte(`{"detected":false}`), nil
 	}
+
 	return json.Marshal(struct {
 		Detected   bool                `json:"detected"`
 		Confidence classify.Confidence `json:"confidence"`
@@ -128,15 +133,20 @@ func (v jsonVerdict) MarshalJSON() ([]byte, error) {
 // "mx:smtp.google.com; run_app:www→xxx.a.run.app".
 func EvidenceSummary(r classify.Result) string {
 	var parts []string
+
 	for _, e := range r.Evidences {
 		kind := strings.TrimPrefix(string(e.Kind), "cname_")
+
 		kind = strings.TrimPrefix(kind, "ns_")
 		if label := hostLabel(e.Host, r.Domain); label != "" {
 			parts = append(parts, fmt.Sprintf("%s:%s→%s", kind, label, e.Record))
+
 			continue
 		}
+
 		parts = append(parts, kind+":"+e.Record)
 	}
+
 	return strings.Join(parts, "; ")
 }
 
@@ -157,5 +167,6 @@ func verdictCell(v classify.Verdict) string {
 	if !v.Detected {
 		return "-"
 	}
+
 	return string(v.Confidence)
 }

@@ -51,11 +51,14 @@ func run(t *testing.T, res *fakeRes, stdin string, args ...string) (string, stri
 	t.Helper()
 
 	var stdout, stderr bytes.Buffer
+
 	d, err := BuildCLI(&stdout, &stderr, "test", res, strings.NewReader(stdin), false)
 	if err != nil {
 		t.Fatalf("BuildCLI failed: %v", err)
 	}
+
 	err = d.ExecuteWithArgs(context.Background(), args)
+
 	return stdout.String(), stderr.String(), err
 }
 
@@ -66,6 +69,7 @@ func TestScanArgumentsHappyPath(t *testing.T) {
 	if err != nil {
 		t.Fatalf("scan failed: %v", err)
 	}
+
 	if !strings.Contains(stdout, "acme.com") || !strings.Contains(stdout, "certain") {
 		t.Errorf("table output incomplete:\n%s", stdout)
 	}
@@ -78,6 +82,7 @@ func TestScanJSONFormat(t *testing.T) {
 	if err != nil {
 		t.Fatalf("scan failed: %v", err)
 	}
+
 	if !strings.Contains(stdout, `"detected": true`) && !strings.Contains(stdout, `"detected":true`) {
 		t.Errorf("json output missing verdicts:\n%s", stdout)
 	}
@@ -90,6 +95,7 @@ func TestScanOnlyFilter(t *testing.T) {
 	if err != nil {
 		t.Fatalf("scan failed: %v", err)
 	}
+
 	if strings.Contains(stdout, "acme.com") {
 		t.Errorf("gcp filter must drop the workspace-only domain:\n%s", stdout)
 	}
@@ -102,6 +108,7 @@ func TestScanReadsStdin(t *testing.T) {
 	if err != nil {
 		t.Fatalf("scan failed: %v", err)
 	}
+
 	if !strings.Contains(stdout, "acme.com") {
 		t.Errorf("stdin domain missing from output:\n%s", stdout)
 	}
@@ -138,6 +145,7 @@ func TestScanInputFile(t *testing.T) {
 	t.Parallel()
 
 	file := filepath.Join(t.TempDir(), "domains.csv")
+
 	content := "Company,Website\nACME,https://www.acme.com\n"
 	if err := os.WriteFile(file, []byte(content), 0o600); err != nil {
 		t.Fatal(err)
@@ -147,6 +155,7 @@ func TestScanInputFile(t *testing.T) {
 	if err != nil {
 		t.Fatalf("scan failed: %v", err)
 	}
+
 	if !strings.Contains(stdout, "acme.com") {
 		t.Errorf("CSV domain missing from output:\n%s", stdout)
 	}
@@ -159,6 +168,7 @@ func TestScanSkippedEntriesReported(t *testing.T) {
 	if err != nil {
 		t.Fatalf("scan failed: %v", err)
 	}
+
 	if !strings.Contains(stderr, "skipped") {
 		t.Errorf("skipped-entry warning missing:\n%s", stderr)
 	}

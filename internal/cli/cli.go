@@ -6,6 +6,7 @@ package cli
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -33,16 +34,16 @@ type RootConfig struct{}
 
 // ScanFlags is the scan command's own flag set.
 type ScanFlags struct {
-	Input     string        `flag:"input" short:"i" help:"Read domains from FILE ('-' reads stdin). Plain lists and CSV with a domain/website/url column both work"`
-	Format    string        `flag:"format" short:"f" default:"table" values:"table,json,csv,tsv,markdown" help:"Output format"`
-	Workers   int           `flag:"workers" short:"j" default:"8" help:"Parallel DNS lookups"`
-	Timeout   time.Duration `flag:"timeout" default:"5s" help:"Per-domain lookup budget"`
-	Only      string        `flag:"only" default:"all" values:"all,workspace,gcp,google" help:"Report only matching domains"`
-	RangesURL string        `flag:"ranges-url" default:"https://www.gstatic.com/ipranges/cloud.json" help:"GCP IP-range feed"`
-	CachePath string        `flag:"ranges-cache" env:"GDD_RANGES_CACHE" help:"Range-feed cache file (default ~/.cache/google-domain-detector/cloud.json)"`
-	NoRanges  bool          `flag:"no-ranges" help:"Skip GCP IP-range matching (CNAME/MX/NS evidence only)"`
-	NoDKIM    bool          `flag:"no-dkim" help:"Skip the google._domainkey probe"`
-	Resolver  string        `flag:"resolver" env:"GDD_RESOLVER" help:"Query this DNS server (host or host:port) instead of the system resolver"`
+	Input     string        `flag:"input"        help:"Read domains from FILE ('-' reads stdin). Plain lists and CSV with a domain/website/url column both work" short:"i"`
+	Format    string        `flag:"format"       help:"Output format"                                                                                            short:"f" default:"table"                                       values:"table,json,csv,tsv,markdown"`
+	Workers   int           `flag:"workers"      help:"Parallel DNS lookups"                                                                                     short:"j" default:"8"`
+	Timeout   time.Duration `flag:"timeout"      help:"Per-domain lookup budget"                                                                                           default:"5s"`
+	Only      string        `flag:"only"         help:"Report only matching domains"                                                                                       default:"all"                                         values:"all,workspace,gcp,google"`
+	RangesURL string        `flag:"ranges-url"   help:"GCP IP-range feed"                                                                                                  default:"https://www.gstatic.com/ipranges/cloud.json"`
+	CachePath string        `flag:"ranges-cache" help:"Range-feed cache file (default ~/.cache/google-domain-detector/cloud.json)"                                                                                                                                    env:"GDD_RANGES_CACHE"`
+	NoRanges  bool          `flag:"no-ranges"    help:"Skip GCP IP-range matching (CNAME/MX/NS evidence only)"`
+	NoDKIM    bool          `flag:"no-dkim"      help:"Skip the google._domainkey probe"`
+	Resolver  string        `flag:"resolver"     help:"Query this DNS server (host or host:port) instead of the system resolver"                                                                                                                                      env:"GDD_RESOLVER"`
 }
 
 // Run builds the CLI and executes args. Construction errors are printed to
@@ -52,14 +53,27 @@ func Run(ctx context.Context, args []string, stdout, stderr io.Writer, version s
 	d, err := BuildCLI(stdout, stderr, version, resolve.New(), os.Stdin, stdinIsTTY())
 	if err != nil {
 		fmt.Fprintf(stderr, "Error: %v\n", err)
+
 		return err
 	}
+
 	return d.ExecuteWithArgs(ctx, args)
 }
 
 // BuildCLI assembles the command tree with injected dependencies.
-func BuildCLI(stdout, stderr io.Writer, version string, res resolve.Resolver, stdin io.Reader, stdinTTY bool) (*v5.CLI[RootConfig], error) {
-	cli, err := v5.NewCLI(Name, "Detect which domains run Google Workspace or Google Cloud, from public DNS alone", RootConfig{}, v5.WithCLIVersion(version))
+func BuildCLI(
+	stdout, stderr io.Writer,
+	version string,
+	res resolve.Resolver,
+	stdin io.Reader,
+	stdinTTY bool,
+) (*v5.CLI[RootConfig], error) {
+	cli, err := v5.NewCLI(
+		Name,
+		"Detect which domains run Google Workspace or Google Cloud, from public DNS alone",
+		RootConfig{},
+		v5.WithCLIVersion(version),
+	)
 	if err != nil {
 		return nil, err
 	}
@@ -73,9 +87,11 @@ func BuildCLI(stdout, stderr io.Writer, version string, res resolve.Resolver, st
 
 	b := v5.NewBuilder(cli)
 	v5.Try(b, scanCmd, cmdErr)
+
 	if err := b.Build(); err != nil {
 		return nil, err
 	}
+
 	return cli, nil
 }
 
@@ -94,6 +110,7 @@ func runScan(
 	if err != nil {
 		return err
 	}
+
 	format, err := output.ParseFormat(f.Format)
 	if err != nil {
 		return err
@@ -103,6 +120,7 @@ func runScan(
 	if err != nil {
 		return err
 	}
+
 	if len(skipped) > 0 {
 		fmt.Fprintf(stderr, "skipped %d unparseable input entries (first: %q)\n", len(skipped), skipped[0])
 	}
@@ -128,10 +146,16 @@ func runScan(
 	if format == output.FormatJSON {
 		return render.JSON(stdout, results)
 	}
+
 	return render.Table(stdout, results, format)
 }
 
-func collectDomains(args []string, inputPath string, stdin io.Reader, stdinTTY bool) ([]domain.Domain, []string, error) {
+func collectDomains(
+	args []string,
+	inputPath string,
+	stdin io.Reader,
+	stdinTTY bool,
+) ([]domain.Domain, []string, error) {
 	var parsed []input.Result
 
 	for _, raw := range args {
@@ -147,17 +171,24 @@ func collectDomains(args []string, inputPath string, stdin io.Reader, stdinTTY b
 			return nil, nil, fmt.Errorf("open --input %s: %w", inputPath, err)
 		}
 		defer func() { _ = file.Close() }()
+
 		parsed = append(parsed, parseLenient(file))
 	case len(args) == 0:
 		if stdinTTY {
-			return nil, nil, fmt.Errorf("no domains given: pass domains as arguments, via --input FILE, or pipe a list on stdin")
+			return nil, nil, errors.New(
+				"no domains given: pass domains as arguments, via --input FILE, or pipe a list on stdin",
+			)
 		}
+
 		parsed = append(parsed, parseLenient(stdin))
 	}
 
 	seen := map[string]bool{}
-	var domains []domain.Domain
-	var skipped []string
+
+	var (
+		domains []domain.Domain
+		skipped []string
+	)
 	for _, res := range parsed {
 		skipped = append(skipped, res.Skipped...)
 		for _, d := range res.Domains {
@@ -167,9 +198,13 @@ func collectDomains(args []string, inputPath string, stdin io.Reader, stdinTTY b
 			}
 		}
 	}
+
 	if len(domains) == 0 {
-		return nil, skipped, fmt.Errorf("no valid domains given: pass domains as arguments, via --input FILE, or pipe a list on stdin")
+		return nil, skipped, errors.New(
+			"no valid domains given: pass domains as arguments, via --input FILE, or pipe a list on stdin",
+		)
 	}
+
 	return domains, skipped, nil
 }
 
@@ -177,6 +212,7 @@ func collectDomains(args []string, inputPath string, stdin io.Reader, stdinTTY b
 // garbage argument degrades to a Skipped entry instead of failing the run.
 func parseLenient(r io.Reader) input.Result {
 	res, _ := input.Parse(r)
+
 	return res
 }
 
@@ -184,18 +220,22 @@ func loadRanges(ctx context.Context, f ScanFlags) (*ranges.Set, error) {
 	if f.NoRanges {
 		return nil, nil
 	}
+
 	cache := f.CachePath
 	if cache == "" {
 		home, err := os.UserHomeDir()
 		if err != nil {
 			return nil, fmt.Errorf("resolve cache dir: %w", err)
 		}
+
 		cache = filepath.Join(home, ".cache", Name, "cloud.json")
 	}
+
 	set, _, err := ranges.Load(ctx, ranges.Options{URL: f.RangesURL, CachePath: cache})
 	if err != nil {
 		return nil, err
 	}
+
 	return set, nil
 }
 
@@ -204,5 +244,6 @@ func stdinIsTTY() bool {
 	if err != nil {
 		return false
 	}
+
 	return info.Mode()&os.ModeCharDevice != 0
 }

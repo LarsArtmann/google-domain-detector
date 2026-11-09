@@ -34,10 +34,12 @@ func NewWithAddr(addr string) Resolver {
 	if _, _, err := net.SplitHostPort(addr); err != nil {
 		addr = net.JoinHostPort(addr, "53")
 	}
+
 	return &netResolver{r: &net.Resolver{
 		PreferGo: true,
 		Dial: func(ctx context.Context, network, _ string) (net.Conn, error) {
 			var dialer net.Dialer
+
 			return dialer.DialContext(ctx, network, addr)
 		},
 	}}

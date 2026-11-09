@@ -12,6 +12,7 @@ func mx(hosts ...string) []*net.MX {
 	for _, h := range hosts {
 		out = append(out, &net.MX{Host: h, Pref: 1})
 	}
+
 	return out
 }
 
@@ -20,6 +21,7 @@ func ns(hosts ...string) []*net.NS {
 	for _, h := range hosts {
 		out = append(out, &net.NS{Host: h})
 	}
+
 	return out
 }
 
@@ -28,6 +30,7 @@ func kinds(es []Evidence) []EvidenceKind {
 	for _, e := range es {
 		out = append(out, e.Kind)
 	}
+
 	return out
 }
 
@@ -38,8 +41,11 @@ func TestClassifyMX(t *testing.T) {
 		hosts []string
 		want  int
 	}{
-		"modern single":        {[]string{"smtp.google.com."}, 1},
-		"classic family":       {[]string{"aspmx.l.google.com.", "alt1.aspmx.l.google.com.", "alt2.aspmx.l.google.com."}, 3},
+		"modern single": {[]string{"smtp.google.com."}, 1},
+		"classic family": {
+			[]string{"aspmx.l.google.com.", "alt1.aspmx.l.google.com.", "alt2.aspmx.l.google.com."},
+			3,
+		},
 		"googlemail legacy":    {[]string{"aspmx2.googlemail.com.", "aspmx3.googlemail.com."}, 2},
 		"mixed with foreign":   {[]string{"aspmx.l.google.com.", "mail.protection.outlook.com."}, 1},
 		"outlook only":         {[]string{"mail.protection.outlook.com."}, 0},
@@ -61,6 +67,7 @@ func TestClassifyMX(t *testing.T) {
 
 	t.Run("googleLooksAlike produces nothing", func(t *testing.T) {
 		t.Parallel()
+
 		if got := ClassifyMX("example.com", mx("aspmx.l.google.com.evil.example.")); len(got) != 0 {
 			t.Errorf("suffix attack must not match: %v", kinds(got))
 		}
@@ -74,15 +81,18 @@ func TestClassifyTXT(t *testing.T) {
 		record string
 		want   []EvidenceKind
 	}{
-		"plain include":       {"v=spf1 include:_spf.google.com ~all", []EvidenceKind{EvidenceSPFGoogle}},
-		"with other includes": {"v=spf1 include:spf.protection.outlook.com include:_spf.google.com -all", []EvidenceKind{EvidenceSPFGoogle}},
-		"uppercase version":   {"V=SPF1 include:_spf.google.com ALL", []EvidenceKind{EvidenceSPFGoogle}},
-		"wrong spf version":   {"v=spf10 include:_spf.google.com ~all", nil},
-		"include is-prefix":   {"v=spf1 include:_spf.google.com.evil.example ~all", nil},
-		"no include":          {"v=spf1 include:spf.protection.outlook.com ~all", nil},
-		"verification":        {"google-site-verification=abc123", []EvidenceKind{EvidenceSiteVerification}},
-		"dkim txt":            {"v=DKIM1; k=rsa; p=MIIB", nil},
-		"google domainkey":    {"v=DKIM1; k=rsa; p=abc", nil},
+		"plain include": {"v=spf1 include:_spf.google.com ~all", []EvidenceKind{EvidenceSPFGoogle}},
+		"with other includes": {
+			"v=spf1 include:spf.protection.outlook.com include:_spf.google.com -all",
+			[]EvidenceKind{EvidenceSPFGoogle},
+		},
+		"uppercase version": {"V=SPF1 include:_spf.google.com ALL", []EvidenceKind{EvidenceSPFGoogle}},
+		"wrong spf version": {"v=spf10 include:_spf.google.com ~all", nil},
+		"include is-prefix": {"v=spf1 include:_spf.google.com.evil.example ~all", nil},
+		"no include":        {"v=spf1 include:spf.protection.outlook.com ~all", nil},
+		"verification":      {"google-site-verification=abc123", []EvidenceKind{EvidenceSiteVerification}},
+		"dkim txt":          {"v=DKIM1; k=rsa; p=MIIB", nil},
+		"google domainkey":  {"v=DKIM1; k=rsa; p=abc", nil},
 	}
 
 	for name, tc := range tests {
@@ -93,6 +103,7 @@ func TestClassifyTXT(t *testing.T) {
 			if len(got) != len(tc.want) {
 				t.Fatalf("ClassifyTXT(%q) = %v, want %v", tc.record, kinds(got), tc.want)
 			}
+
 			for i := range got {
 				if got[i].Kind != tc.want[i] {
 					t.Errorf("evidence[%d].Kind = %s, want %s", i, got[i].Kind, tc.want[i])
@@ -103,6 +114,7 @@ func TestClassifyTXT(t *testing.T) {
 
 	t.Run("verification and spf in separate records", func(t *testing.T) {
 		t.Parallel()
+
 		got := ClassifyTXT("example.com", []string{
 			"google-site-verification=abc",
 			"v=spf1 include:_spf.google.com ~all",
@@ -143,11 +155,14 @@ func TestClassifyCNAME(t *testing.T) {
 				if len(got) != 0 {
 					t.Fatalf("ClassifyCNAME(%q) = %v, want none", tc.target, kinds(got))
 				}
+
 				return
 			}
+
 			if len(got) != 1 || got[0].Kind != tc.want {
 				t.Fatalf("ClassifyCNAME(%q) = %v, want [%s]", tc.target, kinds(got), tc.want)
 			}
+
 			if got[0].Platform != PlatformGCP || got[0].Weight != WeightStrong {
 				t.Errorf("evidence must be strong GCP, got %+v", got[0])
 			}
@@ -158,12 +173,19 @@ func TestClassifyCNAME(t *testing.T) {
 func TestClassifyNS(t *testing.T) {
 	t.Parallel()
 
-	if got := ClassifyNS("example.com", ns("ns-cloud-a1.googledomains.com.", "ns-cloud-a2.googledomains.com.")); len(got) != 2 {
+	if got := ClassifyNS(
+		"example.com",
+		ns("ns-cloud-a1.googledomains.com.", "ns-cloud-a2.googledomains.com."),
+	); len(
+		got,
+	) != 2 {
 		t.Errorf("want 2 Cloud DNS evidence items, got %v", kinds(got))
 	}
+
 	if got := ClassifyNS("example.com", ns("ns1.example.com.")); len(got) != 0 {
 		t.Errorf("self-hosted NS must not match: %v", kinds(got))
 	}
+
 	if got := ClassifyNS("example.com", ns("aws1.cloudns.net.")); len(got) != 0 {
 		t.Errorf("foreign NS must not match: %v", kinds(got))
 	}
@@ -192,6 +214,7 @@ func TestClassifyIPs(t *testing.T) {
 			if tc.want && len(got) != 1 {
 				t.Fatalf("ip %s should match, got %v", tc.ip, kinds(got))
 			}
+
 			if !tc.want && len(got) != 0 {
 				t.Fatalf("ip %s should not match, got %v", tc.ip, kinds(got))
 			}
@@ -245,6 +268,7 @@ func TestWorkspaceVerdict(t *testing.T) {
 			t.Parallel()
 
 			r := Result{Domain: "example.com", Evidences: tc.evidence}
+
 			got := r.WorkspaceVerdict()
 			if got != tc.want {
 				t.Errorf("WorkspaceVerdict() = %+v, want %+v", got, tc.want)
@@ -257,6 +281,7 @@ func TestGCPVerdict(t *testing.T) {
 	t.Parallel()
 
 	strong := []Evidence{{Kind: EvidenceIPGCPRange, Platform: PlatformGCP, Weight: WeightStrong}}
+
 	r := Result{Domain: "example.com", Evidences: strong}
 	if r.GCPVerdict() != (Verdict{true, ConfidenceCertain}) {
 		t.Errorf("strong GCP evidence must be certain, got %+v", r.GCPVerdict())
@@ -272,9 +297,11 @@ func TestGCPVerdict(t *testing.T) {
 
 func mustParseRanges(t *testing.T, data string) *ranges.Set {
 	t.Helper()
+
 	set, err := ranges.Parse([]byte(data))
 	if err != nil {
 		t.Fatalf("parse range fixture: %v", err)
 	}
+
 	return set
 }

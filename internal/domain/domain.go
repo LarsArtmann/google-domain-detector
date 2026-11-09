@@ -3,6 +3,7 @@
 package domain
 
 import (
+	"errors"
 	"fmt"
 	"net"
 	"net/url"
@@ -27,7 +28,7 @@ func Parse(raw string) (Domain, error) {
 	s = strings.TrimSuffix(s, ".")
 
 	if s == "" {
-		return Domain{}, fmt.Errorf("empty domain")
+		return Domain{}, errors.New("empty domain")
 	}
 
 	if strings.Contains(s, "://") || strings.ContainsAny(s, "/@") {
@@ -35,6 +36,7 @@ func Parse(raw string) (Domain, error) {
 		if err != nil {
 			return Domain{}, fmt.Errorf("parse %q as URL: %w", raw, err)
 		}
+
 		s = parsed.Hostname()
 	}
 
@@ -47,9 +49,11 @@ func Parse(raw string) (Domain, error) {
 	if s == "" {
 		return Domain{}, fmt.Errorf("empty domain after normalizing %q", raw)
 	}
+
 	if !strings.Contains(s, ".") {
 		return Domain{}, fmt.Errorf("%q is not a domain (no dot)", raw)
 	}
+
 	if err := validateLabels(s); err != nil {
 		return Domain{}, fmt.Errorf("invalid domain %q: %w", raw, err)
 	}
@@ -70,6 +74,7 @@ func ensureScheme(s string) string {
 	if !strings.Contains(s, "://") {
 		return "http://" + s
 	}
+
 	return s
 }
 
@@ -77,13 +82,14 @@ func validateLabels(name string) error {
 	for label := range strings.SplitSeq(name, ".") {
 		switch {
 		case label == "":
-			return fmt.Errorf("empty label")
+			return errors.New("empty label")
 		case len(label) > maxLabelLength:
 			return fmt.Errorf("label %q longer than %d characters", label, maxLabelLength)
 		case !validLabel(label):
 			return fmt.Errorf("label %q contains illegal characters (allowed: a-z, 0-9, hyphen)", label)
 		}
 	}
+
 	return nil
 }
 
@@ -99,5 +105,6 @@ func validLabel(label string) bool {
 			return false
 		}
 	}
+
 	return true
 }

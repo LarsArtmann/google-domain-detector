@@ -44,17 +44,20 @@ func Run(ctx context.Context, res resolve.Resolver, domains []domain.Domain, opt
 	if workers <= 0 {
 		workers = defaultWorkers
 	}
+
 	if workers > len(domains) {
 		workers = len(domains)
 	}
 
 	queue := make(chan int)
+
 	var wg sync.WaitGroup
 	for range workers {
 		wg.Go(func() {
 			for i := range queue {
 				dctx, cancel := context.WithTimeout(ctx, opts.Timeout)
 				results[i] = ScanDomain(dctx, res, domains[i], opts)
+
 				cancel()
 			}
 		})
@@ -73,6 +76,7 @@ func Run(ctx context.Context, res resolve.Resolver, domains []domain.Domain, opt
 			break
 		}
 	}
+
 	close(queue)
 	wg.Wait()
 
@@ -81,6 +85,7 @@ func Run(ctx context.Context, res resolve.Resolver, domains []domain.Domain, opt
 			results[i] = classify.Result{Domain: domains[i].String(), Err: ctx.Err().Error()}
 		}
 	}
+
 	return results
 }
 
@@ -99,8 +104,10 @@ func ScanDomain(ctx context.Context, res resolve.Resolver, d domain.Domain, opts
 	if err != nil {
 		if dnsErr, ok := errors.AsType[*net.DNSError](err); ok && dnsErr.IsNotFound {
 			r.Err = "domain not found: " + err.Error()
+
 			return r
 		}
+
 		lookupErr = err
 	} else {
 		r.Evidences = append(r.Evidences, classify.ClassifyTXT(apex, txts)...)
@@ -143,6 +150,7 @@ func ScanDomain(ctx context.Context, res resolve.Resolver, d domain.Domain, opts
 	if lookupErr != nil && len(r.Evidences) == 0 {
 		r.Err = lookupErr.Error()
 	}
+
 	return r
 }
 
@@ -150,5 +158,6 @@ func firstErr(existing, candidate error) error {
 	if existing != nil {
 		return existing
 	}
+
 	return candidate
 }

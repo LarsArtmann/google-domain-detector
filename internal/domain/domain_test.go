@@ -35,6 +35,7 @@ func TestParse(t *testing.T) {
 			if err != nil {
 				t.Fatalf("Parse(%q) failed: %v", tc.raw, err)
 			}
+
 			if got.String() != tc.want {
 				t.Errorf("Parse(%q) = %q, want %q", tc.raw, got.String(), tc.want)
 			}
@@ -89,6 +90,7 @@ func TestParseNonNumericPortIsStripped(t *testing.T) {
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
+
 	if got.String() != "example.com" {
 		t.Errorf("got %q, want example.com", got.String())
 	}
@@ -101,6 +103,7 @@ func TestHosts(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Parse failed: %v", err)
 	}
+
 	hosts := d.Hosts()
 	if len(hosts) != 2 || hosts[0] != "example.com" || hosts[1] != "www.example.com" {
 		t.Errorf("Hosts() = %v, want [example.com www.example.com]", hosts)

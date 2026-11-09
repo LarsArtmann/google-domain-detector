@@ -9,6 +9,7 @@ package ranges
 import (
 	"context"
 	"encoding/json/v2"
+	"errors"
 	"fmt"
 	"io"
 	"math"
@@ -61,6 +62,7 @@ func Parse(data []byte) (*Set, error) {
 	}
 
 	set := &Set{}
+
 	for _, p := range f.Prefixes {
 		switch {
 		case p.IPv4Prefix != "":
@@ -68,18 +70,22 @@ func Parse(data []byte) (*Set, error) {
 			if err != nil {
 				return nil, fmt.Errorf("parse IPv4 prefix %q: %w", p.IPv4Prefix, err)
 			}
+
 			set.v4 = append(set.v4, prefix)
 		case p.IPv6Prefix != "":
 			prefix, err := netip.ParsePrefix(p.IPv6Prefix)
 			if err != nil {
 				return nil, fmt.Errorf("parse IPv6 prefix %q: %w", p.IPv6Prefix, err)
 			}
+
 			set.v6 = append(set.v6, prefix)
 		}
 	}
+
 	if set.Len() == 0 {
-		return nil, fmt.Errorf("range feed contains no prefixes")
+		return nil, errors.New("range feed contains no prefixes")
 	}
+
 	return set, nil
 }
 
@@ -88,6 +94,7 @@ func (s *Set) Len() int {
 	if s == nil {
 		return 0
 	}
+
 	return len(s.v4) + len(s.v6)
 }
 
@@ -96,22 +103,27 @@ func (s *Set) Contains(ip net.IP) bool {
 	if s == nil || ip == nil {
 		return false
 	}
+
 	addr, ok := netip.AddrFromSlice(ip)
 	if !ok {
 		return false
 	}
+
 	if addr.Is4In6() {
 		addr = addr.Unmap()
 	}
+
 	list := s.v4
 	if addr.Is6() {
 		list = s.v6
 	}
+
 	for _, prefix := range list {
 		if prefix.Contains(addr) {
 			return true
 		}
 	}
+
 	return false
 }
 
@@ -137,13 +149,16 @@ func Load(ctx context.Context, opts Options) (*Set, Source, error) {
 	if opts.URL == "" {
 		opts.URL = DefaultURL
 	}
+
 	if opts.TTL <= 0 {
 		opts.TTL = DefaultTTL
 	}
+
 	client := opts.Client
 	if client == nil {
 		client = &http.Client{Timeout: 10 * time.Second}
 	}
+
 	now := time.Now
 	if opts.Now != nil {
 		now = opts.Now
@@ -158,14 +173,17 @@ func Load(ctx context.Context, opts Options) (*Set, Source, error) {
 		set, parseErr := Parse(data)
 		if parseErr == nil {
 			writeCache(opts.CachePath, data)
+
 			return set, SourceNetwork, nil
 		}
+
 		return nil, Source(""), fmt.Errorf("fetched feed is unusable: %w", parseErr)
 	}
 
 	if set, ok := readCache(opts.CachePath, anyAge, now); ok {
 		return set, SourceCache, nil
 	}
+
 	return nil, Source(""), fmt.Errorf("fetch %s: %w", opts.URL, err)
 }
 
@@ -173,18 +191,22 @@ func readCache(path string, maxAge time.Duration, now func() time.Time) (*Set, b
 	if path == "" {
 		return nil, false
 	}
+
 	info, err := os.Stat(path)
 	if err != nil || now().Sub(info.ModTime()) > maxAge {
 		return nil, false
 	}
+
 	data, err := os.ReadFile(path)
 	if err != nil {
 		return nil, false
 	}
+
 	set, err := Parse(data)
 	if err != nil {
 		return nil, false
 	}
+
 	return set, true
 }
 
@@ -192,13 +214,16 @@ func writeCache(path string, data []byte) {
 	if path == "" {
 		return
 	}
+
 	if err := os.MkdirAll(filepath.Dir(path), 0o700); err != nil {
 		return
 	}
+
 	tmp := path + ".tmp"
 	if err := os.WriteFile(tmp, []byte(data), 0o600); err != nil {
 		return
 	}
+
 	_ = os.Rename(tmp, path)
 }
 
@@ -207,18 +232,22 @@ func fetch(ctx context.Context, client *http.Client, url string) ([]byte, error)
 	if err != nil {
 		return nil, err
 	}
+
 	resp, err := client.Do(req)
 	if err != nil {
 		return nil, err
 	}
+
 	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != http.StatusOK {
 		return nil, fmt.Errorf("unexpected status %s", resp.Status)
 	}
+
 	body, err := io.ReadAll(io.LimitReader(resp.Body, maxFeedBytes))
 	if err != nil {
 		return nil, err
 	}
+
 	return body, nil
 }

@@ -16,14 +16,32 @@ func sampleResults() []classify.Result {
 		{
 			Domain: "acme.com",
 			Evidences: []classify.Evidence{
-				{Kind: classify.EvidenceMXGoogle, Platform: classify.PlatformWorkspace, Weight: classify.WeightStrong, Host: "acme.com", Record: "smtp.google.com"},
-				{Kind: classify.EvidenceCNAMEFirebase, Platform: classify.PlatformGCP, Weight: classify.WeightStrong, Host: "www.acme.com", Record: "acme.web.app"},
+				{
+					Kind:     classify.EvidenceMXGoogle,
+					Platform: classify.PlatformWorkspace,
+					Weight:   classify.WeightStrong,
+					Host:     "acme.com",
+					Record:   "smtp.google.com",
+				},
+				{
+					Kind:     classify.EvidenceCNAMEFirebase,
+					Platform: classify.PlatformGCP,
+					Weight:   classify.WeightStrong,
+					Host:     "www.acme.com",
+					Record:   "acme.web.app",
+				},
 			},
 		},
 		{
 			Domain: "beta.io",
 			Evidences: []classify.Evidence{
-				{Kind: classify.EvidenceSPFGoogle, Platform: classify.PlatformWorkspace, Weight: classify.WeightWeak, Host: "beta.io", Record: "v=spf1 include:_spf.google.com ~all"},
+				{
+					Kind:     classify.EvidenceSPFGoogle,
+					Platform: classify.PlatformWorkspace,
+					Weight:   classify.WeightWeak,
+					Host:     "beta.io",
+					Record:   "v=spf1 include:_spf.google.com ~all",
+				},
 			},
 		},
 		{Domain: "plain.net"},
@@ -39,6 +57,7 @@ func TestParseFilter(t *testing.T) {
 			t.Errorf("ParseFilter(%q) failed: %v", ok, err)
 		}
 	}
+
 	if _, err := ParseFilter("everything"); err == nil {
 		t.Error("ParseFilter must reject unknown filters")
 	}
@@ -70,6 +89,7 @@ func domainsOf(rs []classify.Result) []string {
 	for _, r := range rs {
 		out = append(out, r.Domain)
 	}
+
 	return out
 }
 
@@ -81,16 +101,19 @@ func TestTableRendering(t *testing.T) {
 		if err != nil {
 			t.Fatalf("format %s: %v", format, err)
 		}
+
 		var buf bytes.Buffer
 		if err := Table(&buf, sampleResults(), f); err != nil {
 			t.Fatalf("Table(%s) failed: %v", format, err)
 		}
+
 		out := buf.String()
 		for _, want := range []string{"acme.com", "certain", "acme.web.app", "gone.example", "domain not found"} {
 			if !strings.Contains(out, want) {
 				t.Errorf("%s output missing %q", format, want)
 			}
 		}
+
 		if strings.Contains(out, "\x1b[") {
 			t.Errorf("%s output must not embed ANSI codes when writing to a buffer", format)
 		}
@@ -120,6 +143,7 @@ func TestJSONRoundTrip(t *testing.T) {
 	if err := json.Unmarshal(buf.Bytes(), &decoded); err != nil {
 		t.Fatalf("output is not valid JSON: %v\n%s", err, buf.String())
 	}
+
 	if len(decoded) != 4 {
 		t.Fatalf("decoded %d results, want 4", len(decoded))
 	}
@@ -128,9 +152,11 @@ func TestJSONRoundTrip(t *testing.T) {
 	if !acme.Workspace.Detected || acme.Workspace.Confidence != "certain" {
 		t.Errorf("acme workspace = %+v", acme.Workspace)
 	}
+
 	if !acme.GCP.Detected {
 		t.Error("acme gcp must be detected")
 	}
+
 	if len(acme.Evidences) != 2 {
 		t.Errorf("acme evidence count = %d, want 2", len(acme.Evidences))
 	}
@@ -175,6 +201,7 @@ func TestEvidenceSummary(t *testing.T) {
 		},
 	}
 	got := EvidenceSummary(r)
+
 	want := "mx_google:smtp.google.com; run_app:www→x.a.run.app"
 	if got != want {
 		t.Errorf("EvidenceSummary = %q, want %q", got, want)

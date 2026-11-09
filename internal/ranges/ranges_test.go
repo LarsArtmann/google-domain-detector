@@ -26,6 +26,7 @@ func TestParseAndContains(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Parse failed: %v", err)
 	}
+
 	if set.Len() != 2 {
 		t.Errorf("Len() = %d, want 2", set.Len())
 	}
@@ -54,6 +55,7 @@ func TestParseAndContains(t *testing.T) {
 	if nilSet.Contains(net.ParseIP("34.0.0.1")) {
 		t.Error("nil set must contain nothing")
 	}
+
 	if nilSet.Len() != 0 {
 		t.Error("nil set must have Len 0")
 	}
@@ -70,6 +72,7 @@ func TestParseRejects(t *testing.T) {
 	} {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
+
 			if _, err := Parse([]byte(data)); err == nil {
 				t.Errorf("Parse(%q) unexpectedly succeeded", data)
 			}
@@ -92,28 +95,36 @@ func TestLoadNetworkFetchesAndCaches(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Load failed: %v", err)
 	}
+
 	if source != SourceNetwork {
 		t.Errorf("source = %s, want network", source)
 	}
+
 	if !set.Contains(net.ParseIP("34.1.1.1")) {
 		t.Error("fetched set must match 34/8")
 	}
+
 	if _, err := os.Stat(cache); err != nil {
 		t.Errorf("cache file not written: %v", err)
 	}
 
 	fetched := 0
+
 	counting := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 		fetched++
 		_, _ = w.Write([]byte(fixtureFeed))
 	}))
 	defer counting.Close()
 
-	if _, source, err := Load(context.Background(), Options{URL: counting.URL, CachePath: cache, Now: time.Now}); err != nil {
+	if _, source, err := Load(
+		context.Background(),
+		Options{URL: counting.URL, CachePath: cache, Now: time.Now},
+	); err != nil {
 		t.Fatalf("second Load failed: %v", err)
 	} else if source != SourceCache {
 		t.Errorf("source = %s, want cache", source)
 	}
+
 	if fetched != 0 {
 		t.Errorf("fresh cache must prevent network fetch, got %d fetches", fetched)
 	}
@@ -137,10 +148,14 @@ func TestLoadFallsBackToStaleCacheOnNetworkFailure(t *testing.T) {
 	}))
 	defer dead.Close()
 
-	set, source, err := Load(context.Background(), Options{URL: dead.URL, CachePath: cache, TTL: time.Hour, Now: time.Now})
+	set, source, err := Load(
+		context.Background(),
+		Options{URL: dead.URL, CachePath: cache, TTL: time.Hour, Now: time.Now},
+	)
 	if err != nil {
 		t.Fatalf("Load must fall back to the stale cache: %v", err)
 	}
+
 	if source != SourceCache || !set.Contains(net.ParseIP("34.1.1.1")) {
 		t.Errorf("stale fallback broken: source=%s", source)
 	}
@@ -154,7 +169,10 @@ func TestLoadFailsWithoutCacheOrNetwork(t *testing.T) {
 	}))
 	defer dead.Close()
 
-	_, _, err := Load(context.Background(), Options{URL: dead.URL, CachePath: filepath.Join(t.TempDir(), "cloud.json"), Now: time.Now})
+	_, _, err := Load(
+		context.Background(),
+		Options{URL: dead.URL, CachePath: filepath.Join(t.TempDir(), "cloud.json"), Now: time.Now},
+	)
 	if err == nil {
 		t.Fatal("Load must fail when the network fails and no cache exists")
 	}

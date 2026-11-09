@@ -36,43 +36,52 @@ func newFake() *fake {
 func (f *fake) record(key string) {
 	f.mu.Lock()
 	defer f.mu.Unlock()
+
 	f.called[key]++
 }
 
 func (f *fake) calls(key string) int {
 	f.mu.Lock()
 	defer f.mu.Unlock()
+
 	return f.called[key]
 }
 
 func (f *fake) LookupTXT(_ context.Context, host string) ([]string, error) {
 	f.record("txt:" + host)
+
 	if err, ok := f.txtErr[host]; ok {
 		return nil, err
 	}
+
 	return f.txt[host], nil
 }
 
 func (f *fake) LookupMX(_ context.Context, host string) ([]*net.MX, error) {
 	f.record("mx:" + host)
+
 	if err, ok := f.mxErr[host]; ok {
 		return nil, err
 	}
+
 	return f.mx[host], nil
 }
 
 func (f *fake) LookupCNAME(_ context.Context, host string) (string, error) {
 	f.record("cname:" + host)
+
 	return f.cname[host], nil
 }
 
 func (f *fake) LookupIP(_ context.Context, host string) ([]net.IP, error) {
 	f.record("ip:" + host)
+
 	return f.ips[host], nil
 }
 
 func (f *fake) LookupNS(_ context.Context, host string) ([]*net.NS, error) {
 	f.record("ns:" + host)
+
 	return f.ns[host], nil
 }
 
@@ -82,23 +91,28 @@ func notFound(host string) error {
 
 func mustDomains(t *testing.T, raw ...string) []domain.Domain {
 	t.Helper()
+
 	out := make([]domain.Domain, 0, len(raw))
 	for _, r := range raw {
 		d, err := domain.Parse(r)
 		if err != nil {
 			t.Fatalf("domain.Parse(%q): %v", r, err)
 		}
+
 		out = append(out, d)
 	}
+
 	return out
 }
 
 func fixtureRanges(t *testing.T) *ranges.Set {
 	t.Helper()
+
 	set, err := ranges.Parse([]byte(`{"prefixes":[{"ipv4Prefix":"34.0.0.0/8"}]}`))
 	if err != nil {
 		t.Fatal(err)
 	}
+
 	return set
 }
 
@@ -113,6 +127,7 @@ func TestScanDomainWorkspaceViaMX(t *testing.T) {
 	if v := r.WorkspaceVerdict(); !v.Detected || v.Confidence != "certain" {
 		t.Errorf("workspace verdict = %+v, want certain", v)
 	}
+
 	if f.calls("txt:google._domainkey.acme.com") != 0 {
 		t.Error("DKIM probe must be skipped once MX proves Workspace")
 	}
@@ -133,6 +148,7 @@ func TestScanDomainWorkspaceLikelyViaDKIMAlone(t *testing.T) {
 	if v := r.WorkspaceVerdict(); !v.Detected || v.Confidence != "likely" {
 		t.Errorf("workspace verdict = %+v, want likely", v)
 	}
+
 	if f.calls("txt:google._domainkey.acme.com") != 1 {
 		t.Error("DKIM probe must run when MX and SPF are silent")
 	}
@@ -151,6 +167,7 @@ func TestScanDomainGCPCNAMEAtWWW(t *testing.T) {
 	if v := r.GCPVerdict(); !v.Detected {
 		t.Errorf("gcp verdict = %+v, want detected", v)
 	}
+
 	if v := r.WorkspaceVerdict(); v.Detected {
 		t.Error("hosting evidence must not imply Workspace")
 	}
@@ -193,6 +210,7 @@ func TestScanDomainNotFoundShortCircuits(t *testing.T) {
 	if r.Err == "" {
 		t.Error("NXDOMAIN must surface as Err")
 	}
+
 	for _, probe := range []string{"mx:gone.example", "cname:gone.example", "ip:gone.example"} {
 		if f.calls(probe) != 0 {
 			t.Errorf("lookup %q must be skipped after NXDOMAIN", probe)
@@ -224,10 +242,12 @@ func TestRunPreservesInputOrder(t *testing.T) {
 	}
 
 	domains := mustDomains(t, "c.com", "a.com", "b.com")
+
 	results := Run(context.Background(), f, domains, Options{Workers: 3, Timeout: time.Second})
 	if len(results) != 3 {
 		t.Fatalf("got %d results, want 3", len(results))
 	}
+
 	want := []string{"c.com", "a.com", "b.com"}
 	for i, r := range results {
 		if r.Domain != want[i] {
@@ -247,13 +267,16 @@ func TestRunCancellationMarksPendingDomains(t *testing.T) {
 
 	ctx, cancel := context.WithCancel(context.Background())
 	domains := make([]domain.Domain, 0, 50)
+
 	for i := range 50 {
 		d, err := domain.Parse(fmt.Sprintf("host%02d.example", i))
 		if err != nil {
 			t.Fatal(err)
 		}
+
 		domains = append(domains, d)
 	}
+
 	cancel()
 
 	results := Run(ctx, f, domains, Options{Workers: 1, Timeout: time.Second})
