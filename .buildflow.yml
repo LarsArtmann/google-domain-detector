@@ -1,0 +1,5 @@
+# BuildFlow coverage for google-domain-detector. Non-default information
+# only — the fleet defaults cover everything else (AGENTS.md documents the
+# split).
+#
+# No skips, no env overrides: stdlib + public deps only, no code generation.

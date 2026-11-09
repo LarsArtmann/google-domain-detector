@@ -1,0 +1,25 @@
+# Changelog
+
+All notable changes to this project will be documented in this file.
+
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
+
+## [Unreleased]
+
+### Added
+
+- `scan` command: batch DNS probe of apex + www per domain (MX, TXT/SPF,
+  google-site-verification, CNAME, A/AAAA, NS, conditional DKIM) behind a
+  bounded worker pool with per-domain timeout and NXDOMAIN short-circuit.
+- Workspace verdicts (MX → certain, SPF/DKIM → likely) and GCP verdicts
+  (run.app, appspot.com, web.app, firebaseapp.com, cloudfunctions.net,
+  googlehosted.com, storage.googleapis.com CNAMEs; googledomains.com NS;
+  cloud.json IP ranges).
+- Input: arguments, `--input FILE` / `-` / piped stdin; plain lists and CSV
+  with a recognized domain column; unparseable rows skipped and counted.
+- Output: table (default), compact full-evidence JSON, csv, tsv, markdown;
+  `--only workspace|gcp|google|all` filter.
+- GCP range feed fetch with 24 h disk cache and stale-cache fallback.
+- cmdguard v5 command surface (`scan`, plus version/doctor/describe
+  batteries); go-output rendering; nix flake via go-nix-helpers; BuildFlow
+  coverage; offline test suite (fake resolvers, httptest feeds).
