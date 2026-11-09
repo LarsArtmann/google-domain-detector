@@ -6,30 +6,27 @@
 
 ## Verdict
 
-**Do not adopt.** endpoints is a **comptime code-generation framework for
-`http.Handler` registrations**: its `endpoints.Enforce[M, H]()` generic
-hook makes a test FAIL at build time when a manifest struct and the real
-handler map drift apart. The detector has zero handlers, zero endpoints,
-zero manifests — the entire mechanism has no input to operate on.
+**Do not adopt.** endpoints provides self-describing HTTP route registration
+for Go's `http.ServeMux`: routes registered through its `Registry` are both
+mounted on the mux and recorded, and a mounted `GET /endpoints` listing
+serves them as JSON (for API clients) or an HTML table (for humans), picked
+by `Accept`-header content negotiation — the listing can never drift from
+what is actually served. The detector registers no HTTP routes and serves
+nothing, so there is nothing to list.
 
 ## What the library is
 
-Single package, zero dependencies (verified):
+Verified against the checkout (endpoints.go, negotiate.go, qvalue.go,
+render.go):
 
-- Pattern: you keep a `map[string]http.Handler` and a parallel manifest
-  struct; each handler implementation embeds
-  `endpoints.EndpointDef[ManifestField]`.
-- `endpoints.Enforce[M, H]()` — a no-op at runtime that constrains `H` to
-  implement `Endpoint[Manifest[M]]` at compile time; a generated test
-  (`generator.Main`, `endpoints check`) re-runs `go test -run` per gap and
-  fails with a pinpointed message naming the missing handler field.
-- `endpoints check` CLI + `endpoints generate` (scaffolds the test), wired
-  through `internal/generator` (generator/main.go:44-93,
-  internal/tests.go:52-140).
-- An optional VFS layer + testify-based `ShouldBeServed` test helper.
-
-Tagline: "comptime codegen with zero dependencies". Verified: no runtime
-deps; a single `go test` indirect.
+- `NewRegistry()` → `Handle(mux, pattern, handler, summary)` /
+  `HandleFunc(...)` — one declaration mounts AND records; wiring errors are
+  values, never panics (nil mux, empty pattern, mux-rejected pattern).
+- `Register(mux, registry)` mounts `GET /endpoints` (the listing includes
+  itself); `Routes()` / `Handler()` expose the record programmatically.
+- Content negotiation over `Accept` with a hand-rolled, allocation-free
+  q-value parser (qvalue.go:28-114); JSON and HTML renderers (render.go).
+- Zero dependencies — stdlib-only, usable without the rest of httputil.
 
 ## Current usage in google-domain-detector
 
@@ -37,25 +34,25 @@ None — not imported, not in the graph.
 
 ## Why we should NOT use it
 
-1. **Mechanism requires an HTTP surface.** Its one job is keeping a route
-   table and handler implementations in lockstep. A CLI with no routes has
-   nothing to enforce.
-2. The closest analogy in this project — "flag values enum must match
-   implemented renderers" — is already enforced better by cmdguard's
-   `values:` tag plus `output.ParseFormat` validation (internal/cli/cli.go:38,114).
+1. **Requires an HTTP mux with routes.** Its whole value is keeping a
+   route listing in lockstep with a server; a batch CLI has neither.
+2. The closest analogy in this project — the `--format`/`--only` value
+   enums — is already enforced by cmdguard's `values:` tag +
+   `output.ParseFormat` (internal/cli/cli.go:38,114).
 
 ## Capability ↔ project applicability
 
-| Capability                  | Applies? | Reason                                        |
-| --------------------------- | -------- | --------------------------------------------- |
-| Endpoint/handler drift tests | No      | No handlers                                   |
-| Manifest scaffolding CLI    | No       | No manifests                                  |
-| testify serving assertions  | No       | testify not used; nothing served             |
+| Capability                        | Applies? | Reason                                   |
+| --------------------------------- | -------- | ---------------------------------------- |
+| Registry + Handle/HandleFunc      | No       | No routes to register                     |
+| GET /endpoints JSON/HTML listing  | No       | No server to mount it on                  |
+| Accept content negotiation        | No       | No HTTP responses                         |
+| Q-value parser                    | No       | Nothing to negotiate                      |
 
 ## Version currency (of the audited checkout)
 
-Tag: `endpoints/v0.1.0` (newest; only release). HEAD is exactly at the tag
-— zero drift. Young but clean; rejection is fit.
+Tag: `endpoints/v0.1.0` (newest and only release). HEAD is exactly at the
+tag — zero drift. Young but clean; rejection is fit, not quality.
 
 ## Revisit trigger
 
@@ -64,7 +61,7 @@ Only alongside the HTTP-serving mode already ruled out in httputil.md.
 ## How to verify
 
 ```bash
-rg -n 'endpoints' --type go . go.mod go.sum    # absent (check for the httputil path specifically)
+rg -n 'httputil/endpoints' --type go . go.mod go.sum   # absent
 cd /home/lars/projects/httputil && git tag --sort=-v:refname | rg endpoints
-cd /home/lars/projects/httputil/endpoints && rg -n 'func Enforce' *.go internal/*.go
+cd /home/lars/projects/httputil/endpoints && rg -n 'func NewRegistry|func Register' endpoints.go
 ```
