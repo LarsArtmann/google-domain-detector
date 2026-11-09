@@ -21,16 +21,16 @@ echo "artmann.tech" | google-domain-detector scan --format json | jq '.[] | sele
 
 ## What it detects
 
-| Signal (DNS) | Verdict | Confidence |
-| --- | --- | --- |
-| MX hosts under `google.com` / `googlemail.com` (`smtp.google.com`, `aspmx.l.google.com`, …) | **Workspace** | certain — mail is delivered to Google |
-| SPF `include:_spf.google.com` | **Workspace** | likely — free Gmail "send as" also produces this |
-| TXT at `google._domainkey.<domain>` (probed only when MX+SPF are silent) | **Workspace** | likely |
-| CNAME to `*.run.app` (Cloud Run), `*.appspot.com` (App Engine) | **GCP** | certain |
-| CNAME to `*.web.app` / `*.firebaseapp.com` (Firebase Hosting) | **GCP** | certain |
-| CNAME to `*.cloudfunctions.net`, `*.googlehosted.com`, `*.storage.googleapis.com` | **GCP** | certain |
-| NS under `*.googledomains.com` (Cloud DNS) | **GCP** | certain |
-| A/AAAA inside Google's published GCP ranges (`gstatic.com/ipranges/cloud.json`) | **GCP** | certain |
+| Signal (DNS)                                                                                | Verdict       | Confidence                                       |
+| ------------------------------------------------------------------------------------------- | ------------- | ------------------------------------------------ |
+| MX hosts under `google.com` / `googlemail.com` (`smtp.google.com`, `aspmx.l.google.com`, …) | **Workspace** | certain — mail is delivered to Google            |
+| SPF `include:_spf.google.com`                                                               | **Workspace** | likely — free Gmail "send as" also produces this |
+| TXT at `google._domainkey.<domain>` (probed only when MX+SPF are silent)                    | **Workspace** | likely                                           |
+| CNAME to `*.run.app` (Cloud Run), `*.appspot.com` (App Engine)                              | **GCP**       | certain                                          |
+| CNAME to `*.web.app` / `*.firebaseapp.com` (Firebase Hosting)                               | **GCP**       | certain                                          |
+| CNAME to `*.cloudfunctions.net`, `*.googlehosted.com`, `*.storage.googleapis.com`           | **GCP**       | certain                                          |
+| NS under `*.googledomains.com` (Cloud DNS)                                                  | **GCP**       | certain                                          |
+| A/AAAA inside Google's published GCP ranges (`gstatic.com/ipranges/cloud.json`)             | **GCP**       | certain                                          |
 
 `google-site-verification=` TXT records are reported as generic Google usage
 but never drive a platform verdict.

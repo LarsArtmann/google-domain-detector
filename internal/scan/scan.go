@@ -51,15 +51,13 @@ func Run(ctx context.Context, res resolve.Resolver, domains []domain.Domain, opt
 	queue := make(chan int)
 	var wg sync.WaitGroup
 	for range workers {
-		wg.Add(1)
-		go func() {
-			defer wg.Done()
+		wg.Go(func() {
 			for i := range queue {
 				dctx, cancel := context.WithTimeout(ctx, opts.Timeout)
 				results[i] = ScanDomain(dctx, res, domains[i], opts)
 				cancel()
 			}
-		}()
+		})
 	}
 
 	feed := func(i int) bool {

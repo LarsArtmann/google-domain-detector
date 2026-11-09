@@ -5,10 +5,12 @@
 package render
 
 import (
-	"encoding/json"
+	"encoding/json/v2"
 	"fmt"
 	"io"
 	"strings"
+
+	"encoding/json/jsontext"
 
 	"github.com/larsartmann/go-output"
 	_ "github.com/larsartmann/go-output/delimited"     // registers csv, tsv
@@ -94,8 +96,8 @@ func JSON(w io.Writer, results []classify.Result) error {
 		})
 	}
 
-	enc := json.NewEncoder(w)
-	return enc.Encode(dto)
+	enc := jsontext.NewEncoder(w)
+	return json.MarshalEncode(enc, dto)
 }
 
 type jsonResult struct {

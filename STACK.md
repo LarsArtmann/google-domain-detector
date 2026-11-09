@@ -22,15 +22,15 @@
 
 ## Chosen foundation
 
-| Category         | Choice (first-party = ★) | Why this, not that                                                                                         | Owning skill / docs      | Revisit when                                          |
-| ---------------- | ------------------------ | ---------------------------------------------------------------------------------------------------------- | ------------------------ | ----------------------------------------------------- |
-| CLI framework    | ★ cmdguard v5            | typed struct-tag flags (enum `values`, Duration, env), builder wiring, version/doctor/describe batteries   | `cmdguard` skill         | command set grows beyond `scan`                       |
-| Output rendering | ★ go-output              | one `Table` → table/json/csv/tsv/markdown via registry dispatch; format-enum flag is free                  | README + pkg.go.dev      | output needs exceed its formats                       |
-| DNS lookups      | stdlib `net.Resolver`    | MX/TXT/CNAME/IP/NS are all stdlib calls; rejected `miekg/dns` — no raw-packet or EDNS need, UDP internals  | stdlib docs              | need for specific EDNS/DNSSEC options arises          |
-| Concurrency      | stdlib worker pool       | one fan-out loop with channels; rejected `golang.org/x/sync/errgroup` — nothing else needs it, zero-dep    | —                        | structured per-lookup cancellation needed             |
-| JSON             | stdlib `encoding/json`   | rejected `encoding/json/v2` — still GOEXPERIMENT-gated, and the hermetic nix build (GOTOOLCHAIN=local) would need env plumbing | how-to-golang        | jsonv2 is non-experimental in the fleet toolchain     |
-| Nix packaging    | go-nix-helpers           | `flakeModules.go-standard` is the fleet pattern (vendorHash, goPkgAttr, devshell); rejected hand-rolled `buildGoModule` | `nix-private-go-repos` (public deps only) | — |
-| Quality pipeline | BuildFlow                | lint/format/test/repair loop + pre-commit; this repo ships only a minimal `.buildflow.yml`                  | `buildflow` skill        | —                                                     |
+| Category         | Choice (first-party = ★) | Why this, not that                                                                                                             | Owning skill / docs                       | Revisit when                                      |
+| ---------------- | ------------------------ | ------------------------------------------------------------------------------------------------------------------------------ | ----------------------------------------- | ------------------------------------------------- |
+| CLI framework    | ★ cmdguard v5            | typed struct-tag flags (enum `values`, Duration, env), builder wiring, version/doctor/describe batteries                       | `cmdguard` skill                          | command set grows beyond `scan`                   |
+| Output rendering | ★ go-output              | one `Table` → table/json/csv/tsv/markdown via registry dispatch; format-enum flag is free                                      | README + pkg.go.dev                       | output needs exceed its formats                   |
+| DNS lookups      | stdlib `net.Resolver`    | MX/TXT/CNAME/IP/NS are all stdlib calls; rejected `miekg/dns` — no raw-packet or EDNS need, UDP internals                      | stdlib docs                               | need for specific EDNS/DNSSEC options arises      |
+| Concurrency      | stdlib worker pool       | one fan-out loop with channels; rejected `golang.org/x/sync/errgroup` — nothing else needs it, zero-dep                        | —                                         | structured per-lookup cancellation needed         |
+| JSON             | stdlib `encoding/json`   | rejected `encoding/json/v2` — still GOEXPERIMENT-gated, and the hermetic nix build (GOTOOLCHAIN=local) would need env plumbing | how-to-golang                             | jsonv2 is non-experimental in the fleet toolchain |
+| Nix packaging    | go-nix-helpers           | `flakeModules.go-standard` is the fleet pattern (vendorHash, goPkgAttr, devshell); rejected hand-rolled `buildGoModule`        | `nix-private-go-repos` (public deps only) | —                                                 |
+| Quality pipeline | BuildFlow                | lint/format/test/repair loop + pre-commit; this repo ships only a minimal `.buildflow.yml`                                     | `buildflow` skill                         | —                                                 |
 
 Rules for this table:
 
@@ -43,17 +43,17 @@ Rules for this table:
 
 ## Deliberately excluded
 
-| Candidate                    | Reason                                                                              |
-| ---------------------------- | ----------------------------------------------------------------------------------- |
-| go-cqrs-lite                 | no events or invariants — a batch read-only scan (YAGNI)                            |
-| go-retry                     | `net.Resolver` retries internally; a batch tool re-runs cheaply                     |
-| go-composable-business-types | no Money/Email/DataPoint semantics in this domain                                   |
+| Candidate                    | Reason                                                                               |
+| ---------------------------- | ------------------------------------------------------------------------------------ |
+| go-cqrs-lite                 | no events or invariants — a batch read-only scan (YAGNI)                             |
+| go-retry                     | `net.Resolver` retries internally; a batch tool re-runs cheaply                      |
+| go-composable-business-types | no Money/Email/DataPoint semantics in this domain                                    |
 | go-branded-id                | scanned domains are input values, not entity IDs; a validated `Domain` type suffices |
-| samber/do                    | no service graph beyond cmdguard's own DI                                           |
-| go-ndjson                    | input is CSV/plain lines, not newline-delimited JSON                                |
-| project-discovery-sdk        | scans arbitrary remote domains, not local project directories                      |
-| miekg/dns                    | raw packet access unneeded; stdlib resolver covers every record type probed         |
-| encoding/json/v2             | GOEXPERIMENT plumbing vs. hermetic nix build (see chosen table)                     |
+| samber/do                    | no service graph beyond cmdguard's own DI                                            |
+| go-ndjson                    | input is CSV/plain lines, not newline-delimited JSON                                 |
+| project-discovery-sdk        | scans arbitrary remote domains, not local project directories                        |
+| miekg/dns                    | raw packet access unneeded; stdlib resolver covers every record type probed          |
+| encoding/json/v2             | GOEXPERIMENT plumbing vs. hermetic nix build (see chosen table)                      |
 
 Every high-importance candidate the profile plausibly touched belongs here
 with a reason — silence about a known candidate is an unmade decision, not a

@@ -8,7 +8,7 @@ package ranges
 
 import (
 	"context"
-	"encoding/json"
+	"encoding/json/v2"
 	"fmt"
 	"io"
 	"math"

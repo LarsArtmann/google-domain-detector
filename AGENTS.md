@@ -28,16 +28,16 @@ Manual go commands need the cache-env guard (stale inherited GOCACHE):
 
 ## Architecture map
 
-| Package | Owns |
-| --- | --- |
-| `internal/domain` | Domain normalization/validation (URLs, ports, www-strip, punycode-in) |
-| `internal/input` | plain-list / CSV detection, header keyword match, dedup, Skipped reporting |
+| Package             | Owns                                                                                                          |
+| ------------------- | ------------------------------------------------------------------------------------------------------------- |
+| `internal/domain`   | Domain normalization/validation (URLs, ports, www-strip, punycode-in)                                         |
+| `internal/input`    | plain-list / CSV detection, header keyword match, dedup, Skipped reporting                                    |
 | `internal/classify` | **all detection rules** — pure functions over record values; verdicts (Workspace certain/likely, GCP certain) |
-| `internal/ranges` | cloud.json parse/fetch/cache, CIDR membership (netip, 4-in-6 unmapped) |
-| `internal/resolve` | Resolver interface + PreferGo net.Resolver adapter |
-| `internal/scan` | worker pool, per-domain timeout, NXDOMAIN short-circuit, DKIM probe only when MX+SPF silent |
-| `internal/render` | go-output table formats + compact full-evidence JSON DTO |
-| `internal/cli` | cmdguard wiring; `runScan` takes injected deps (test seam) |
+| `internal/ranges`   | cloud.json parse/fetch/cache, CIDR membership (netip, 4-in-6 unmapped)                                        |
+| `internal/resolve`  | Resolver interface + PreferGo net.Resolver adapter                                                            |
+| `internal/scan`     | worker pool, per-domain timeout, NXDOMAIN short-circuit, DKIM probe only when MX+SPF silent                   |
+| `internal/render`   | go-output table formats + compact full-evidence JSON DTO                                                      |
+| `internal/cli`      | cmdguard wiring; `runScan` takes injected deps (test seam)                                                    |
 
 Rule changes go in `classify` (pure, table-tested). Probe orchestration
 changes go in `scan`. Never put record-interpretation logic in `scan`.

@@ -74,7 +74,7 @@ func ensureScheme(s string) string {
 }
 
 func validateLabels(name string) error {
-	for _, label := range strings.Split(name, ".") {
+	for label := range strings.SplitSeq(name, ".") {
 		switch {
 		case label == "":
 			return fmt.Errorf("empty label")
