@@ -2,6 +2,7 @@ package scanstore_test
 
 import (
 	"context"
+	"errors"
 	"path/filepath"
 	"testing"
 	"time"
@@ -64,15 +65,18 @@ func TestCommandsProjectReadModels(t *testing.T) {
 	}
 
 	sc.When(scanstore.StartScanCmd{BasicCommand: startBasic, InputDomain: 2, Workers: 4}).
-		Then("scan.started").
 		Command(observe(workspaceResult("acme.com"))).
 		Command(observe(failedResult("gone.example"))).
-		Then("scan.domain_observed").
+		Then("scan.started", "scan.domain_observed", "scan.domain_observed").
 		ThenQueryFunc(func() (any, error) {
 			view, found, err := metaengine.NewReader[scanstore.ObservationView](
 				sc.System().MetaEngine(), scanstore.CollectionObservations).Get(ctx, "acme.com")
-			if err != nil || !found {
+			if err != nil {
 				return nil, err
+			}
+
+			if !found {
+				return nil, errors.New("observation view for acme.com not projected yet")
 			}
 
 			return view, nil

@@ -305,3 +305,36 @@ func mustParseRanges(t *testing.T, data string) *ranges.Set {
 
 	return set
 }
+
+func TestCountTalliesVerdicts(t *testing.T) {
+	t.Parallel()
+
+	results := []Result{
+		{Domain: "certain.example", Evidences: []Evidence{
+			{Platform: PlatformWorkspace, Weight: WeightStrong},
+		}},
+		{Domain: "likely.example", Evidences: []Evidence{
+			{Platform: PlatformWorkspace, Weight: WeightWeak},
+		}},
+		{Domain: "gcp.example", Evidences: []Evidence{
+			{Platform: PlatformGCP, Weight: WeightStrong},
+			{Platform: PlatformGoogle, Weight: WeightWeak},
+		}},
+		{Domain: "gone.example", Err: "domain not found"},
+	}
+
+	got := Count(results)
+
+	want := Counts{
+		Scanned:          4,
+		WorkspaceCertain: 1,
+		WorkspaceLikely:  1,
+		GCPCertain:       1,
+		GenericGoogle:    1,
+		Errors:           1,
+	}
+
+	if got != want {
+		t.Errorf("Count = %+v, want %+v", got, want)
+	}
+}

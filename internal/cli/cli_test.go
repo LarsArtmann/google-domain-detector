@@ -205,3 +205,54 @@ func TestScanDomainTimeoutFlagIsUsed(t *testing.T) {
 		t.Fatalf("scan failed: %v", err)
 	}
 }
+
+func TestScanRecordsEventsAndReplayRebuildsIdenticalJSON(t *testing.T) {
+	t.Parallel()
+
+	store := filepath.Join(t.TempDir(), "scans.db")
+
+	scanOut, scanErr, err := run(t, workspaceDomain(), "",
+		"scan", "--no-ranges", "--format", "json", "--event-store", store, "acme.com")
+	if err != nil {
+		t.Fatalf("scan with event store failed: %v", err)
+	}
+
+	if !strings.Contains(scanErr, "recorded to "+store) {
+		t.Errorf("stderr should name the run and store, got: %q", scanErr)
+	}
+
+	replayOut, replayErr, err := run(t, workspaceDomain(), "",
+		"replay", "--event-store", store, "--format", "json")
+	if err != nil {
+		t.Fatalf("replay failed: %v", err)
+	}
+
+	if !strings.Contains(replayErr, "workspace certain 1") {
+		t.Errorf("replay stderr should summarize the run, got: %q", replayErr)
+	}
+
+	if scanOut != replayOut {
+		t.Errorf("replay JSON differs from scan JSON:\nscan:   %q\nreplay: %q", scanOut, replayOut)
+	}
+}
+
+func TestReplayRequiresEventStore(t *testing.T) {
+	t.Parallel()
+
+	_, _, err := run(t, workspaceDomain(), "", "replay")
+	if err == nil {
+		t.Fatal("replay without --event-store must fail")
+	}
+}
+
+func TestReplayEmptyStoreFails(t *testing.T) {
+	t.Parallel()
+
+	store := filepath.Join(t.TempDir(), "missing.db")
+
+	// Booting an empty store creates the file; replay must report no runs.
+	_, _, err := run(t, workspaceDomain(), "", "replay", "--event-store", store)
+	if err == nil {
+		t.Fatal("replay of a store with no runs must fail")
+	}
+}

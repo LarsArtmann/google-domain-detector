@@ -9,6 +9,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/larsartmann/google-domain-detector/internal/classify"
 	"github.com/larsartmann/google-domain-detector/internal/domain"
 	"github.com/larsartmann/google-domain-detector/internal/ranges"
 	"github.com/larsartmann/google-domain-detector/internal/resolve"
@@ -292,6 +293,38 @@ func TestRunEmptyInput(t *testing.T) {
 
 	if got := Run(context.Background(), newFake(), nil, Options{}); len(got) != 0 {
 		t.Errorf("got %d results for empty input, want 0", len(got))
+	}
+}
+
+func TestRunCallsOnResultForEachDomain(t *testing.T) {
+	t.Parallel()
+
+	f := newFake()
+	f.txt = map[string][]string{"acme.com": {"v=spf1 include:_spf.google.com ~all"}}
+
+	names := []string{"acme.com", "other.example", "third.example"}
+
+	domains := mustDomains(t, names...)
+
+	var mu sync.Mutex
+
+	seen := map[string]int{}
+
+	Run(context.Background(), f, domains, Options{
+		Workers: 4,
+		Timeout: time.Second,
+		OnResult: func(r classify.Result) {
+			mu.Lock()
+			defer mu.Unlock()
+
+			seen[r.Domain]++
+		},
+	})
+
+	for _, name := range names {
+		if seen[name] != 1 {
+			t.Errorf("OnResult saw %s %d times, want exactly 1", name, seen[name])
+		}
 	}
 }
 
