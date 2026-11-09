@@ -1,0 +1,221 @@
+// Package ranges parses Google's published GCP IP-range feed
+// (https://www.gstatic.com/ipranges/cloud.json), caches it on disk, and
+// answers membership queries. cloud.json is the GCP-specific feed (Google
+// Cloud Customer's public IP space); goog.json would also cover Google's own
+// properties and is deliberately NOT used — the signal sought is "served by
+// GCP", not "touches Google anywhere".
+package ranges
+
+import (
+	"context"
+	"encoding/json"
+	"fmt"
+	"io"
+	"math"
+	"net"
+	"net/http"
+	"net/netip"
+	"os"
+	"path/filepath"
+	"time"
+)
+
+// DefaultURL is Google's official machine-readable GCP range feed.
+const DefaultURL = "https://www.gstatic.com/ipranges/cloud.json"
+
+// DefaultTTL is how long a cached feed stays fresh.
+const DefaultTTL = 24 * time.Hour
+
+// maxFeedBytes caps the downloaded feed (the real one is ~100 KiB).
+const maxFeedBytes = 10 << 20
+
+// anyAge admits a cache file of any age (stale-cache fallback).
+const anyAge = time.Duration(math.MaxInt64)
+
+// Set is a parsed collection of GCP CIDR prefixes.
+type Set struct {
+	v4 []netip.Prefix
+	v6 []netip.Prefix
+}
+
+type feed struct {
+	Prefixes []struct {
+		IPv4Prefix string `json:"ipv4Prefix"`
+		IPv6Prefix string `json:"ipv6Prefix"`
+	} `json:"prefixes"`
+}
+
+// Source says where a loaded set came from.
+type Source string
+
+const (
+	SourceNetwork Source = "network"
+	SourceCache   Source = "cache"
+)
+
+// Parse decodes a cloud.json document.
+func Parse(data []byte) (*Set, error) {
+	var f feed
+	if err := json.Unmarshal(data, &f); err != nil {
+		return nil, fmt.Errorf("parse range feed: %w", err)
+	}
+
+	set := &Set{}
+	for _, p := range f.Prefixes {
+		switch {
+		case p.IPv4Prefix != "":
+			prefix, err := netip.ParsePrefix(p.IPv4Prefix)
+			if err != nil {
+				return nil, fmt.Errorf("parse IPv4 prefix %q: %w", p.IPv4Prefix, err)
+			}
+			set.v4 = append(set.v4, prefix)
+		case p.IPv6Prefix != "":
+			prefix, err := netip.ParsePrefix(p.IPv6Prefix)
+			if err != nil {
+				return nil, fmt.Errorf("parse IPv6 prefix %q: %w", p.IPv6Prefix, err)
+			}
+			set.v6 = append(set.v6, prefix)
+		}
+	}
+	if set.Len() == 0 {
+		return nil, fmt.Errorf("range feed contains no prefixes")
+	}
+	return set, nil
+}
+
+// Len returns the number of prefixes in the set.
+func (s *Set) Len() int {
+	if s == nil {
+		return 0
+	}
+	return len(s.v4) + len(s.v6)
+}
+
+// Contains reports whether the IP falls inside any GCP prefix.
+func (s *Set) Contains(ip net.IP) bool {
+	if s == nil || ip == nil {
+		return false
+	}
+	addr, ok := netip.AddrFromSlice(ip)
+	if !ok {
+		return false
+	}
+	list := s.v4
+	if addr.Is6() {
+		list = s.v6
+	}
+	for _, prefix := range list {
+		if prefix.Contains(addr) {
+			return true
+		}
+	}
+	return false
+}
+
+// Options controls Load.
+type Options struct {
+	// URL of the feed; empty means DefaultURL.
+	URL string
+	// CachePath of the on-disk cache file; empty disables caching.
+	CachePath string
+	// TTL of the cache; zero means DefaultTTL. A cache older than TTL is
+	// still used as a fallback when the network fetch fails.
+	TTL time.Duration
+	// Client used for the fetch; nil means a client with a 10 s timeout.
+	Client *http.Client
+	// Now overrides the clock (tests); nil means time.Now.
+	Now func() time.Time
+}
+
+// Load returns the GCP ranges: from cache when fresh, otherwise fetched over
+// the network (and written back to the cache). A stale cache is the fallback
+// when the fetch fails. The only error is "no ranges from anywhere".
+func Load(ctx context.Context, opts Options) (*Set, Source, error) {
+	if opts.URL == "" {
+		opts.URL = DefaultURL
+	}
+	if opts.TTL <= 0 {
+		opts.TTL = DefaultTTL
+	}
+	client := opts.Client
+	if client == nil {
+		client = &http.Client{Timeout: 10 * time.Second}
+	}
+	now := time.Now
+	if opts.Now != nil {
+		now = opts.Now
+	}
+
+	if set, ok := readCache(opts.CachePath, opts.TTL, now); ok {
+		return set, SourceCache, nil
+	}
+
+	data, err := fetch(ctx, client, opts.URL)
+	if err == nil {
+		set, err := Parse(data)
+		if err == nil {
+			writeCache(opts.CachePath, data)
+			return set, SourceNetwork, nil
+		}
+		return nil, Source(""), fmt.Errorf("fetched feed is unusable: %w", err)
+	}
+
+	if set, ok := readCache(opts.CachePath, anyAge, now); ok {
+		return set, SourceCache, nil
+	}
+	return nil, Source(""), fmt.Errorf("fetch %s: %w", opts.URL, err)
+}
+
+func readCache(path string, maxAge time.Duration, now func() time.Time) (*Set, bool) {
+	if path == "" {
+		return nil, false
+	}
+	info, err := os.Stat(path)
+	if err != nil || now().Sub(info.ModTime()) > maxAge {
+		return nil, false
+	}
+	data, err := os.ReadFile(path)
+	if err != nil {
+		return nil, false
+	}
+	set, err := Parse(data)
+	if err != nil {
+		return nil, false
+	}
+	return set, true
+}
+
+func writeCache(path, data string) {
+	if path == "" {
+		return
+	}
+	if err := os.MkdirAll(filepath.Dir(path), 0o700); err != nil {
+		return
+	}
+	tmp := path + ".tmp"
+	if err := os.WriteFile(tmp, []byte(data), 0o600); err != nil {
+		return
+	}
+	_ = os.Rename(tmp, path)
+}
+
+func fetch(ctx context.Context, client *http.Client, url string) (string, error) {
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
+	if err != nil {
+		return "", err
+	}
+	resp, err := client.Do(req)
+	if err != nil {
+		return "", err
+	}
+	defer func() { _ = resp.Body.Close() }()
+
+	if resp.StatusCode != http.StatusOK {
+		return "", fmt.Errorf("unexpected status %s", resp.Status)
+	}
+	body, err := io.ReadAll(io.LimitReader(resp.Body, maxFeedBytes))
+	if err != nil {
+		return "", err
+	}
+	return string(body), nil
+}
