@@ -100,6 +100,9 @@ func (s *Set) Contains(ip net.IP) bool {
 	if !ok {
 		return false
 	}
+	if addr.Is4In6() {
+		addr = addr.Unmap()
+	}
 	list := s.v4
 	if addr.Is6() {
 		list = s.v6

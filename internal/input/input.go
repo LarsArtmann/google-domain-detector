@@ -17,16 +17,16 @@ import (
 // headerKeywords names (lowercase, quotes/spaces stripped) that mark a CSV
 // column as the domain source. The first matching column, left to right, wins.
 var headerKeywords = map[string]bool{
-	"domain":        true,
-	"domains":       true,
-	"website":       true,
-	"websites":      true,
-	"url":           true,
-	"urls":          true,
-	"host":          true,
-	"hostname":      true,
-	"site":          true,
-	"web":           true,
+	"domain":         true,
+	"domains":        true,
+	"website":        true,
+	"websites":       true,
+	"url":            true,
+	"urls":           true,
+	"host":           true,
+	"hostname":       true,
+	"site":           true,
+	"web":            true,
 	"company domain": true,
 }
 

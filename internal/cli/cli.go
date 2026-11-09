@@ -162,7 +162,7 @@ func collectDomains(args []string, inputPath string, stdin io.Reader, stdinTTY b
 		}
 	}
 	if len(domains) == 0 {
-		return nil, skipped, fmt.Errorf("no valid domains given")
+		return nil, skipped, fmt.Errorf("no valid domains given: pass domains as arguments, via --input FILE, or pipe a list on stdin")
 	}
 	return domains, skipped, nil
 }

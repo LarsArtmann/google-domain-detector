@@ -11,10 +11,10 @@ import (
 	"strings"
 
 	"github.com/larsartmann/go-output"
-	_ "github.com/larsartmann/go-output/delimited"  // registers csv, tsv
-	_ "github.com/larsartmann/go-output/markdown"   // registers markdown
+	_ "github.com/larsartmann/go-output/delimited"     // registers csv, tsv
+	_ "github.com/larsartmann/go-output/markdown"      // registers markdown
 	_ "github.com/larsartmann/go-output/serialization" // registers json, xml, yaml, jsonl, toml
-	_ "github.com/larsartmann/go-output/table"      // registers the terminal table
+	_ "github.com/larsartmann/go-output/table"         // registers the terminal table
 
 	"github.com/larsartmann/google-domain-detector/internal/classify"
 )
@@ -23,10 +23,10 @@ import (
 type Filter string
 
 const (
-	FilterAll        Filter = "all"
-	FilterWorkspace  Filter = "workspace"
-	FilterGCP        Filter = "gcp"
-	FilterGoogle     Filter = "google"
+	FilterAll       Filter = "all"
+	FilterWorkspace Filter = "workspace"
+	FilterGCP       Filter = "gcp"
+	FilterGoogle    Filter = "google"
 )
 
 // ParseFilter validates a user-supplied filter name.
@@ -95,7 +95,6 @@ func JSON(w io.Writer, results []classify.Result) error {
 	}
 
 	enc := json.NewEncoder(w)
-	enc.SetIndent("", "  ")
 	return enc.Encode(dto)
 }
 
@@ -119,7 +118,7 @@ func (v jsonVerdict) MarshalJSON() ([]byte, error) {
 		return []byte(`{"detected":false}`), nil
 	}
 	return json.Marshal(struct {
-		Detected   bool                 `json:"detected"`
+		Detected   bool                `json:"detected"`
 		Confidence classify.Confidence `json:"confidence"`
 	}{Detected: true, Confidence: v.Confidence})
 }
