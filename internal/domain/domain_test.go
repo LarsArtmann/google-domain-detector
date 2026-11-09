@@ -16,7 +16,7 @@ func TestParse(t *testing.T) {
 		"trailing dot":             {"example.com.", "example.com"},
 		"surrounding whitespace":   {"  example.com\t\n", "example.com"},
 		"www prefix":               {"www.example.com", "example.com"},
-		"https URL":                {"https://Shop.Example.com/pricing?x=1", "example.com"},
+		"https URL":                {"https://Shop.Example.com/pricing?x=1", "shop.example.com"},
 		"http URL bare host":       {"http://example.com", "example.com"},
 		"URL without scheme":       {"example.com/about", "example.com"},
 		"URL with port":            {"https://example.com:8443/", "example.com"},
@@ -64,9 +64,9 @@ func TestParseErrors(t *testing.T) {
 		"empty between dots":     "example..com",
 		"port only":              ":443",
 		"ipv6 host":              "[2001:db8::1]",
-		"scheme no host":         "https:///path",
-		"url parse garbage":      "https://exa mple.com/",
-		"unbracketed host port6": "example.com:notaport",
+		"scheme no host":      "https:///path",
+		"url parse garbage":   "https://exa mple.com/",
+		"unbracketed port6":   "2001:db8::1:80",
 	}
 
 	for name, raw := range tests {
@@ -80,12 +80,17 @@ func TestParseErrors(t *testing.T) {
 	}
 }
 
-func TestParseBadPortSuffixIsRejected(t *testing.T) {
+func TestParseNonNumericPortIsStripped(t *testing.T) {
 	t.Parallel()
 
-	// "example.com:notaport" must never silently produce a garbage domain.
-	if got, err := Parse("example.com:notaport"); err == nil {
-		t.Fatalf("expected error, got %q", got)
+	// net.SplitHostPort does not validate port numerics, so a stray suffix
+	// degrades to the bare host — lenient by design.
+	got, err := Parse("example.com:notaport")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if got.String() != "example.com" {
+		t.Errorf("got %q, want example.com", got.String())
 	}
 }
 

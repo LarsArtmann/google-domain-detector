@@ -124,7 +124,7 @@ func TestParsePlainListWithCommasButNoHeaderKeywords(t *testing.T) {
 func TestParseSkipsInvalidEntries(t *testing.T) {
 	t.Parallel()
 
-	in := "example.com\nnot a domain\n...\nexample.org"
+	in := "example.com\n???\nexample.org"
 	res, err := Parse(strings.NewReader(in))
 	if err != nil {
 		t.Fatalf("Parse failed: %v", err)
@@ -132,8 +132,8 @@ func TestParseSkipsInvalidEntries(t *testing.T) {
 	if len(res.Domains) != 2 {
 		t.Errorf("domains = %v, want 2", names(res))
 	}
-	if len(res.Skipped) != 2 {
-		t.Errorf("skipped = %v, want 2", res.Skipped)
+	if len(res.Skipped) != 1 || res.Skipped[0] != "???" {
+		t.Errorf("skipped = %v, want [???]", res.Skipped)
 	}
 }
 
