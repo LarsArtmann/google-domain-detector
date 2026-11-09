@@ -1,0 +1,99 @@
+package scanstore
+
+import (
+	"time"
+
+	"github.com/larsartmann/go-cqrs-lite/metaengine/projectionadapter/v4"
+	"github.com/larsartmann/go-cqrs-lite/metaengine/v4"
+	"github.com/larsartmann/go-cqrs-lite/record/v4"
+
+	"github.com/larsartmann/google-domain-detector/internal/classify"
+)
+
+// Read-model collections (metaengine Map queries).
+const (
+	CollectionObservations = "observation_views"
+	CollectionRuns         = "run_views"
+)
+
+// ObservationView is the read model for one domain: its latest observation.
+type ObservationView struct {
+	Domain string `json:"domain"`
+	//cqrs-lint:ignore(A032) read models are the serialized data surface; branded IDs stop at the command/stream boundary (goal-shaped-app precedent)
+	LastRunID    string              `json:"last_run_id"`
+	Evidence     []classify.Evidence `json:"evidence"`
+	Err          string              `json:"error,omitempty"`
+	ObservedAt   time.Time           `json:"observed_at"`
+	Observations int                 `json:"observations"`
+}
+
+// RunView is the read model for one run stream.
+type RunView struct {
+	//cqrs-lint:ignore(A032) read models are the serialized data surface; branded IDs stop at the command/stream boundary (goal-shaped-app precedent)
+	RunID     string          `json:"run_id"`
+	Started   bool            `json:"started"`
+	Completed bool            `json:"completed"`
+	Counts    classify.Counts `json:"counts"`
+}
+
+func projections() (
+	metaengine.QueryDecl[struct{}, ObservationView],
+	metaengine.QueryDecl[struct{}, RunView],
+	*projectionadapter.TypeDecoder,
+) {
+	observations := metaengine.Query[struct{}, ObservationView](CollectionObservations,
+		metaengine.OnRecordTyped(
+			string(evtDomainObserved),
+			projectionadapter.EventWithID[DomainObservedPayload]{},
+			func(_ record.Record, e projectionadapter.EventWithID[DomainObservedPayload]) (string, ObservationView) {
+				return e.ID, observationViewFrom(e.Payload, 1)
+			},
+		),
+		metaengine.OnRecordTyped(
+			string(evtDomainObserved),
+			projectionadapter.EventWithID[DomainObservedPayload]{},
+			func(_ record.Record, e projectionadapter.EventWithID[DomainObservedPayload], prev ObservationView) ObservationView {
+				return observationViewFrom(e.Payload, prev.Observations+1)
+			},
+		),
+	)
+
+	runs := metaengine.Query[struct{}, RunView](CollectionRuns,
+		metaengine.OnRecordTyped(
+			string(evtScanStarted),
+			projectionadapter.EventWithID[ScanStartedPayload]{},
+			func(_ record.Record, e projectionadapter.EventWithID[ScanStartedPayload]) (string, RunView) {
+				return e.ID, RunView{RunID: e.ID, Started: true}
+			},
+		),
+		metaengine.OnRecordTyped(
+			string(evtScanCompleted),
+			projectionadapter.EventWithID[ScanCompletedPayload]{},
+			func(_ record.Record, e projectionadapter.EventWithID[ScanCompletedPayload], prev RunView) RunView {
+				prev.Completed = true
+				prev.Counts = e.Payload.Counts
+
+				return prev
+			},
+		),
+	)
+
+	decoder := projectionadapter.NewTypeDecoder(
+		projectionadapter.Register(evtScanStarted, ScanStartedPayload{}),
+		projectionadapter.Register(evtDomainObserved, DomainObservedPayload{}),
+		projectionadapter.Register(evtScanCompleted, ScanCompletedPayload{}),
+	)
+
+	return observations, runs, decoder
+}
+
+func observationViewFrom(p DomainObservedPayload, observations int) ObservationView {
+	return ObservationView{
+		Domain:       p.Domain,
+		LastRunID:    p.RunID,
+		Evidence:     p.Evidence,
+		Err:          p.Err,
+		ObservedAt:   p.ObservedAt,
+		Observations: observations,
+	}
+}
