@@ -12,21 +12,23 @@ The one theoretically retryable call, the cloud.json fetch, runs **once per
 24 h window** against one of the most reliable CDNs on earth, is bounded by
 a 10 s client timeout, and already has a stale-cache fallback
 (ranges.go:183-185). Wrapping it in a retry policy adds a dependency to
-defend against a near-nonexistent failure mode. Bonus finding: the
-library's fail-open defaults (unclassified errors retry) make it a footgun
-unless paired with go-error-family — which this project deliberately
-doesn't adopt (see go-error-family.md).
+defend against a near-nonexistent failure mode. Bonus finding: its default
+predicate is `errorfamily.IsRetryable` (go-retry/retry.go:106-108), which
+delegates to go-error-family's `Classify` — and that classifier **defaults
+unknown errors to Transient** (classify.go, "fail-open for retry"), so
+unclassified errors retry by default; tightening requires `WithIsRetryable`
+or wrapping errors with explicit families.
 
 ## What the library is
 
 `retry.Do(ctx, op, opts...)` with: configurable Attempts/MaxAttempts +
-wall-clock deadline, 6 backoff strategies (Fixed/Exponential/Polynomial/
-Linear/Jittered/Decorrelated) with cap and max-elapsed, context-aware
-cancellation, per-attempt timeout enforcement, error accumulation
-(`Errors()`), `ShouldRetry(predicate)` — including an
-`errorfamily.ShouldRetry` classifier — and `OnRetry`/`OnAttempt` hooks
-(retry.go:70-260, options.go, strategy.go, predicate.go). Deps: stdlib +
-go-error-family.
+wall-clock deadline, backoff strategies (incl. jittered/decorrelated) with
+cap and max-elapsed, context-aware cancellation, per-attempt timeout
+enforcement, error accumulation (`Errors()`), `Config.IsRetryable` /
+`WithIsRetryable(f)` predicate — defaulting to
+`errorfamily.IsRetryable` (only-Transient, but fail-open via Classify's
+unknown→Transient default) — and OnRetry/OnAttempt hooks (retry.go:42-119,
+options.go:17-26). Deps: stdlib + go-error-family.
 
 ## Current usage in google-domain-detector
 
@@ -49,9 +51,9 @@ None — not imported, not in the graph.
 | Capability                    | Applies? | Reason                                             |
 | ----------------------------- | -------- | -------------------------------------------------- |
 | Do + Attempts/Deadline        | No       | No call justifying a retry loop                     |
-| Backoff strategies (6)        | No       | Same                                               |
+| Backoff strategies            | No       | Same                                               |
 | Per-attempt timeout           | No       | Client timeout + ctx already bound the fetch        |
-| errorfamily.ShouldRetry       | No       | No error-family adoption (see that report)          |
+| IsRetryable predicate         | No       | No retry loop to gate                              |
 | OnRetry/OnAttempt hooks       | No       | No retry events to observe                         |
 
 ## Version currency (of the audited checkout)
@@ -71,5 +73,5 @@ profile (see go-daemon.md).
 ```bash
 rg -n 'go-retry' --type go . go.mod go.sum    # absent
 cd /home/lars/projects/go-retry && git tag --sort=-v:refname | head -5
-cd /home/lars/projects/go-retry && rg -n 'ShouldRetry' predicate.go errorfamily/*.go
+cd /home/lars/projects/go-retry && rg -n 'IsRetryable' retry.go options.go
 ```

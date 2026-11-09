@@ -20,20 +20,25 @@ consumed them.
 
 ## What the library is
 
-Three orthogonal axes over wrapped errors, verified in the checkout:
+Error families + classification + exit codes, verified in the checkout:
 
-- **Family** — 6 sentinels + panic safety (NotFound, Conflict, Validation,
-  Transient, Permission, Corruption; classification.go:15-61), immutable
-  `.With(f)`/`.WithMsg`, `errors.Is`-compatible wrapping (family.go:54-108).
-- **Hint** — `.WithHint("...")` surfaces as `hint` in cmdguard's JSON error
-  envelopes; default hints per family (fallbacks.go:13-73).
-- **Source** — `.WithSource(err)` separates wrapped cause from rendered
-  message (source.go:43-114); power-user combinators `From`,
-  `FromFallback`, `JoinSources` (from.go:41-123).
-
-cmdguard honors ExitCoder (30×5 family→exit-code matrix) and renders hints
-in error envelopes. HTTP mapping lives in httputil's `Code`/`Domain`
-mirrors, not here.
+- **Families** (family.go:30-50): `Rejection` (bad input, unauthorized, not
+  found), `Conflict`, `Transient`, `Corruption`, `Infrastructure` (cannot
+  serve), `Orchestration` (internal coordination failure).
+- **Constructors** (constructors.go:10-97+): `New`/`Newf`/`Wrap`/`Wrapf` plus
+  per-family convenience (`NewTransient`, `WrapConflict`, ...) with stable
+  machine `code` strings; `Code(err)` extracts them from any chain
+  (classify.go:36-44).
+- **Classification** (classify.go:46-69): `Classify(err)` checks the
+  `Classified` interface → `Retryable` inference → registered sentinels →
+  registered `Classifier` predicates (for dynamic third-party errors like
+  sqlite) → **default Transient (fail-open for retry)**. `IsRetryable`, and
+  a scoped `Registry`/`NewRegistry` for test isolation.
+- **Exit codes** (classify.go:71+): `ExitCode(err)` honors an `ExitCoder`
+  chain override; cmdguard maps family → exit code (and its JSON error
+  envelope carries `hint`/`code` fields — cmdguard's own errors_facts.go,
+  not this library).
+- Also: `http.go` HTTP-status helpers, `log.go`, `handle.go`.
 
 ## Current usage in google-domain-detector
 
@@ -67,10 +72,9 @@ defensible.
 | Capability                  | Applies? | Reason                                                        |
 | --------------------------- | -------- | -------------------------------------------------------------- |
 | Family classification        | Partially | Only ranges fetch-vs-parse split is real                       |
-| ExitCoder via cmdguard       | Yes (if scoped adopt) | free exit-code differentiation                    |
-| Hints in JSON error envelopes| Partially | pairs with cmdguard `-o json` (currently unused, see cmdguard.md) |
-| Source separation            | No        | no dual-render error paths                                     |
-| Panic sentinels              | No        | no panic-recovery error flows                                  |
+| ExitCode via cmdguard       | Yes (if scoped adopt) | free exit-code differentiation                    |
+| `code` strings + Code(err)   | Partially | pairs with cmdguard's JSON error `code` field (envelope plumbing unused, see cmdguard.md) |
+| Classifier registry          | No        | no dynamic third-party error types in the scan path             |
 
 ## Version currency
 
@@ -81,6 +85,6 @@ Pinned v0.12.0 (indirect) = newest tag; HEAD adds no code. Fully current.
 ```bash
 go mod why github.com/larsartmann/go-error-family   # via cmdguard→samber-do-auditlog
 rg -n 'error-family' --type go .                     # no direct usage today
-cd /home/lars/projects/go-error-family && git diff --stat v0.12.0..HEAD   # docs only
+cd /home/lars/projects/go-error-family && rg -n 'Default — Transient' classify.go
 cd /home/lars/projects/cmdguard && rg -n 'ExitCoder' pkg/cmdguard/v5/cli_errors_json.go
 ```
