@@ -97,8 +97,7 @@ func ScanDomain(ctx context.Context, res resolve.Resolver, d domain.Domain, opts
 
 	txts, err := res.LookupTXT(ctx, apex)
 	if err != nil {
-		var dnsErr *net.DNSError
-		if errors.As(err, &dnsErr) && dnsErr.IsNotFound {
+		if dnsErr, ok := errors.AsType[*net.DNSError](err); ok && dnsErr.IsNotFound {
 			r.Err = "domain not found: " + err.Error()
 			return r
 		}

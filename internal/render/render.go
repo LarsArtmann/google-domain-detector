@@ -5,12 +5,11 @@
 package render
 
 import (
+	"encoding/json/jsontext"
 	"encoding/json/v2"
 	"fmt"
 	"io"
 	"strings"
-
-	"encoding/json/jsontext"
 
 	"github.com/larsartmann/go-output"
 	_ "github.com/larsartmann/go-output/delimited"     // registers csv, tsv
