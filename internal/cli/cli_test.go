@@ -7,6 +7,7 @@ import (
 	"net"
 	"os"
 	"path/filepath"
+	"reflect"
 	"strings"
 	"testing"
 )
@@ -251,7 +252,7 @@ func TestScanRecordsEventsAndReplayRebuildsSameResults(t *testing.T) {
 			continue
 		}
 
-		if scanned != replayed {
+		if !reflect.DeepEqual(scanned, replayed) {
 			t.Errorf("replay result for %s differs:\nscan:   %q\nreplay: %q", domain, scanned, replayed)
 		}
 	}

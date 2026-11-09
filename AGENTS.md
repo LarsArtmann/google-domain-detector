@@ -98,6 +98,19 @@ first-party lib is considered.
   started/completed. Replay keeps the LAST observation per domain per run.
 - `replay` boots the system WITHOUT the projection host (`scanstore.Boot`)
   — journal replay must not pay for folding every read model first.
+- Ordering contract: scan output preserves INPUT order; replay preserves
+  journal (completion) order. Same facts, different orderings — the e2e
+  test compares parsed result SETS, never raw bytes with >1 domain.
+- cqrs-lint deliberate non-fixes: E003 (scanstore mixes command/event/fold
+  in one package — warning) — the package owns ONE concern (scan event
+  sourcing) in a 4-file split; a domain/infrastructure package split is
+  over-engineering for a single-consumer internal package. B005
+  (StrictApply — info): folds intentionally ignore unknown event types;
+  new event types must not crash old binaries replaying old journals.
+- Event payloads use `event.Instant` (not `time.Time` — CBOR epoch encoding
+  drops timezones, C013) and every `event.New` stamps
+  `event.WithSchemaVersion(1)` so the first schema evolution can upcast
+  (D013). New events must follow both.
 - Binary flag name is `--ranges-cache` (not `--cache-path`).
 - Binary flag for the SQLite journal is `--event-store` (env `GDD_EVENT_STORE`).
 
