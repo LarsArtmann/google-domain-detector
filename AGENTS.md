@@ -65,8 +65,9 @@ changes go in `scan`. Never put record-interpretation logic in `scan`.
   captured output, for them.
 - go-output renderer registry: root module registers NOTHING; the blank
   imports in `internal/render` are load-bearing (drop one, lose a format).
-- `encoding/json` (v1) deliberately: jsonv2 is GOEXPERIMENT-gated and the
-  hermetic nix build runs GOTOOLCHAIN=local (see STACK.md).
+- `encoding/json/v2` (migrated from v1 by go-auto-upgrade 2026-11-09 — jsonv2
+  is stable in Go 1.27; render uses `jsontext.NewEncoder` for the compact
+  one-line-per-domain JSON).
 - Binary flag name is `--ranges-cache` (not `--cache-path`).
 
 ## Git remotes

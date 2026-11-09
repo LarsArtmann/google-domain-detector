@@ -28,7 +28,7 @@
 | Output rendering | ★ go-output              | one `Table` → table/json/csv/tsv/markdown via registry dispatch; format-enum flag is free                                      | README + pkg.go.dev                       | output needs exceed its formats                   |
 | DNS lookups      | stdlib `net.Resolver`    | MX/TXT/CNAME/IP/NS are all stdlib calls; rejected `miekg/dns` — no raw-packet or EDNS need, UDP internals                      | stdlib docs                               | need for specific EDNS/DNSSEC options arises      |
 | Concurrency      | stdlib worker pool       | one fan-out loop with channels; rejected `golang.org/x/sync/errgroup` — nothing else needs it, zero-dep                        | —                                         | structured per-lookup cancellation needed         |
-| JSON             | stdlib `encoding/json`   | rejected `encoding/json/v2` — still GOEXPERIMENT-gated, and the hermetic nix build (GOTOOLCHAIN=local) would need env plumbing | how-to-golang                             | jsonv2 is non-experimental in the fleet toolchain |
+| JSON             | stdlib `encoding/json/v2` | Go 1.27 ships jsonv2 stable — the hermetic nix build (GOTOOLCHAIN=local) compiles it, no GOEXPERIMENT plumbing; rejected v1 — superseded per how-to-golang. Written on v1, migrated by go-auto-upgrade 2026-11-09 | how-to-golang | — |
 | Nix packaging    | go-nix-helpers           | `flakeModules.go-standard` is the fleet pattern (vendorHash, goPkgAttr, devshell); rejected hand-rolled `buildGoModule`        | `nix-private-go-repos` (public deps only) | —                                                 |
 | Quality pipeline | BuildFlow                | lint/format/test/repair loop + pre-commit; this repo ships only a minimal `.buildflow.yml`                                     | `buildflow` skill                         | —                                                 |
 
@@ -53,7 +53,6 @@ Rules for this table:
 | go-ndjson                    | input is CSV/plain lines, not newline-delimited JSON                                 |
 | project-discovery-sdk        | scans arbitrary remote domains, not local project directories                        |
 | miekg/dns                    | raw packet access unneeded; stdlib resolver covers every record type probed          |
-| encoding/json/v2             | GOEXPERIMENT plumbing vs. hermetic nix build (see chosen table)                      |
 
 Every high-importance candidate the profile plausibly touched belongs here
 with a reason — silence about a known candidate is an unmade decision, not a
@@ -69,3 +68,4 @@ decision.
 ## Decision log
 
 - 2026-11-09 — Initial selection (stack-selection skill, session: "detect Google usage from domains" greenfield build).
+- 2026-11-09 — JSON row updated: go-auto-upgrade migrated `encoding/json` → `encoding/json/v2` once the Go 1.27 toolchain made it stable; the initial v1 choice (GOEXPERIMENT concern) is obsolete.
