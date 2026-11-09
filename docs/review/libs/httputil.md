@@ -66,7 +66,7 @@ surface is one outbound GET in `internal/ranges/ranges.go:230-253` (plain
 | Health/ready handlers                | No       | Nothing probes this process                              |
 | CSRF / CORS / rate limiting / nonce  | No       | Browser-facing concerns; terminal tool                   |
 | Response compression / decompression | No       | Server-side body handling only                           |
-| httpspec behavioral test suite       | No       | Tests `http.Handler`s; project has none                  |
+| httpspec behavioral test suite       | No       | Tests `http.Handler` values; project has none                  |
 | Code/Domain error wrappers           | No       | Server-coded mirror of go-error-family (see that report) |
 
 ## Version currency (of the audited checkout)

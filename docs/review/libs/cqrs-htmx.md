@@ -18,7 +18,7 @@ go-cqrs-lite.md) — use go-cqrs-lite.
 ## What the library is
 
 One declarative line per endpoint: `app.Command(...)` with composable
-`HandlerOption`s covering HTMX response headers (HX-Trigger/Push-Url/
+`HandlerOption` values covering HTMX response headers (HX-Trigger/Push-Url/
 Redirect), partial-vs-full rendering, CSRF, method override, conditional
 GET/ETag, idempotency, SSE broadcaster with reconnect/Last-Event-ID,
 OpenAPI collector, and a recommended middleware stack. Sub-modules add

@@ -108,7 +108,6 @@ type Result struct {
 	Err string `json:"error,omitempty"`
 }
 
-
 // WorkspaceVerdict: MX evidence is certain (mail is delivered to Google);
 // SPF or DKIM alone is likely (free Gmail "send as" can produce both).
 func (r Result) WorkspaceVerdict() Verdict {
