@@ -50,13 +50,13 @@ None — not imported, not in the graph.
 
 ## Capability ↔ project applicability
 
-| Capability                 | Applies? | Reason                                  |
-| -------------------------- | -------- | --------------------------------------- |
-| Patch emission (script/URL/console) | No | No SSE responses to patch      |
-| Signal read/write/store    | No       | Browser-state primitives                 |
-| broadcast hub + replay     | No       | Multi-client fan-out                     |
-| static JS embedding        | No       | Serving JS to browsers                   |
-| datastartest kit           | No       | No DataStar handlers under test          |
+| Capability                          | Applies? | Reason                          |
+| ----------------------------------- | -------- | ------------------------------- |
+| Patch emission (script/URL/console) | No       | No SSE responses to patch       |
+| Signal read/write/store             | No       | Browser-state primitives        |
+| broadcast hub + replay              | No       | Multi-client fan-out            |
+| static JS embedding                 | No       | Serving JS to browsers          |
+| datastartest kit                    | No       | No DataStar handlers under test |
 
 ## Version currency (of the audited checkout)
 

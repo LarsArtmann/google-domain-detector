@@ -58,14 +58,14 @@ None — not imported, not in the graph.
 
 ## Capability ↔ project applicability
 
-| Capability                          | Applies? | Reason                                        |
-| ----------------------------------- | -------- | --------------------------------------------- |
-| Unix-socket HTTP server lifecycle   | No       | No listener, no socket                         |
-| sd_notify readiness / watchdog      | No       | Not run under systemd TYPE=notify              |
-| JSON/CBOR negotiation, WriteEncoded | No       | No requests to negotiate                        |
-| SSE parsing                         | No       | No event streams                               |
-| FlightRecorder trace streaming      | No       | No long-lived process to diagnose              |
-| Graceful drain hooks                | No       | Process lifetime is a single scan              |
+| Capability                          | Applies? | Reason                            |
+| ----------------------------------- | -------- | --------------------------------- |
+| Unix-socket HTTP server lifecycle   | No       | No listener, no socket            |
+| sd_notify readiness / watchdog      | No       | Not run under systemd TYPE=notify |
+| JSON/CBOR negotiation, WriteEncoded | No       | No requests to negotiate          |
+| SSE parsing                         | No       | No event streams                  |
+| FlightRecorder trace streaming      | No       | No long-lived process to diagnose |
+| Graceful drain hooks                | No       | Process lifetime is a single scan |
 
 ## Version currency (of the audited checkout)
 
@@ -75,7 +75,7 @@ past v0.4.0. Healthy and active; rejection is fit, not quality.
 ## Revisit trigger
 
 None plausible. If a daemon mode were ever wanted it would be a different
-product; even then this library serves *socket-HTTP daemons*, not
+product; even then this library serves _socket-HTTP daemons_, not
 process daemonization.
 
 ## How to verify

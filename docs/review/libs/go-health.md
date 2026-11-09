@@ -44,13 +44,13 @@ None — not imported, not in the graph.
 
 ## Capability ↔ project applicability
 
-| Capability                    | Applies? | Reason                                          |
-| ----------------------------- | -------- | ----------------------------------------------- |
-| Registry + Check functions    | No       | No long-lived probe state                        |
-| Aggregation strategies        | No       | Nothing to aggregate over time                  |
-| HTTP handlers (/healthz)      | No       | No server                                        |
-| live variable snapshots       | No       | No observability surface                        |
-| HTTP error-rate/latency trackers | No    | No requests served                              |
+| Capability                       | Applies? | Reason                         |
+| -------------------------------- | -------- | ------------------------------ |
+| Registry + Check functions       | No       | No long-lived probe state      |
+| Aggregation strategies           | No       | Nothing to aggregate over time |
+| HTTP handlers (/healthz)         | No       | No server                      |
+| live variable snapshots          | No       | No observability surface       |
+| HTTP error-rate/latency trackers | No       | No requests served             |
 
 ## Version currency (of the audited checkout)
 

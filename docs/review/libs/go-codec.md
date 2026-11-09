@@ -31,8 +31,9 @@ compression (verified — zero matches in non-test source).
 ## Current usage in google-domain-detector
 
 None. The project's serialization is:
+
 - `internal/render/render.go:88-104` — result JSON via `jsontext.NewEncoder`
-  + `json.MarshalEncode` (encoding/json/v2), streaming straight to stdout
+  - `json.MarshalEncode` (encoding/json/v2), streaming straight to stdout
 - `internal/ranges/ranges.go:58-90` — cloud.json feed via one
   `json.Unmarshal`
 
@@ -55,15 +56,15 @@ Both are stdlib, zero added deps, and already on json/v2.
 
 ## Capability ↔ project applicability
 
-| Capability                              | Applies? | Reason                                                        |
-| --------------------------------------- | -------- | ------------------------------------------------------------- |
-| JSONCodec / stdlib JSON wrap            | No       | Project already uses json/v2 directly; default build is v1     |
-| CBOR / CBORCompact determinism          | No       | No binary interchange, no signing                             |
-| COSE Sign1/Encrypt0                     | No       | No event signing/encryption domain                            |
-| Envelope Wrap/Unwrap                    | No       | No self-describing persisted payloads                          |
-| AutoDetect / TranscodeToJSON            | No       | Input formats are known (cloud.json, CSV/plain domain lists)    |
-| NDJSON/CBOR streaming helpers           | No       | Output is a single JSON doc; no NDJSON I/O                     |
-| Pooling / observability / Size diag     | No       | No hot serialization loop                                     |
+| Capability                          | Applies? | Reason                                                       |
+| ----------------------------------- | -------- | ------------------------------------------------------------ |
+| JSONCodec / stdlib JSON wrap        | No       | Project already uses json/v2 directly; default build is v1   |
+| CBOR / CBORCompact determinism      | No       | No binary interchange, no signing                            |
+| COSE Sign1/Encrypt0                 | No       | No event signing/encryption domain                           |
+| Envelope Wrap/Unwrap                | No       | No self-describing persisted payloads                        |
+| AutoDetect / TranscodeToJSON        | No       | Input formats are known (cloud.json, CSV/plain domain lists) |
+| NDJSON/CBOR streaming helpers       | No       | Output is a single JSON doc; no NDJSON I/O                   |
+| Pooling / observability / Size diag | No       | No hot serialization loop                                    |
 
 ## Version currency (of the audited checkout)
 

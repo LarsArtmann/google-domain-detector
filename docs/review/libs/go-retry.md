@@ -48,13 +48,13 @@ None — not imported, not in the graph.
 
 ## Capability ↔ project applicability
 
-| Capability                    | Applies? | Reason                                             |
-| ----------------------------- | -------- | -------------------------------------------------- |
-| Do + Attempts/Deadline        | No       | No call justifying a retry loop                     |
-| Backoff strategies            | No       | Same                                               |
-| Per-attempt timeout           | No       | Client timeout + ctx already bound the fetch        |
-| IsRetryable predicate         | No       | No retry loop to gate                              |
-| OnRetry/OnAttempt hooks       | No       | No retry events to observe                         |
+| Capability              | Applies? | Reason                                       |
+| ----------------------- | -------- | -------------------------------------------- |
+| Do + Attempts/Deadline  | No       | No call justifying a retry loop              |
+| Backoff strategies      | No       | Same                                         |
+| Per-attempt timeout     | No       | Client timeout + ctx already bound the fetch |
+| IsRetryable predicate   | No       | No retry loop to gate                        |
+| OnRetry/OnAttempt hooks | No       | No retry events to observe                   |
 
 ## Version currency (of the audited checkout)
 

@@ -54,13 +54,13 @@ directory, no config hot-reload, and no long-running process.
 
 ## Capability ↔ project applicability
 
-| Capability                     | Applies? | Reason                                              |
-| ------------------------------ | -------- | --------------------------------------------------- |
-| Watch/WatchOnce event streams  | No       | No long-running phase                                |
-| Filters + combinators          | No       | Nothing to filter without events                     |
-| Middleware (19+) / debouncing  | No       | Event-pipeline machinery                             |
-| Polling fallback / self-heal   | No       | Watch-budget resilience for daemons                  |
-| Content hashing events         | No       | Input is read once in full                           |
+| Capability                    | Applies? | Reason                              |
+| ----------------------------- | -------- | ----------------------------------- |
+| Watch/WatchOnce event streams | No       | No long-running phase               |
+| Filters + combinators         | No       | Nothing to filter without events    |
+| Middleware (19+) / debouncing | No       | Event-pipeline machinery            |
+| Polling fallback / self-heal  | No       | Watch-budget resilience for daemons |
+| Content hashing events        | No       | Input is read once in full          |
 
 ## Version currency (of the audited checkout)
 

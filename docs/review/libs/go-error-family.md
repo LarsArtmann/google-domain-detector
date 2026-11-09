@@ -49,6 +49,7 @@ throughout (e.g. ranges.go:61,71,78,86,180,187; cli.go:178,203) with
 ## Should we use it?
 
 **For (scoped to internal/ranges):**
+
 - `ranges.Load` has exactly two error classes the OS already distinguishes:
   fetch (temporary, exit 75) vs parse (data, exit 65). Today both exit 1
   via generic wrapping.
@@ -57,6 +58,7 @@ throughout (e.g. ranges.go:61,71,78,86,180,187; cli.go:178,203) with
   hint ("cached ranges unavailable, continuing without IP evidence").
 
 **Against (default/global):**
+
 - Fail-open Transient default is a footgun for DNS errors — the scan path's
   errors are deliberately plain strings in results (`classify.Result.Err`).
 - The project has no consumer of classifications (no retry, no HTTP
@@ -69,12 +71,12 @@ defensible.
 
 ## Capability ↔ project applicability
 
-| Capability                  | Applies? | Reason                                                        |
-| --------------------------- | -------- | -------------------------------------------------------------- |
-| Family classification        | Partially | Only ranges fetch-vs-parse split is real                       |
-| ExitCode via cmdguard       | Yes (if scoped adopt) | free exit-code differentiation                    |
-| `code` strings + Code(err)   | Partially | pairs with cmdguard's JSON error `code` field (envelope plumbing unused, see cmdguard.md) |
-| Classifier registry          | No        | no dynamic third-party error types in the scan path             |
+| Capability                 | Applies?              | Reason                                                                                    |
+| -------------------------- | --------------------- | ----------------------------------------------------------------------------------------- |
+| Family classification      | Partially             | Only ranges fetch-vs-parse split is real                                                  |
+| ExitCode via cmdguard      | Yes (if scoped adopt) | free exit-code differentiation                                                            |
+| `code` strings + Code(err) | Partially             | pairs with cmdguard's JSON error `code` field (envelope plumbing unused, see cmdguard.md) |
+| Classifier registry        | No                    | no dynamic third-party error types in the scan path                                       |
 
 ## Version currency
 

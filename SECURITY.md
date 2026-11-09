@@ -26,10 +26,10 @@ instead:
 
 ### Response commitments
 
-| Phase            | Timeline        |
-| ---------------- | --------------- |
-| Initial response | Within 48 hours |
-| Triage           | Within 72 hours |
+| Phase            | Timeline                    |
+| ---------------- | --------------------------- |
+| Initial response | Within 48 hours             |
+| Triage           | Within 72 hours             |
 | Disclosure       | Coordinated, within 90 days |
 
 ## Security Practices

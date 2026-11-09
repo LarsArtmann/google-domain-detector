@@ -20,15 +20,15 @@ fsync it, optionally take an flock + verify an xxhash64 content fingerprint,
 then rename and fsync the parent directory (POSIX). Windows path retries
 renames on sharing violations. Exactly 12 exported symbols:
 
-| Symbol                                  | What it does                                                                    |
-| --------------------------------------- | ------------------------------------------------------------------------------- |
-| `Write(path, data)`                     | temp + fsync + rename + dir-fsync (atomicwrite.go:17)                            |
-| `WriteWithPerm(path, data, perm)`       | explicit perm, temp created with final perm (atomicwrite.go:42)                  |
-| `WriteVerified(path, data, fp)`         | flock + re-read + fingerprint match required (atomicwrite.go:65)                 |
-| `WriteIfChanged(path, data) (bool, err)`| xxhash dedup: skips write + mtime bump when identical (atomicwrite.go:91)        |
-| `WriteFunc{,WithPerm,Verified}`         | streaming via callback through 64 KiB bufio (atomicwrite.go:125/151/167)         |
-| `Fingerprint [8]byte` + helpers         | xxhash64 content fingerprint; `FingerprintFile` (fingerprint.go:13-35)           |
-| `ErrConcurrentModification`             | sentinel for verified-write races (commit.go:13)                                 |
+| Symbol                                   | What it does                                                              |
+| ---------------------------------------- | ------------------------------------------------------------------------- |
+| `Write(path, data)`                      | temp + fsync + rename + dir-fsync (atomicwrite.go:17)                     |
+| `WriteWithPerm(path, data, perm)`        | explicit perm, temp created with final perm (atomicwrite.go:42)           |
+| `WriteVerified(path, data, fp)`          | flock + re-read + fingerprint match required (atomicwrite.go:65)          |
+| `WriteIfChanged(path, data) (bool, err)` | xxhash dedup: skips write + mtime bump when identical (atomicwrite.go:91) |
+| `WriteFunc{,WithPerm,Verified}`          | streaming via callback through 64 KiB bufio (atomicwrite.go:125/151/167)  |
+| `Fingerprint [8]byte` + helpers          | xxhash64 content fingerprint; `FingerprintFile` (fingerprint.go:13-35)    |
+| `ErrConcurrentModification`              | sentinel for verified-write races (commit.go:13)                          |
 
 fsync verified both places: temp file at stage.go:88/119, parent dir after
 rename at rename_unix.go:17-34. Locking exists only on `*Verified` paths
@@ -70,7 +70,7 @@ func writeCache(path string, data []byte) {
 ```
 
 On released **v0.6.1/v0.6.2**, keep the caller-side `MkdirAll` (library-side
-MkdirAll is unreleased, and its hardcoded 0o755 would *regress* today's
+MkdirAll is unreleased, and its hardcoded 0o755 would _regress_ today's
 0o700 cache dir).
 
 **Caution — do NOT use `WriteIfChanged` here:** the cache TTL is mtime-based

@@ -36,25 +36,25 @@ type RootConfig struct{}
 
 // ScanFlags is the scan command's own flag set.
 type ScanFlags struct {
-	Input     string        `flag:"input"        help:"Read domains from FILE ('-' reads stdin). Plain lists and CSV with a domain/website/url column both work" short:"i"`
-	Format    string        `flag:"format"       help:"Output format"                                                                                            short:"f" default:"table"                                       values:"table,json,csv,tsv,markdown"`
-	Workers   int           `flag:"workers"      help:"Parallel DNS lookups"                                                                                     short:"j" default:"8"`
-	Timeout   time.Duration `flag:"timeout"      help:"Per-domain lookup budget"                                                                                           default:"5s"`
-	Only      string        `flag:"only"         help:"Report only matching domains"                                                                                       default:"all"                                         values:"all,workspace,gcp,google"`
-	RangesURL string        `flag:"ranges-url"   help:"GCP IP-range feed"                                                                                                  default:"https://www.gstatic.com/ipranges/cloud.json"`
-	CachePath string        `flag:"ranges-cache" help:"Range-feed cache file (default ~/.cache/google-domain-detector/cloud.json)"                                                                                                                                    env:"GDD_RANGES_CACHE"`
-	NoRanges  bool          `flag:"no-ranges"    help:"Skip GCP IP-range matching (CNAME/MX/NS evidence only)"`
-	NoDKIM    bool          `flag:"no-dkim"      help:"Skip the google._domainkey probe"`
-	Resolver  string        `flag:"resolver"     help:"Query this DNS server (host or host:port) instead of the system resolver"                                                                                                                                      env:"GDD_RESOLVER"`
-	EventStore string       `flag:"event-store"  help:"Persist the run as events in this SQLite file (go-cqrs-lite journal; replay with the replay command)"                                                                                                                               env:"GDD_EVENT_STORE"`
+	Input      string        `flag:"input"        help:"Read domains from FILE ('-' reads stdin). Plain lists and CSV with a domain/website/url column both work" short:"i"`
+	Format     string        `flag:"format"       help:"Output format"                                                                                            short:"f" default:"table"                                       values:"table,json,csv,tsv,markdown"`
+	Workers    int           `flag:"workers"      help:"Parallel DNS lookups"                                                                                     short:"j" default:"8"`
+	Timeout    time.Duration `flag:"timeout"      help:"Per-domain lookup budget"                                                                                           default:"5s"`
+	Only       string        `flag:"only"         help:"Report only matching domains"                                                                                       default:"all"                                         values:"all,workspace,gcp,google"`
+	RangesURL  string        `flag:"ranges-url"   help:"GCP IP-range feed"                                                                                                  default:"https://www.gstatic.com/ipranges/cloud.json"`
+	CachePath  string        `flag:"ranges-cache" help:"Range-feed cache file (default ~/.cache/google-domain-detector/cloud.json)"                                                                                                                                    env:"GDD_RANGES_CACHE"`
+	NoRanges   bool          `flag:"no-ranges"    help:"Skip GCP IP-range matching (CNAME/MX/NS evidence only)"`
+	NoDKIM     bool          `flag:"no-dkim"      help:"Skip the google._domainkey probe"`
+	Resolver   string        `flag:"resolver"     help:"Query this DNS server (host or host:port) instead of the system resolver"                                                                                                                                      env:"GDD_RESOLVER"`
+	EventStore string        `flag:"event-store"  help:"Persist the run as events in this SQLite file (go-cqrs-lite journal; replay with the replay command)"                                                                                                          env:"GDD_EVENT_STORE"`
 }
 
 // ReplayFlags is the replay command's flag set.
 type ReplayFlags struct {
-	EventStore string `flag:"event-store" help:"SQLite event store written by scan --event-store"     env:"GDD_EVENT_STORE"`
-	Run        string `flag:"run"          help:"Rebuild this run ID (default: the most recent run)"`
-	Format     string `flag:"format"       help:"Output format"                     default:"table" values:"table,json,csv,tsv,markdown"`
-	Only       string `flag:"only"         help:"Report only matching domains"                 default:"all"   values:"all,workspace,gcp,google"`
+	EventStore string `env:"GDD_EVENT_STORE" flag:"event-store" help:"SQLite event store written by scan --event-store"`
+	Run        string `                      flag:"run"         help:"Rebuild this run ID (default: the most recent run)"`
+	Format     string `                      flag:"format"      help:"Output format"                                      default:"table" values:"table,json,csv,tsv,markdown"`
+	Only       string `                      flag:"only"        help:"Report only matching domains"                       default:"all"   values:"all,workspace,gcp,google"`
 }
 
 // Run builds the CLI and executes args. Construction errors are printed to
@@ -273,13 +273,14 @@ func runReplay(ctx context.Context, f ReplayFlags, stdout, stderr io.Writer) err
 	}
 
 	var summary *scanstore.RunSummary
+
 	for i := range replay.Runs {
 		if replay.Runs[i].RunID == replay.RunID {
 			summary = &replay.Runs[i]
 
 			break
 		}
-		}
+	}
 
 	if summary != nil {
 		fmt.Fprintf(stderr, "run %s: %d domains, workspace certain %d / likely %d, gcp %d, errors %d\n",

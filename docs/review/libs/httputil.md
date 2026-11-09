@@ -49,9 +49,9 @@ surface is one outbound GET in `internal/ranges/ranges.go:230-253` (plain
    endpoints, rate limiting, CSRF, CORS — all inapplicable by construction.
 2. **No client utilities either.** The gaps one might want to close on the
    feed fetch (User-Agent header, retry, ETag/If-None-Match conditional
-   GET) would all be *client-side* helpers; none exist in this repo. Its
+   GET) would all be _client-side_ helpers; none exist in this repo. Its
    `Timeout` is a handler middleware, its `Decompression` middleware
-   decompresses *request* bodies a server receives — neither fits an
+   decompresses _request_ bodies a server receives — neither fits an
    outbound fetch.
 3. **Dependency weight:** 4 external deps (nosurf, x/time, go-etag/server,
    go-error-family) of pure server baggage for a hermetic nix single-binary
@@ -59,15 +59,15 @@ surface is one outbound GET in `internal/ranges/ranges.go:230-253` (plain
 
 ## Capability ↔ project applicability
 
-| Capability                          | Applies? | Reason                                                |
-| ----------------------------------- | -------- | ----------------------------------------------------- |
-| Middleware stack (18 middlewares)   | No       | No incoming requests exist                            |
-| NewServer lifecycle/graceful drain  | No       | Process is one-shot, exits after render               |
-| Health/ready handlers               | No       | Nothing probes this process                           |
-| CSRF / CORS / rate limiting / nonce | No       | Browser-facing concerns; terminal tool                |
-| Response compression / decompression| No       | Server-side body handling only                        |
-| httpspec behavioral test suite      | No       | Tests `http.Handler`s; project has none               |
-| Code/Domain error wrappers          | No       | Server-coded mirror of go-error-family (see that report) |
+| Capability                           | Applies? | Reason                                                   |
+| ------------------------------------ | -------- | -------------------------------------------------------- |
+| Middleware stack (18 middlewares)    | No       | No incoming requests exist                               |
+| NewServer lifecycle/graceful drain   | No       | Process is one-shot, exits after render                  |
+| Health/ready handlers                | No       | Nothing probes this process                              |
+| CSRF / CORS / rate limiting / nonce  | No       | Browser-facing concerns; terminal tool                   |
+| Response compression / decompression | No       | Server-side body handling only                           |
+| httpspec behavioral test suite       | No       | Tests `http.Handler`s; project has none                  |
+| Code/Domain error wrappers           | No       | Server-coded mirror of go-error-family (see that report) |
 
 ## Version currency (of the audited checkout)
 

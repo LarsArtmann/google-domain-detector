@@ -29,39 +29,39 @@ flightrecorder, schema, lint.
 
 ## Current usage (baseline, verified)
 
-| Site                          | API used                                                            |
-| ----------------------------- | ------------------------------------------------------------------- |
-| `cmd/.../main.go:18`          | `v5.ExitCode(run(...))`                                             |
-| `internal/cli/cli.go:71-76`   | `NewCLI(name, desc, RootConfig{}, WithCLIVersion)`                   |
-| `internal/cli/cli.go:81-86`   | `NewCommand("scan", ScanFlags{}, fn, WithShort(...))`                |
-| `internal/cli/cli.go:88-95`   | `NewBuilder` + `Try` + `Build`                                       |
-| `internal/cli/cli.go:60`      | `ExecuteWithArgs` (repeat-safe, used by tests)                       |
-| `internal/cli/cli.go:83`      | `ArgsFromContext(ctx)`                                               |
-| `internal/cli/cli.go:36-47`   | tags: `flag`,`help`,`short`,`default`,`values`,`env` (6 of 13 tags)  |
+| Site                        | API used                                                            |
+| --------------------------- | ------------------------------------------------------------------- |
+| `cmd/.../main.go:18`        | `v5.ExitCode(run(...))`                                             |
+| `internal/cli/cli.go:71-76` | `NewCLI(name, desc, RootConfig{}, WithCLIVersion)`                  |
+| `internal/cli/cli.go:81-86` | `NewCommand("scan", ScanFlags{}, fn, WithShort(...))`               |
+| `internal/cli/cli.go:88-95` | `NewBuilder` + `Try` + `Build`                                      |
+| `internal/cli/cli.go:60`    | `ExecuteWithArgs` (repeat-safe, used by tests)                      |
+| `internal/cli/cli.go:83`    | `ArgsFromContext(ctx)`                                              |
+| `internal/cli/cli.go:36-47` | tags: `flag`,`help`,`short`,`default`,`values`,`env` (6 of 13 tags) |
 
 ## Capability inventory & grades
 
-| # | Capability                                    | Grade               | Evidence / note                                                                 |
-| - | --------------------------------------------- | ------------------- | ------------------------------------------------------------------------------- |
-| 1 | Typed flag structs + core tag set             | 🟢 Fully leveraged  | cli.go:36-47 — values enum, Duration, env tags all used correctly                |
-| 2 | Builder (NewBuilder/Try/Build)                | 🟢 Fully leveraged  | cli.go:88-95 — error-propagating Try pattern                                     |
-| 3 | ExecuteWithArgs + ArgsFromContext + DI seam   | 🟢 Fully leveraged  | repeat-safe exec powers cli_test.go; deps injected into runScan                  |
-| 4 | version battery (WithCLIVersion)              | 🟢 Fully leveraged  | main.go:15 link-time override + WithCLIVersion                                  |
-| 5 | Error contract (print exactly once + ExitCode)| 🟢 Fully leveraged  | main.go:22-23 comment documents the split; no double printing                     |
-| 6 | Signal handling / graceful shutdown defaults  | 🟢 Fully leveraged  | on by default; ctx cancellation feeds scan.Run                                   |
-| 7 | fang styling, man pages, completion           | 🟢 Fully leveraged  | free via defaults (binary already ships `man`, `completion`)                      |
-| 8 | describe battery (JSON contract)              | 🟢 Fully leveraged  | auto-registered; documents flags/env for tooling                                 |
-| 9 | doctor battery + `WithDoctorCheck`            | 🟡 Partially used   | doctor exists but with zero real checks — a network tool has an obvious preflight |
-| 10| Env handling via `WithEnvPrefix`              | 🟡 Partially used   | env vars work (GDD_RANGES_CACHE/GDD_RESOLVER) but via full-name tags; prefix option would make the GDD_ convention structural |
-| 11| `validate` tag                                | 🔴 Missed (S)       | `--workers 0`/negative silently falls back to 8 (scan.go:44) instead of a parse-time error |
-| 12| `ExitError` exit-code differentiation         | 🔴 Missed (S)       | usage errors (cli.go:178,203) exit 1 — same as DNS/runtime failures; `NewExitError(2, err)` would separate them |
-| 13| Middleware (Recovery, Timeout)                | 🔴 Missed (S)       | a panic in scan aborts with a stack trace instead of a printed error + exit 1    |
-| 14| `WithOutputFormat` + JSON error envelopes     | 🔴 Missed (M)       | `-o json` switches errors to structured envelopes with `hint`/`code` (cli.go:647-657 in cmdguard) — better scripting contract than prose |
-| 15| `WithCLICommit`, `WithExample`, `WithLong`    | 🔴 Missed (S)       | build identification and help examples are one-liners                            |
-| 16| cmdguard-lint in CI                           | 🔴 Missed (free)    | consumer passes CG001-CG008 today; a lint step would keep it that way            |
-| — | Config file (WithConfigFile, config explain)  | ⚪ N/A               | one-shot single-user CLI; flags+env suffice — no config-file audience             |
-| — | DI scope (Provide/Invoke/Override)            | ⚪ N/A               | manual injection into runScan is simpler and already the test seam                |
-| — | Subcommands, groups, hidden/deprecated/prompt/secret tags, prompts/spinner/glamour/telemetry sub-modules | ⚪ N/A | single command; STACK.md "revisit when command set grows beyond scan" is correct |
+| #  | Capability                                                                                               | Grade              | Evidence / note                                                                                                                          |
+| -- | -------------------------------------------------------------------------------------------------------- | ------------------ | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| 1  | Typed flag structs + core tag set                                                                        | 🟢 Fully leveraged | cli.go:36-47 — values enum, Duration, env tags all used correctly                                                                        |
+| 2  | Builder (NewBuilder/Try/Build)                                                                           | 🟢 Fully leveraged | cli.go:88-95 — error-propagating Try pattern                                                                                             |
+| 3  | ExecuteWithArgs + ArgsFromContext + DI seam                                                              | 🟢 Fully leveraged | repeat-safe exec powers cli_test.go; deps injected into runScan                                                                          |
+| 4  | version battery (WithCLIVersion)                                                                         | 🟢 Fully leveraged | main.go:15 link-time override + WithCLIVersion                                                                                           |
+| 5  | Error contract (print exactly once + ExitCode)                                                           | 🟢 Fully leveraged | main.go:22-23 comment documents the split; no double printing                                                                            |
+| 6  | Signal handling / graceful shutdown defaults                                                             | 🟢 Fully leveraged | on by default; ctx cancellation feeds scan.Run                                                                                           |
+| 7  | fang styling, man pages, completion                                                                      | 🟢 Fully leveraged | free via defaults (binary already ships `man`, `completion`)                                                                             |
+| 8  | describe battery (JSON contract)                                                                         | 🟢 Fully leveraged | auto-registered; documents flags/env for tooling                                                                                         |
+| 9  | doctor battery + `WithDoctorCheck`                                                                       | 🟡 Partially used  | doctor exists but with zero real checks — a network tool has an obvious preflight                                                        |
+| 10 | Env handling via `WithEnvPrefix`                                                                         | 🟡 Partially used  | env vars work (GDD_RANGES_CACHE/GDD_RESOLVER) but via full-name tags; prefix option would make the GDD_ convention structural            |
+| 11 | `validate` tag                                                                                           | 🔴 Missed (S)      | `--workers 0`/negative silently falls back to 8 (scan.go:44) instead of a parse-time error                                               |
+| 12 | `ExitError` exit-code differentiation                                                                    | 🔴 Missed (S)      | usage errors (cli.go:178,203) exit 1 — same as DNS/runtime failures; `NewExitError(2, err)` would separate them                          |
+| 13 | Middleware (Recovery, Timeout)                                                                           | 🔴 Missed (S)      | a panic in scan aborts with a stack trace instead of a printed error + exit 1                                                            |
+| 14 | `WithOutputFormat` + JSON error envelopes                                                                | 🔴 Missed (M)      | `-o json` switches errors to structured envelopes with `hint`/`code` (cli.go:647-657 in cmdguard) — better scripting contract than prose |
+| 15 | `WithCLICommit`, `WithExample`, `WithLong`                                                               | 🔴 Missed (S)      | build identification and help examples are one-liners                                                                                    |
+| 16 | cmdguard-lint in CI                                                                                      | 🔴 Missed (free)   | consumer passes CG001-CG008 today; a lint step would keep it that way                                                                    |
+| —  | Config file (WithConfigFile, config explain)                                                             | ⚪ N/A             | one-shot single-user CLI; flags+env suffice — no config-file audience                                                                    |
+| —  | DI scope (Provide/Invoke/Override)                                                                       | ⚪ N/A             | manual injection into runScan is simpler and already the test seam                                                                       |
+| —  | Subcommands, groups, hidden/deprecated/prompt/secret tags, prompts/spinner/glamour/telemetry sub-modules | ⚪ N/A             | single command; STACK.md "revisit when command set grows beyond scan" is correct                                                         |
 
 Score inputs: N=19 rows, A=16 applicable, Full=8, Partial=2 →
 `round(100 × (8 + 2×0.5) / 16)` = **56 — moderate band**. Impact-weighted

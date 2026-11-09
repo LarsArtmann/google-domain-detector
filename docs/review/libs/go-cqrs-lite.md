@@ -56,14 +56,14 @@ even indirectly.
 
 ## Capability ↔ project applicability
 
-| Capability                          | Applies to this project? | Reason                                                     |
-| ----------------------------------- | ------------------------ | ---------------------------------------------------------- |
-| Event journal / append semantics    | No                       | No events exist; scan is read-only                         |
-| Deciders (load·fold·decide)         | No                       | No commands, no domain invariants                          |
-| Projection host (replay, checkpoints, DLQ) | No              | Nothing to project; output is rendered once and dropped     |
-| metaengine 12-engine query planner  | No                       | No read models; no queries beyond in-memory filtering       |
-| Snapshots, scheduling, signing      | No                       | Durability machinery for stateful apps                     |
-| cqrs-gen / cqrs-lint / cqrs-upgrade tooling | No            | Only meaningful inside a cqrs-lite codebase                |
+| Capability                                  | Applies to this project? | Reason                                                  |
+| ------------------------------------------- | ------------------------ | ------------------------------------------------------- |
+| Event journal / append semantics            | No                       | No events exist; scan is read-only                      |
+| Deciders (load·fold·decide)                 | No                       | No commands, no domain invariants                       |
+| Projection host (replay, checkpoints, DLQ)  | No                       | Nothing to project; output is rendered once and dropped |
+| metaengine 12-engine query planner          | No                       | No read models; no queries beyond in-memory filtering   |
+| Snapshots, scheduling, signing              | No                       | Durability machinery for stateful apps                  |
+| cqrs-gen / cqrs-lint / cqrs-upgrade tooling | No                       | Only meaningful inside a cqrs-lite codebase             |
 
 Every row is "No" for a structural reason, not a maturity reason: the repo
 itself is very healthy (newest tag 2026-11-09; HEAD actively developed).

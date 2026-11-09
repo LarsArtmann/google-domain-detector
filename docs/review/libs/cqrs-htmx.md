@@ -46,15 +46,15 @@ None — not imported, not in the graph.
 
 ## Capability ↔ project applicability
 
-| Capability                            | Applies? | Reason                                        |
-| ------------------------------------- | -------- | --------------------------------------------- |
-| Command/query → HTTP handler builder  | No       | No commands, no handlers                       |
-| HTMX partial rendering / headers      | No       | No browser client                              |
-| usermgmt (WebAuthn/OAuth2/TOTP)       | No       | No users, no auth                              |
-| adminui / dashboardui / loginpage     | No       | No UI                                          |
-| SSE broadcaster                       | No       | No event streams                               |
-| Conditional GET / ETag helpers        | No       | Server-response concerns (see go-etag.md)      |
-| Offline sync protocol                 | No       | No state to sync                               |
+| Capability                           | Applies? | Reason                                    |
+| ------------------------------------ | -------- | ----------------------------------------- |
+| Command/query → HTTP handler builder | No       | No commands, no handlers                  |
+| HTMX partial rendering / headers     | No       | No browser client                         |
+| usermgmt (WebAuthn/OAuth2/TOTP)      | No       | No users, no auth                         |
+| adminui / dashboardui / loginpage    | No       | No UI                                     |
+| SSE broadcaster                      | No       | No event streams                          |
+| Conditional GET / ETag helpers       | No       | Server-response concerns (see go-etag.md) |
+| Offline sync protocol                | No       | No state to sync                          |
 
 ## Version currency (of the audited checkout)
 

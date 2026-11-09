@@ -37,11 +37,11 @@ None — not imported, not in the graph.
 
 ## Capability ↔ project applicability
 
-| Capability              | Applies? | Reason                                    |
-| ----------------------- | -------- | ----------------------------------------- |
-| HTML dashboard mounting | No       | No mux, no server                          |
-| Check cards / live view | No       | No health checks                           |
-| K8s/Redis exporters     | No       | No cluster, no Redis                       |
+| Capability              | Applies? | Reason               |
+| ----------------------- | -------- | -------------------- |
+| HTML dashboard mounting | No       | No mux, no server    |
+| Check cards / live view | No       | No health checks     |
+| K8s/Redis exporters     | No       | No cluster, no Redis |
 
 ## Version currency (of the audited checkout)
 

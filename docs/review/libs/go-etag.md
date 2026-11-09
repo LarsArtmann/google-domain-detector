@@ -52,13 +52,13 @@ None — not imported, not in the graph. The feed fetch
 
 ## Capability ↔ project applicability
 
-| Capability                | Applies? | Reason                                            |
-| ------------------------- | -------- | ------------------------------------------------- |
-| Server ETag generation    | No       | No responses written                               |
-| client caching transport  | No       | in-process cache dies with the one-shot process      |
-| entitytag Parse/Compare   | No       | no ETag parsing need                               |
-| metrics                   | No       | no Prometheus surface                              |
-| (hand-rolled alternative) | —        | 30 lines in ranges.go if ever needed               |
+| Capability                | Applies? | Reason                                          |
+| ------------------------- | -------- | ----------------------------------------------- |
+| Server ETag generation    | No       | No responses written                            |
+| client caching transport  | No       | in-process cache dies with the one-shot process |
+| entitytag Parse/Compare   | No       | no ETag parsing need                            |
+| metrics                   | No       | no Prometheus surface                           |
+| (hand-rolled alternative) | —        | 30 lines in ranges.go if ever needed            |
 
 ## Version currency (of the audited checkout)
 

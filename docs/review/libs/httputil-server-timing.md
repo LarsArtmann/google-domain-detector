@@ -7,7 +7,7 @@
 ## Verdict
 
 **Do not adopt.** server_timing generates W3C `Server-Timing` response
-headers for HTTP handlers — it is a header *emitter* for servers, with no
+headers for HTTP handlers — it is a header _emitter_ for servers, with no
 parser for reading such headers from responses a client receives.
 google-domain-detector writes no HTTP responses anywhere. Even the loose
 idea "record per-phase durations" belongs to slog/terminal output, not a
@@ -42,11 +42,11 @@ nothing beyond that.
 
 ## Capability ↔ project applicability
 
-| Capability                          | Applies? | Reason                                         |
-| ----------------------------------- | -------- | ---------------------------------------------- |
-| ServerTimingMiddleware + collector  | No       | No responses are written                       |
-| Record/Measure context helpers      | No       | Request-context-scoped; terminal tool          |
-| HeaderValue serialization           | No       | Header emitter; no parser for received headers  |
+| Capability                         | Applies? | Reason                                         |
+| ---------------------------------- | -------- | ---------------------------------------------- |
+| ServerTimingMiddleware + collector | No       | No responses are written                       |
+| Record/Measure context helpers     | No       | Request-context-scoped; terminal tool          |
+| HeaderValue serialization          | No       | Header emitter; no parser for received headers |
 
 ## Version currency (of the audited checkout)
 

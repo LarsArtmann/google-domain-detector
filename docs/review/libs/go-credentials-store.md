@@ -42,12 +42,12 @@ None — not imported, not in the graph.
 
 ## Capability ↔ project applicability
 
-| Capability                  | Applies? | Reason                                        |
-| --------------------------- | -------- | --------------------------------------------- |
-| Keyring/file/memory stores  | No       | No secrets to store                            |
-| Field structs + lookup      | No       | No credential model                            |
-| Migration / rotation        | No       | Nothing to migrate                             |
-| Boot validation             | No       | Nothing to validate                            |
+| Capability                 | Applies? | Reason              |
+| -------------------------- | -------- | ------------------- |
+| Keyring/file/memory stores | No       | No secrets to store |
+| Field structs + lookup     | No       | No credential model |
+| Migration / rotation       | No       | Nothing to migrate  |
+| Boot validation            | No       | Nothing to validate |
 
 ## Version currency (of the audited checkout)
 

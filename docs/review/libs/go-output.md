@@ -26,32 +26,32 @@ sub-modules. Root package deps: only `golang.org/x/term` + go-branded-id.
 
 ## Current usage (baseline, verified)
 
-| Site                        | API used                                                                        |
-| --------------------------- | -------------------------------------------------------------------------------- |
+| Site                              | API used                                                                                      |
+| --------------------------------- | --------------------------------------------------------------------------------------------- |
 | `internal/render/render.go:14-18` | blank imports: delimited (csv,tsv), markdown, serialization (json,xml,yaml,jsonl,toml), table |
-| `internal/render/render.go:72-83` | `NewTable` → `AddRow` → `RenderTable(data, format, RenderOptions{Writer: w})`    |
-| `internal/cli/cli.go:114`   | `ParseFormat(f.Format)` — validates the `--format` flag                           |
-| `internal/cli/cli.go:38`    | flag enum `values:"table,json,csv,tsv,markdown"` — **5 of 16 formats reachable** |
-| `internal/cli/cli.go:146`   | `FormatJSON` special-case → custom DTO path (render.go:88-104), bypassing the registry |
+| `internal/render/render.go:72-83` | `NewTable` → `AddRow` → `RenderTable(data, format, RenderOptions{Writer: w})`                 |
+| `internal/cli/cli.go:114`         | `ParseFormat(f.Format)` — validates the `--format` flag                                       |
+| `internal/cli/cli.go:38`          | flag enum `values:"table,json,csv,tsv,markdown"` — **5 of 16 formats reachable**              |
+| `internal/cli/cli.go:146`         | `FormatJSON` special-case → custom DTO path (render.go:88-104), bypassing the registry        |
 
 ## Capability inventory & grades
 
-| # | Capability                                        | Grade             | Evidence / note                                                                    |
-| - | ------------------------------------------------- | ----------------- | ---------------------------------------------------------------------------------- |
-| 1 | Registry + blank-import registration pattern      | 🟢 Fully leveraged | render.go:14-18 — the load-bearing imports AGENTS.md warns about                    |
-| 2 | RenderTable dispatch + RenderOptions.Writer       | 🟢 Fully leveraged | render.go:83 — clean dispatch for all table-shaped formats                           |
-| 3 | Table construction API                            | 🟡 Partially used  | NewTable/AddRow used; `AddRowChecked` (fail-fast 5-col invariant) and `SetFooter` (summary row, rendered by 7 formats) unused |
-| 4 | Format breadth via flag enum                      | 🔴 Missed (S)      | yaml/toml/jsonl registered but unreachable (flag enum blocks them); xml/html/asciidoc one blank import away (`markup` already in graph) |
-| 5 | `RenderOptions.ColorMode` + `ParseColorMode`      | 🔴 Missed (S)      | a `--color=auto/always/never` flag; table renderer honors it; NO_COLOR/CI/FORCE_COLOR detection is free |
-| 6 | `RenderOptions.Title`                             | 🔴 Missed (S)      | free `# title` on markdown, `<title>`+`<h1>` on html                                  |
-| 7 | `RegisterUnknownRenderer` (DTO-in-registry)       | 🔴 Missed (S)      | would re-home the custom JSON DTO into the registry and remove the cli.go:146 special case (cosmetic) |
-| 8 | `nom.InlineRenderer` live progress                | 🔴 Missed (M)      | genuinely fits a tens-of-thousands-domain batch: in-place ANSI activity tree, no alt-screen |
-| — | Streaming writers (CSVWriter/JSONLWriter)         | ⚪ N/A             | results are materialized before render by design; streaming gains memory only, not correctness |
-| — | Tree/Graph shapes (tree, dot, mermaid, d2, plantuml) | ⚪ N/A          | flat per-domain rows; a domain→evidence graph is a gimmick for this tool            |
-| — | `tui` bubbletea progress                          | ⚪ N/A             | full-screen TUI is the wrong weight class for a pipe-friendly batch CLI             |
-| — | `daghtml` interactive page                       | ⚪ N/A             | server artifact                                                                     |
-| — | `escape` helpers                                 | ⚪ N/A             | markdown/CSV escaping already handled inside the renderers                           |
-| — | WriteRendered helpers, MarshalJSONIndent          | ⚪ N/A             | equivalent one-liners exist; JSON path already streams via jsontext encoder         |
+| # | Capability                                           | Grade              | Evidence / note                                                                                                                         |
+| - | ---------------------------------------------------- | ------------------ | --------------------------------------------------------------------------------------------------------------------------------------- |
+| 1 | Registry + blank-import registration pattern         | 🟢 Fully leveraged | render.go:14-18 — the load-bearing imports AGENTS.md warns about                                                                        |
+| 2 | RenderTable dispatch + RenderOptions.Writer          | 🟢 Fully leveraged | render.go:83 — clean dispatch for all table-shaped formats                                                                              |
+| 3 | Table construction API                               | 🟡 Partially used  | NewTable/AddRow used; `AddRowChecked` (fail-fast 5-col invariant) and `SetFooter` (summary row, rendered by 7 formats) unused           |
+| 4 | Format breadth via flag enum                         | 🔴 Missed (S)      | yaml/toml/jsonl registered but unreachable (flag enum blocks them); xml/html/asciidoc one blank import away (`markup` already in graph) |
+| 5 | `RenderOptions.ColorMode` + `ParseColorMode`         | 🔴 Missed (S)      | a `--color=auto/always/never` flag; table renderer honors it; NO_COLOR/CI/FORCE_COLOR detection is free                                 |
+| 6 | `RenderOptions.Title`                                | 🔴 Missed (S)      | free `# title` on markdown, `<title>`+`<h1>` on html                                                                                    |
+| 7 | `RegisterUnknownRenderer` (DTO-in-registry)          | 🔴 Missed (S)      | would re-home the custom JSON DTO into the registry and remove the cli.go:146 special case (cosmetic)                                   |
+| 8 | `nom.InlineRenderer` live progress                   | 🔴 Missed (M)      | genuinely fits a tens-of-thousands-domain batch: in-place ANSI activity tree, no alt-screen                                             |
+| — | Streaming writers (CSVWriter/JSONLWriter)            | ⚪ N/A             | results are materialized before render by design; streaming gains memory only, not correctness                                          |
+| — | Tree/Graph shapes (tree, dot, mermaid, d2, plantuml) | ⚪ N/A             | flat per-domain rows; a domain→evidence graph is a gimmick for this tool                                                                |
+| — | `tui` bubbletea progress                             | ⚪ N/A             | full-screen TUI is the wrong weight class for a pipe-friendly batch CLI                                                                 |
+| — | `daghtml` interactive page                           | ⚪ N/A             | server artifact                                                                                                                         |
+| — | `escape` helpers                                     | ⚪ N/A             | markdown/CSV escaping already handled inside the renderers                                                                              |
+| — | WriteRendered helpers, MarshalJSONIndent             | ⚪ N/A             | equivalent one-liners exist; JSON path already streams via jsontext encoder                                                             |
 
 Score inputs: N=14 rows, A=8 applicable, Full=2, Partial=1 →
 `round(100 × (2 + 0.5) / 8)` = **31 — low band**. Impact-weighted read:

@@ -42,12 +42,12 @@ None — not imported, not in the graph.
 
 ## Capability ↔ project applicability
 
-| Capability                        | Applies? | Reason                                   |
-| --------------------------------- | -------- | ---------------------------------------- |
-| Registry + Handle/HandleFunc      | No       | No routes to register                     |
-| GET /endpoints JSON/HTML listing  | No       | No server to mount it on                  |
-| Accept content negotiation        | No       | No HTTP responses                         |
-| Q-value parser                    | No       | Nothing to negotiate                      |
+| Capability                       | Applies? | Reason                   |
+| -------------------------------- | -------- | ------------------------ |
+| Registry + Handle/HandleFunc     | No       | No routes to register    |
+| GET /endpoints JSON/HTML listing | No       | No server to mount it on |
+| Accept content negotiation       | No       | No HTTP responses        |
+| Q-value parser                   | No       | Nothing to negotiate     |
 
 ## Version currency (of the audited checkout)
 

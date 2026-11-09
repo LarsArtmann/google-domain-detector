@@ -41,11 +41,11 @@ indirect dep of go-output's tui).
 
 ## Capability ↔ project applicability
 
-| Capability            | Applies? | Reason                                     |
-| --------------------- | -------- | ------------------------------------------ |
-| 180+ HTML components  | No       | No HTML output                              |
-| Charts (ECharts)      | No       | No charts, no browser                      |
-| HTMX/DataStar helpers | No       | No interactivity surface                   |
+| Capability            | Applies? | Reason                                       |
+| --------------------- | -------- | -------------------------------------------- |
+| 180+ HTML components  | No       | No HTML output                               |
+| Charts (ECharts)      | No       | No charts, no browser                        |
+| HTMX/DataStar helpers | No       | No interactivity surface                     |
 | Themes/icons          | No       | Terminal styling is lipgloss/fang (cmdguard) |
 
 ## Version currency (of the audited checkout)

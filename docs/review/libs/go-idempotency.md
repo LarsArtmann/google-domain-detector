@@ -37,12 +37,12 @@ None — not imported, not in the graph.
 
 ## Capability ↔ project applicability
 
-| Capability            | Applies? | Reason                                     |
-| --------------------- | -------- | ------------------------------------------ |
-| Key-based dedup middleware | No   | No server, no requests                     |
-| In-flight/replay/conflict scenarios | No | No concurrent callers of a write op |
-| fs journal            | No       | Nothing journaled                          |
-| Prometheus metrics    | No       | No metrics endpoint                        |
+| Capability                          | Applies? | Reason                              |
+| ----------------------------------- | -------- | ----------------------------------- |
+| Key-based dedup middleware          | No       | No server, no requests              |
+| In-flight/replay/conflict scenarios | No       | No concurrent callers of a write op |
+| fs journal                          | No       | Nothing journaled                   |
+| Prometheus metrics                  | No       | No metrics endpoint                 |
 
 ## Version currency (of the audited checkout)
 

@@ -63,16 +63,16 @@ None — not imported, not in the graph.
 
 ## Capability ↔ project applicability
 
-| Module        | Applies? | Reason                                            |
-| ------------- | -------- | ------------------------------------------------- |
-| core Service  | No       | No listener, no drain/shutdown semantics           |
-| config        | No       | Redundant with cmdguard flags/env (its own words)  |
-| httpx         | No       | Inbound-handler DX                                 |
-| realtime/SSE  | No       | No event streams                                   |
-| health(+dash) | No       | No probing process                                 |
-| security      | No       | Browser/request concerns                           |
-| systemd       | No       | Not run under systemd                              |
-| otel / docs / errorpages / preset / flightrecorder | No | Server observability stack     |
+| Module                                             | Applies? | Reason                                            |
+| -------------------------------------------------- | -------- | ------------------------------------------------- |
+| core Service                                       | No       | No listener, no drain/shutdown semantics          |
+| config                                             | No       | Redundant with cmdguard flags/env (its own words) |
+| httpx                                              | No       | Inbound-handler DX                                |
+| realtime/SSE                                       | No       | No event streams                                  |
+| health(+dash)                                      | No       | No probing process                                |
+| security                                           | No       | Browser/request concerns                          |
+| systemd                                            | No       | Not run under systemd                             |
+| otel / docs / errorpages / preset / flightrecorder | No       | Server observability stack                        |
 
 ## Version currency (of the audited checkout)
 

@@ -13,6 +13,7 @@ require (
 	github.com/larsartmann/go-cqrs-lite/metaengine/v4 v4.23.0
 	github.com/larsartmann/go-cqrs-lite/record/v4 v4.6.2
 	github.com/larsartmann/go-cqrs-lite/system/v4 v4.18.0
+	github.com/larsartmann/go-cqrs-lite/systemscenario/v4 v4.3.0
 	github.com/larsartmann/go-output v0.38.7
 	github.com/larsartmann/go-output/delimited v0.38.7
 	github.com/larsartmann/go-output/markdown v0.38.7
@@ -75,7 +76,6 @@ require (
 	github.com/larsartmann/go-cqrs-lite/query/v4 v4.10.1 // indirect
 	github.com/larsartmann/go-cqrs-lite/schema/v4 v4.7.1 // indirect
 	github.com/larsartmann/go-cqrs-lite/snapshot/v4 v4.7.0 // indirect
-	github.com/larsartmann/go-cqrs-lite/systemscenario/v4 v4.3.0 // indirect
 	github.com/larsartmann/go-cqrs-lite/watermill/v4 v4.7.0 // indirect
 	github.com/larsartmann/go-error-family v0.12.0 // indirect
 	github.com/larsartmann/go-flightrecorder v0.2.1 // indirect
