@@ -99,11 +99,10 @@ type DomainState struct {
 }
 
 func applyDomain(s DomainState, evt event.Event) (DomainState, error) {
-	if evt.Type() != evtDomainObserved {
-		return s, nil
+	switch evt.Type() {
+	case evtDomainObserved:
+		s.Observations++
 	}
-
-	s.Observations++
 
 	return s, nil
 }
