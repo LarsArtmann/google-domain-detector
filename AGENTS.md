@@ -10,6 +10,8 @@ Detect Google Workspace / GCP usage for a domain list from public DNS alone.
   sub-module blank imports that self-register renderers
 - DNS: stdlib `net.Resolver` behind `resolve.Resolver` (interface); no
   third-party DNS library
+- Event sourcing: **go-cqrs-lite** `system/v4` + `metaengine/v4`
+  (`internal/scanstore`) — sqlite engine, journal + Map-query projections
 - Ranges feed: `https://www.gstatic.com/ipranges/cloud.json`, disk cache
   (24 h TTL, stale-fallback), matching via `net/netip`
 
@@ -23,6 +25,10 @@ nix build         # hermetic build (vendorHash in flake.nix; nix-hash-fix repair
 go run ./cmd/google-domain-detector scan --no-ranges example.com
 ```
 
+Event-sourced scans: `scan --event-store FILE.db` records every run as
+events (one stream per domain, one per run); `replay --event-store FILE.db
+[--run ID]` rebuilds the report from the journal alone, no DNS.
+
 Manual go commands need the cache-env guard (stale inherited GOCACHE):
 `export GOCACHE=$HOME/.cache/go-build-demo GOMODCACHE=$HOME/go/pkg/mod`.
 
@@ -35,12 +41,15 @@ Manual go commands need the cache-env guard (stale inherited GOCACHE):
 | `internal/classify` | **all detection rules** — pure functions over record values; verdicts (Workspace certain/likely, GCP certain) |
 | `internal/ranges`   | cloud.json parse/fetch/cache, CIDR membership (netip, 4-in-6 unmapped)                                        |
 | `internal/resolve`  | Resolver interface + PreferGo net.Resolver adapter                                                            |
-| `internal/scan`     | worker pool, per-domain timeout, NXDOMAIN short-circuit, DKIM probe only when MX+SPF silent                   |
-| `internal/render`   | go-output table formats + compact full-evidence JSON DTO                                                      |
-| `internal/cli`      | cmdguard wiring; `runScan` takes injected deps (test seam)                                                    |
+| `internal/scan`     | worker pool, per-domain timeout, NXDOMAIN short-circuit, DKIM probe only when MX+SPF silent; `Options.OnResult` streams finished results to sinks (event store) |
+| `internal/render`   | go-output table formats + compact full-evidence JSON DTO |
+| `internal/scanstore`| event-sourced persistence via go-cqrs-lite `system.New` composition root: commands/events/deciders, metaengine projections, journal replay |
+| `internal/cli`      | cmdguard wiring; `runScan` takes injected deps (test seam) |
 
 Rule changes go in `classify` (pure, table-tested). Probe orchestration
 changes go in `scan`. Never put record-interpretation logic in `scan`.
+Event-store schema changes go in `scanstore` (payloads are append-only
+events — evolve, never rewrite).
 
 ## Library audit (2026-11-09)
 
@@ -81,7 +90,16 @@ first-party lib is considered.
 - `encoding/json/v2` (migrated from v1 by go-auto-upgrade 2026-11-09 — jsonv2
   is stable in Go 1.27; render uses `jsontext.NewEncoder` for the compact
   one-line-per-domain JSON).
+- `DomainObservedPayload` carries evidence only, never verdicts — verdicts
+  are derived by `classify.Result` methods; duplicating them in events would
+  be a split brain. Same rule for any new event payload.
+- Observation streams are per-domain (stable stream ID = domain name), so
+  whole-TLD scale never bloats one stream; run streams hold only
+  started/completed. Replay keeps the LAST observation per domain per run.
+- `replay` boots the system WITHOUT the projection host (`scanstore.Boot`)
+  — journal replay must not pay for folding every read model first.
 - Binary flag name is `--ranges-cache` (not `--cache-path`).
+- Binary flag for the SQLite journal is `--event-store` (env `GDD_EVENT_STORE`).
 
 ## Git remotes
 

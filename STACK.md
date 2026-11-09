@@ -13,9 +13,9 @@
 
 | Axis         | Answer                                                                 |
 | ------------ | ---------------------------------------------------------------------- |
-| Shape        | CLI (one-shot batch scanner)                                           |
+| Shape        | CLI (one-shot batch scanner; optionally event-sourced)                 |
 | Domain       | DNS technographics — Google Workspace / GCP evidence for a domain list |
-| Persistence  | none (one cached artifact: the GCP IP-range feed on disk)              |
+| Persistence  | optional: scan runs as events in a SQLite file (`--event-store`); plus the cached GCP IP-range feed |
 | Interfaces   | terminal (args/stdin/CSV in; table/JSON/CSV/TSV/Markdown out)          |
 | Scale target | single user, hundreds–tens of thousands of domains per run             |
 | Constraints  | single binary, nix build, public deps only, tests offline (fake DNS)   |
@@ -31,6 +31,7 @@
 | JSON             | stdlib `encoding/json/v2` | Go 1.27 ships jsonv2 stable — the hermetic nix build (GOTOOLCHAIN=local) compiles it, no GOEXPERIMENT plumbing; rejected v1 — superseded per how-to-golang. Written on v1, migrated by go-auto-upgrade 2026-11-09 | how-to-golang | — |
 | Nix packaging    | go-nix-helpers           | `flakeModules.go-standard` is the fleet pattern (vendorHash, goPkgAttr, devshell); rejected hand-rolled `buildGoModule`        | `nix-private-go-repos` (public deps only) | —                                                 |
 | Quality pipeline | BuildFlow                | lint/format/test/repair loop + pre-commit; this repo ships only a minimal `.buildflow.yml`                                     | `buildflow` skill                         | —                                                 |
+| Event sourcing | ★ go-cqrs-lite `system/v4` + `metaengine/v4` (sqliteengine) | owner directive 2026-11-09: whole-TLD runs must be durable, replayable, and keep per-domain history. Composition root (`system.New`) + Map-query projections per ADR-0123; rejected hand-rolled SQLite journal — split brain vs. the fleet's one storage substrate | `go-cqrs-lite` skill                      | read models outgrow point lookups (need filtered scans) |
 
 Rules for this table:
 
@@ -45,7 +46,6 @@ Rules for this table:
 
 | Candidate                    | Reason                                                                               |
 | ---------------------------- | ------------------------------------------------------------------------------------ |
-| go-cqrs-lite                 | no events or invariants — a batch read-only scan (YAGNI)                             |
 | go-retry                     | `net.Resolver` retries internally; a batch tool re-runs cheaply                      |
 | go-composable-business-types | no Money/Email/DataPoint semantics in this domain                                    |
 | go-branded-id                | scanned domains are input values, not entity IDs; a validated `Domain` type suffices |
@@ -69,3 +69,4 @@ decision.
 
 - 2026-11-09 — Initial selection (stack-selection skill, session: "detect Google usage from domains" greenfield build).
 - 2026-11-09 — JSON row updated: go-auto-upgrade migrated `encoding/json` → `encoding/json/v2` once the Go 1.27 toolchain made it stable; the initial v1 choice (GOEXPERIMENT concern) is obsolete.
+- 2026-11-09 — go-cqrs-lite moved from "deliberately excluded" (YAGNI for a read-only batch scan) to the chosen foundation: owner directive to event-source scans ahead of whole-TLD runs. The original exclusion assumed a one-shot tool; run history, crash-safe journals, and replay changed the profile. Integration is `system.New` + `metaengine` only (ADR-0123), behind `--event-store` — the no-store path stays dependency-free at runtime.

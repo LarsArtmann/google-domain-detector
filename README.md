@@ -63,6 +63,24 @@ prints the machine-readable CLI contract.
 Proven at bulk scale: the Tranco top-1M filtered to `.de`/`.ch`/`.uk`
 (~63k domains) scans in ~20 minutes at `--workers 24`.
 
+### Event-sourced scans (go-cqrs-lite)
+
+`--event-store FILE.db` (or `GDD_EVENT_STORE`) persists every run as an
+append-only event journal in SQLite — one stream per domain (re-scans keep
+their history), one per run (started/completed with the verdict tally):
+
+```bash
+google-domain-detector scan --event-store scans.db --resolver 127.0.0.1:53 -j 24 domains.txt
+google-domain-detector replay --event-store scans.db            # latest run, no DNS
+google-domain-detector replay --event-store scans.db --run ID   # any earlier run
+```
+
+`replay` rebuilds the report purely from the journal — the scanned report
+and the replayed report are byte-identical (pinned by a test). Built on the
+[go-cqrs-lite](https://github.com/LarsArtmann/go-cqrs-lite) `system`
+composition root with metaengine projections; events carry evidence only —
+verdicts are always recomputed from it.
+
 ## Honest limitations
 
 - **Only externally visible services are detectable.** A backend on Cloud Run
