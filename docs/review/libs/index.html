@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Report Title</title>
+    <title>google-domain-detector — LarsArtmann Library Audit</title>
     <style>
       /* =========================================================================
          BAUHAUS DARK — Dashboard template
@@ -826,207 +826,416 @@
     </style>
   </head>
   <body>
-    <!-- Full-bleed top bar (optional — remove for quieter reports) -->
+    <!-- Full-bleed top bar -->
     <div class="top-bar">
-      <span>REPORT TYPE</span>
-      <span>YYYY-MM-DD</span>
-      <span>AUTHOR / TEAM</span>
+      <span>LIBRARY AUDIT</span>
+      <span>2026-11-09</span>
+      <span>google-domain-detector</span>
     </div>
 
     <div class="layout">
-      <!-- Sidebar TOC (hidden below 1024px; use inline .toc if you prefer) -->
       <aside class="sidebar" data-nav>
         <nav>
           <div class="label">Contents</div>
           <a href="#summary">Summary</a>
-          <a href="#findings">Findings</a>
-          <a href="#issues">Issue Cards</a>
-          <a href="#proposal">Proposal</a>
-          <a href="#plan">Plan</a>
+          <a href="#deepdives">Deep dives (used)</a>
+          <a href="#adopt">Adopt candidate</a>
+          <a href="#matrix">Decision matrix (22)</a>
+          <a href="#opportunities">Top opportunities</a>
+          <a href="#verify">How to verify</a>
         </nav>
       </aside>
 
       <main class="main">
-        <!-- Hero -->
         <div class="hero">
-          <!-- Optional Bauhaus signature: geometric shape cluster. Remove for quieter hero. -->
           <div class="hero-shapes">
             <div class="circle"></div>
             <div class="square"></div>
             <div class="tri"></div>
           </div>
-          <div class="hero-badge">Report Type</div>
-          <h1>Report Title</h1>
+          <div class="hero-badge">LarsArtmann Library Audit</div>
+          <h1>google-domain-detector</h1>
           <p class="hero-subtitle">
-            One-sentence description of what this report covers.
+            Do we use them, and do we use them to the max? All 22 first-party
+            libraries assessed against a one-shot DNS batch CLI — usage verified
+            from go.mod and source, capabilities verified from the local
+            checkouts at latest versions.
           </p>
         </div>
 
-        <!-- Inline TOC (alternative to sidebar; pick one) -->
-        <nav class="toc">
-          <h3>Contents</h3>
-          <ul>
-            <li><a href="#summary">Summary</a></li>
-            <li><a href="#findings">Findings</a></li>
-            <li><a href="#issues">Issue Cards</a></li>
-            <li><a href="#proposal">Proposal</a></li>
-            <li><a href="#plan">Plan</a></li>
-          </ul>
-        </nav>
-
-        <!-- Stats Dashboard -->
         <h2 id="summary"><span class="num">00</span>Summary</h2>
         <div class="stat-grid">
           <div class="stat-card">
-            <div class="stat-value">42</div>
-            <div class="stat-label">Total Items</div>
-          </div>
-          <div class="stat-card stat-bad">
-            <div class="stat-value">7</div>
-            <div class="stat-label">Critical</div>
-          </div>
-          <div class="stat-card stat-warn">
-            <div class="stat-value">12</div>
-            <div class="stat-label">Warnings</div>
+            <div class="stat-value">22</div>
+            <div class="stat-label">Libraries reviewed</div>
           </div>
           <div class="stat-card stat-good">
-            <div class="stat-value">35</div>
-            <div class="stat-label">Resolved</div>
+            <div class="stat-value">2</div>
+            <div class="stat-label">Direct deps (both current)</div>
           </div>
-        </div>
-
-        <!-- Findings as Cards -->
-        <h2 id="findings"><span class="num">01</span>Findings</h2>
-
-        <div class="card card-problem">
-          <h4>Critical Issue</h4>
-          <p>Description of the problem and its impact.</p>
+          <div class="stat-card stat-warn">
+            <div class="stat-value">2</div>
+            <div class="stat-label">In graph, unleveraged</div>
+          </div>
+          <div class="stat-card stat-bad">
+            <div class="stat-value">1</div>
+            <div class="stat-label">Adopt candidate (effort S)</div>
+          </div>
         </div>
 
         <div class="card card-solution">
-          <h4>Recommended Fix</h4>
-          <p>Description of the solution with rationale.</p>
-        </div>
-
-        <!-- Issue Cards -->
-        <h2 id="issues"><span class="num">02</span>Issue Cards</h2>
-
-        <div class="issue issue-critical">
-          <span class="severity severity-critical">Blocking</span>
-          <h3>Critical finding title</h3>
-          <div class="where">path/to/file.go:42-58</div>
+          <h4>The stack is right; the leverage is shallow</h4>
           <p>
-            Describe the problem and cite the code or behavior that proves it.
+            Every exclusion checked out: 18 absent libraries are absent for
+            structural reasons (server/UI/state machinery vs. a headless
+            one-shot CLI), not by oversight. STACK.md's recorded decisions
+            survive contact with the code. The two direct dependencies —
+            cmdguard v5.0.0 and go-output v0.38.7 — are both pinned at the
+            newest releases and used correctly on their core paths, but each
+            leaves S-effort surface on the table.
           </p>
-          <div class="callout callout-solution">
-            <strong>Fix</strong>
-            State the concrete recommended action.
-          </div>
         </div>
+
+        <div class="dep-tree">
+          <span class="root">google-domain-detector</span> ├──
+          <span class="ok">cmdguard/v5 v5.0.0</span> ── ┬──
+          <span class="unwanted">go-atomic-write v0.6.1 (in binary, unused directly — adopt)</span> ├──
+          <span class="unwanted">go-error-family v0.12.0 (in binary, unused directly)</span> └──
+          go-branded-id · go-ndjson · samber-do-auditlog
+          <br>├── <span class="ok">go-output v0.38.7 + table/delimited/serialization/markdown</span>
+          └── stdlib everywhere else (net.Resolver, encoding/json/v2, worker pool)
+        </div>
+
+        <h2 id="deepdives"><span class="num">01</span>Deep dives — the libraries we use</h2>
 
         <div class="issue issue-important">
-          <span class="severity severity-important">Important</span>
-          <h3>Important finding title</h3>
-          <div class="where">path/to/another.go:12-19</div>
+          <span class="severity severity-important">56 / 100 · moderate</span>
+          <h3>cmdguard v5 — core right, shelf unused</h3>
+          <div class="where">internal/cli/cli.go:71-95 · cmd/google-domain-detector/main.go:18</div>
           <p>
-            Explain the risk and why a careful reviewer would hesitate before
-            shipping.
+            Typed flags, builder, batteries, print-once error contract,
+            repeat-safe ExecuteWithArgs — all exactly per contract (8 of 16
+            applicable capabilities fully leveraged). Unused: the
+            <code>validate</code> tag, <code>WithDoctorCheck</code>,
+            <code>WithEnvPrefix</code>, <code>ExitError</code> differentiation,
+            recovery middleware, and the <code>-o</code>/JSON-error-envelope
+            plumbing.
           </p>
-        </div>
-
-        <div class="issue issue-nice">
-          <span class="severity severity-nice">Nice to have</span>
-          <h3>Polish suggestion</h3>
-          <div class="where">docs/ or config</div>
-          <p>
-            Minor documentation gaps or future-proofing suggestions go here.
-          </p>
-        </div>
-
-        <!-- Strengths -->
-        <h2>Strengths</h2>
-        <div class="strengths">
-          <div class="strength">
-            <div class="check">+</div>
-            <div class="text">
-              <strong>Specific strength</strong>
-              <span>Explain why it matters and what it enables.</span>
-            </div>
+          <div class="callout callout-solution">
+            <strong>Highest value</strong>
+            <code>validate:"min=1"</code> on --workers and a real
+            <code>WithDoctorCheck</code> preflight (resolver + feed) — both S.
           </div>
         </div>
 
-        <!-- Table with Badges -->
-        <h2>Issue Table</h2>
-        <table>
-          <thead>
-            <tr>
-              <th>#</th>
-              <th>Severity</th>
-              <th>Issue</th>
-              <th>Status</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td>1</td>
-              <td><span class="badge badge-critical">Critical</span></td>
-              <td>Missing error handling</td>
-              <td><span class="badge badge-fixed">Fixed</span></td>
-            </tr>
-            <tr>
-              <td>2</td>
-              <td><span class="badge badge-high">High</span></td>
-              <td>Race condition</td>
-              <td><span class="badge badge-low">Open</span></td>
-            </tr>
-          </tbody>
-        </table>
+        <div class="issue issue-critical">
+          <span class="severity severity-critical">31 / 100 · low</span>
+          <h3>go-output — registry paid for, formats unreachable</h3>
+          <div class="where">internal/render/render.go:14-18 · internal/cli/cli.go:38</div>
+          <p>
+            The blank imports register csv, tsv, markdown, json, xml, yaml,
+            jsonl and toml renderers — but the <code>--format</code> enum
+            admits only 5. yaml/toml/jsonl are one flag-enum string away from
+            working. <code>RenderOptions</code> has three fields; we set one
+            (Writer). Title, ColorMode, SetFooter summary rows, AddRowChecked,
+            and the nom live-progress renderer all apply to this tool.
+          </p>
+          <div class="callout callout-solution">
+            <strong>Best value/effort in the audit</strong>
+            Widen <code>values:</code> to <code>…,yaml,toml,jsonl</code> — one
+            string, three new output formats for free.
+          </div>
+        </div>
 
-        <!-- Before/After Comparison -->
-        <h2 id="proposal">Before / After</h2>
+        <h2 id="adopt"><span class="num">02</span>The one adopt candidate</h2>
+
+        <div class="issue issue-nice">
+          <span class="severity severity-nice">Effort S · already linked</span>
+          <h3>go-atomic-write — replace the hand-rolled writeCache</h3>
+          <div class="where">internal/ranges/ranges.go:213-228</div>
+          <p>
+            The only filesystem write in the project hand-rolls
+            tmp+rename with no fsync, a fixed <code>.tmp</code> name (race
+            between concurrent runs), and swallowed errors. The library —
+            already compiled into the binary via cmdguard → samber-do-auditlog —
+            does staged fsync, dir fsync, unique temp names, and cleanup. Use
+            <code>WriteWithPerm</code>, <em>not</em> <code>WriteIfChanged</code>
+            (identical-content skips would never refresh the mtime the 24 h TTL
+            depends on).
+          </p>
+        </div>
+
         <div class="compare-header">
-          <div class="compare-before">Before</div>
+          <div class="compare-before">Before (ranges.go:213-228)</div>
           <div class="compare-after">After</div>
         </div>
         <div class="compare-row">
           <div>
-            <pre><code><span class="tok-comment">// Old code</span>
-<span class="tok-keyword">func</span> <span class="tok-func">process</span>(data <span class="tok-type">interface</span>{}) { }</code></pre>
+            <pre><code>tmp := path + <span class="tok-string">".tmp"</span>
+<span class="tok-keyword">if</span> err := os.WriteFile(tmp, data, <span class="tok-number">0o600</span>); err != <span class="tok-keyword">nil</span> {
+        <span class="tok-keyword">return</span> <span class="tok-comment">// swallowed</span>
+}
+_ = os.Rename(tmp, path)</code></pre>
           </div>
           <div>
-            <pre><code><span class="tok-comment">// New code</span>
-<span class="tok-keyword">func</span> <span class="tok-func">process</span>[T <span class="tok-type">any</span>](data T) { }</code></pre>
+            <pre><code><span class="tok-comment">// atomicwrite "github.com/larsartmann/go-atomic-write"</span>
+err := atomicwrite.<span class="tok-func">WriteWithPerm</span>(path, data, <span class="tok-number">0o600</span>)
+<span class="tok-comment">// staged fsync + unique tmp + dir fsync + cleanup</span></code></pre>
           </div>
         </div>
 
-        <!-- ASCII Diagram -->
-        <h2>Dependency Tree</h2>
-        <div class="dep-tree">
-          <span class="root">root</span> ├──
-          <span class="ok">wanted-dep</span> └──
-          <span class="unwanted">unwanted-dep</span>
+        <h2 id="matrix"><span class="num">03</span>Decision matrix — all 22</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>Library</th>
+              <th>Status</th>
+              <th>Verdict</th>
+              <th>Score</th>
+              <th>One-line reason</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><a href="cmdguard.md">cmdguard</a></td>
+              <td><span class="badge badge-fixed">Direct</span></td>
+              <td><span class="badge badge-high">Deepen</span></td>
+              <td>56/100</td>
+              <td class="why">Keep — deepen: validate tag, doctor checks, exit codes</td>
+            </tr>
+            <tr>
+              <td><a href="go-output.md">go-output</a></td>
+              <td><span class="badge badge-fixed">Direct</span></td>
+              <td><span class="badge badge-high">Deepen</span></td>
+              <td>31/100</td>
+              <td class="why">Keep — widen --format; 4 formats registered but unreachable</td>
+            </tr>
+            <tr>
+              <td><a href="go-atomic-write.md">go-atomic-write</a></td>
+              <td><span class="badge badge-medium">Indirect</span></td>
+              <td><span class="badge badge-critical">Adopt</span></td>
+              <td>—</td>
+              <td class="why">ADOPT (S): replace hand-rolled writeCache</td>
+            </tr>
+            <tr>
+              <td><a href="go-error-family.md">go-error-family</a></td>
+              <td><span class="badge badge-medium">Indirect</span></td>
+              <td><span class="badge badge-medium">Optional</span></td>
+              <td>—</td>
+              <td class="why">Optional scoped adopt (ranges exit codes)</td>
+            </tr>
+            <tr>
+              <td><a href="go-retry.md">go-retry</a></td>
+              <td><span class="badge badge-low">Absent</span></td>
+              <td><span class="badge badge-low">Exclude</span></td>
+              <td>—</td>
+              <td class="why">Correctly excluded — resolver retries below us</td>
+            </tr>
+            <tr>
+              <td><a href="go-etag.md">go-etag</a></td>
+              <td><span class="badge badge-low">Absent</span></td>
+              <td><span class="badge badge-low">Exclude</span></td>
+              <td>—</td>
+              <td class="why">Correctly excluded — no persistent client cache</td>
+            </tr>
+            <tr>
+              <td><a href="go-idempotency.md">go-idempotency</a></td>
+              <td><span class="badge badge-low">Absent</span></td>
+              <td><span class="badge badge-low">Exclude</span></td>
+              <td>—</td>
+              <td class="why">Correctly excluded — no retried side effects</td>
+            </tr>
+            <tr>
+              <td><a href="httputil.md">httputil</a></td>
+              <td><span class="badge badge-low">Absent</span></td>
+              <td><span class="badge badge-low">Exclude</span></td>
+              <td>—</td>
+              <td class="why">Correctly excluded — 100% server-side</td>
+            </tr>
+            <tr>
+              <td><a href="httputil-server-timing.md">httputil/server_timing</a></td>
+              <td><span class="badge badge-low">Absent</span></td>
+              <td><span class="badge badge-low">Exclude</span></td>
+              <td>—</td>
+              <td class="why">Correctly excluded — response-header emitter</td>
+            </tr>
+            <tr>
+              <td><a href="httputil-endpoints.md">httputil/endpoints</a></td>
+              <td><span class="badge badge-low">Absent</span></td>
+              <td><span class="badge badge-low">Exclude</span></td>
+              <td>—</td>
+              <td class="why">Correctly excluded — route listing for servers</td>
+            </tr>
+            <tr>
+              <td><a href="go-codec.md">go-codec</a></td>
+              <td><span class="badge badge-low">Absent</span></td>
+              <td><span class="badge badge-low">Exclude</span></td>
+              <td>—</td>
+              <td class="why">Correctly excluded — default build wraps json v1 (regression)</td>
+            </tr>
+            <tr>
+              <td><a href="go-sse.md">go-sse</a></td>
+              <td><span class="badge badge-low">Absent</span></td>
+              <td><span class="badge badge-low">Exclude</span></td>
+              <td>—</td>
+              <td class="why">Correctly excluded — no streams either direction</td>
+            </tr>
+            <tr>
+              <td><a href="go-datastar.md">go-datastar</a></td>
+              <td><span class="badge badge-low">Absent</span></td>
+              <td><span class="badge badge-low">Exclude</span></td>
+              <td>—</td>
+              <td class="why">Correctly excluded — needs server + browser</td>
+            </tr>
+            <tr>
+              <td><a href="go-filewatcher.md">go-filewatcher</a></td>
+              <td><span class="badge badge-low">Absent</span></td>
+              <td><span class="badge badge-low">Exclude</span></td>
+              <td>—</td>
+              <td class="why">Correctly excluded — no event loop to feed</td>
+            </tr>
+            <tr>
+              <td><a href="go-daemon.md">go-daemon</a></td>
+              <td><span class="badge badge-low">Absent</span></td>
+              <td><span class="badge badge-low">Exclude</span></td>
+              <td>—</td>
+              <td class="why">Correctly excluded — unix-socket HTTP daemon kit</td>
+            </tr>
+            <tr>
+              <td><a href="go-health.md">go-health</a></td>
+              <td><span class="badge badge-low">Absent</span></td>
+              <td><span class="badge badge-low">Exclude</span></td>
+              <td>—</td>
+              <td class="why">Correctly excluded — nothing probes this process</td>
+            </tr>
+            <tr>
+              <td><a href="go-health-dashboard.md">go-health-dashboard</a></td>
+              <td><span class="badge badge-low">Absent</span></td>
+              <td><span class="badge badge-low">Exclude</span></td>
+              <td>—</td>
+              <td class="why">Correctly excluded — HTML page for a server</td>
+            </tr>
+            <tr>
+              <td><a href="go-credentials-store.md">go-credentials-store</a></td>
+              <td><span class="badge badge-low">Absent</span></td>
+              <td><span class="badge badge-low">Exclude</span></td>
+              <td>—</td>
+              <td class="why">Correctly excluded — zero credentials by design</td>
+            </tr>
+            <tr>
+              <td><a href="templ-components.md">templ-components</a></td>
+              <td><span class="badge badge-low">Absent</span></td>
+              <td><span class="badge badge-low">Exclude</span></td>
+              <td>—</td>
+              <td class="why">Correctly excluded — no HTML surface</td>
+            </tr>
+            <tr>
+              <td><a href="go-appkit.md">go-appkit</a></td>
+              <td><span class="badge badge-low">Absent</span></td>
+              <td><span class="badge badge-low">Exclude</span></td>
+              <td>—</td>
+              <td class="why">Correctly excluded — HTTP service lifecycle kit</td>
+            </tr>
+            <tr>
+              <td><a href="go-cqrs-lite.md">go-cqrs-lite</a></td>
+              <td><span class="badge badge-low">Absent</span></td>
+              <td><span class="badge badge-low">Exclude</span></td>
+              <td>—</td>
+              <td class="why">Correctly excluded — no events/invariants (STACK.md)</td>
+            </tr>
+            <tr>
+              <td><a href="cqrs-htmx.md">cqrs-htmx</a></td>
+              <td><span class="badge badge-low">Absent</span></td>
+              <td><span class="badge badge-low">Exclude</span></td>
+              <td>—</td>
+              <td class="why">Correctly excluded — requires go-cqrs-lite + server</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <div class="card card-warning">
+          <h4>Why 18 rejections are structural, not lazy</h4>
+          <p>
+            httputil (+ server_timing, endpoints), go-sse, go-datastar,
+            go-appkit, cqrs-htmx, go-health, go-health-dashboard,
+            go-idempotency, go-daemon and templ-components all presume an
+            inbound HTTP server and/or a browser; go-cqrs-lite presumes events
+            and writes (its own README's "when NOT to use" covers this tool);
+            go-credentials-store presumes secrets (this tool is auth-free by
+            design); go-filewatcher presumes a long-lived watcher loop;
+            go-retry and go-etag defend against failure modes the tool doesn't
+            have (per-24 h fetch with stale-cache fallback, resolver-internal
+            retries); go-codec would actively regress the deliberate
+            encoding/json/v2 migration. Each report carries its own revisit
+            trigger.
+          </p>
         </div>
 
-        <!-- Numbered Steps -->
-        <h2 id="plan"><span class="num">03</span>Migration Plan</h2>
+        <h2 id="opportunities"><span class="num">04</span>Top opportunities (impact × ease)</h2>
         <div class="migration-step">
           <div class="migration-num">1</div>
           <div class="migration-content">
-            <h4>Add generic type parameter</h4>
-            <p>Update the function signature to accept a type parameter.</p>
+            <h4>Widen --format to yaml, toml, jsonl (S)</h4>
+            <p>One string in the flag enum; the renderers are already registered and blank-imported.</p>
           </div>
         </div>
         <div class="migration-step">
           <div class="migration-num">2</div>
           <div class="migration-content">
-            <h4>Update all call sites</h4>
-            <p>Pass explicit types at each call site for type safety.</p>
+            <h4>Adopt go-atomic-write WriteWithPerm in writeCache (S)</h4>
+            <p>Crash-safe, race-free cache writes; the dependency is already in the binary.</p>
+          </div>
+        </div>
+        <div class="migration-step">
+          <div class="migration-num">3</div>
+          <div class="migration-content">
+            <h4>validate tag on --workers + WithDoctorCheck preflight (S-M)</h4>
+            <p>Parse-time typo guard; doctor gains resolver + feed checks a network tool actually wants.</p>
+          </div>
+        </div>
+        <div class="migration-step">
+          <div class="migration-num">4</div>
+          <div class="migration-content">
+            <h4>ExitError(2) for usage errors, WithEnvPrefix("GDD_") (S)</h4>
+            <p>Scripts can tell bad invocation from scan failure; the env convention becomes structural.</p>
+          </div>
+        </div>
+        <div class="migration-step">
+          <div class="migration-num">5</div>
+          <div class="migration-content">
+            <h4>--color flag + SetFooter summary row + Title (S)</h4>
+            <p>ParseColorMode/RenderOptions plumbing for correct piping; "N domains · M workspace · K gcp" footer.</p>
+          </div>
+        </div>
+        <div class="migration-step">
+          <div class="migration-num">6</div>
+          <div class="migration-content">
+            <h4>nom live progress + WithOutputFormat JSON envelopes (M)</h4>
+            <p>Per-worker activity for tens-of-thousands-domain scans; structured error envelopes for scripting.</p>
           </div>
         </div>
 
+        <h2 id="verify"><span class="num">05</span>How to verify</h2>
+        <div class="card">
+          <h4>Re-derive every claim</h4>
+          <pre><code>go mod graph | rg larsartmann            # the full first-party graph
+rg -n 'larsartmann' --type go .         # actual imports (cmdguard, go-output only)
+go run ./cmd/google-domain-detector scan --no-ranges --format yaml example.com
+<span class="tok-comment"># → rejected today: the flag-enum gap, opportunity 1</span>
+ls docs/review/libs/                    # 22 markdown reports + this index</code></pre>
+          <p>
+            Per-library verify commands live at the bottom of each report.
+            Version currency: cmdguard v5.0.0 is the only v5 tag; go-output
+            v0.38.7 is the newest (HEAD is docs-only past it); go-atomic-write
+            latest release is v0.6.2 (pin v0.6.1 indirect); go-error-family
+            v0.12.0 = newest, HEAD docs-only.
+          </p>
+        </div>
+
         <footer class="footer">
-          Generated YYYY-MM-DD &middot; All claims verified against source code
-          where noted
+          Generated 2026-11-09 &middot; All claims verified against the local
+          checkouts at /home/lars/projects/&lt;lib&gt; and this repo's source &middot;
+          Reports: docs/review/libs/*.md
         </footer>
       </main>
     </div>

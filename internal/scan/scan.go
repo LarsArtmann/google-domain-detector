@@ -29,6 +29,10 @@ type Options struct {
 	// ProbeDKIM queries google._domainkey.<domain> for domains whose MX and
 	// SPF lookups yielded no Workspace evidence.
 	ProbeDKIM bool
+	// OnResult, when set, is invoked with every completed result, possibly
+	// concurrently from worker goroutines. It must not block unduly: slow
+	// sinks stall the whole pool.
+	OnResult func(classify.Result)
 }
 
 // Run scans every domain with a bounded worker pool and returns results in
@@ -57,6 +61,10 @@ func Run(ctx context.Context, res resolve.Resolver, domains []domain.Domain, opt
 			for i := range queue {
 				dctx, cancel := context.WithTimeout(ctx, opts.Timeout)
 				results[i] = ScanDomain(dctx, res, domains[i], opts)
+
+				if opts.OnResult != nil {
+					opts.OnResult(results[i])
+				}
 
 				cancel()
 			}
