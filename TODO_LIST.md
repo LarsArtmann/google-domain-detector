@@ -68,14 +68,15 @@ which is paperwork only the account holder can sign:
 - [ ] `WithExample`/`WithLong` on the scan command (S).
 - [ ] Add a "verified against commit X" line to every audit report header
       (point-in-time citation pinning).
-- [ ] vendorHash in flake.nix is stale vs go.mod (nix-checker warning from
-      the concurrent session's dep additions) — run nix-hash-fix when that
-      session finishes.
+- [x] vendorHash in flake.nix is stale vs go.mod (nix-checker warning from
+      the concurrent session's dep additions) — done: nix-hash-fix repaired
+      it, hermetic nix build + buildflow gate green (2026-11-10).
 - [ ] README lacks an installation section (go-structure-linter info).
 - [x] Harvest status-report section (f) items into TODO_LIST.md
       (docs-health HARVEST) — done in this commit.
 - [ ] Update STACK.md when opportunities 1-2 (format widening, atomic
       write) are implemented.
-- [ ] AGENTS.md: add the "reports are point-in-time @ commit" caveat next
-      to the audit section.
+- [x] AGENTS.md: add the "reports are point-in-time @ commit" caveat next
+      to the audit section — done: added above the Library audit section
+      (2026-11-10).
 - [ ] `go mod tidy` sweep after the other session's feature stabilizes.
