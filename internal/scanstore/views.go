@@ -16,10 +16,16 @@ const (
 	CollectionRuns         = "run_views"
 )
 
+// Volume hints for the cost-based planner: observations scale with every
+// domain ever scanned (whole-TLD millions), runs with every invocation.
+const (
+	volumeObservations = 1_000_000
+	volumeRuns         = 100
+)
+
 // ObservationView is the read model for one domain: its latest observation.
 type ObservationView struct {
-	Domain string `json:"domain"`
-	//cqrs-lint:ignore(A032) read models are the serialized data surface; branded IDs stop at the command/stream boundary (goal-shaped-app precedent)
+	Domain       string              `json:"domain"`
 	LastRunID    string              `json:"last_run_id"`
 	Evidence     []classify.Evidence `json:"evidence"`
 	Err          string              `json:"error,omitempty"`
@@ -29,7 +35,6 @@ type ObservationView struct {
 
 // RunView is the read model for one run stream.
 type RunView struct {
-	//cqrs-lint:ignore(A032) read models are the serialized data surface; branded IDs stop at the command/stream boundary (goal-shaped-app precedent)
 	RunID     string          `json:"run_id"`
 	Started   bool            `json:"started"`
 	Completed bool            `json:"completed"`
@@ -42,6 +47,7 @@ func projections() (
 	*projectionadapter.TypeDecoder,
 ) {
 	observations := metaengine.Query[struct{}, ObservationView](CollectionObservations,
+		metaengine.Volume(volumeObservations),
 		metaengine.OnRecordTyped(
 			string(evtDomainObserved),
 			projectionadapter.EventWithID[DomainObservedPayload]{},
@@ -59,6 +65,7 @@ func projections() (
 	)
 
 	runs := metaengine.Query[struct{}, RunView](CollectionRuns,
+		metaengine.Volume(volumeRuns),
 		metaengine.OnRecordTyped(
 			string(evtScanStarted),
 			projectionadapter.EventWithID[ScanStartedPayload]{},
@@ -93,7 +100,7 @@ func observationViewFrom(p DomainObservedPayload, observations int) ObservationV
 		LastRunID:    p.RunID,
 		Evidence:     p.Evidence,
 		Err:          p.Err,
-		ObservedAt:   p.ObservedAt,
+		ObservedAt:   p.ObservedAt.Time(),
 		Observations: observations,
 	}
 }

@@ -53,8 +53,8 @@ func Domain() system.DomainConfig {
 									RunID:      cmd.RunID,
 									Evidence:   cmd.Result.Evidences,
 									Err:        cmd.Result.Err,
-									ObservedAt: time.Now(),
-								})
+									ObservedAt: event.NewInstantNow(),
+								}, event.WithSchemaVersion(1))
 							if err != nil {
 								return nil, err
 							}
@@ -74,11 +74,11 @@ func Domain() system.DomainConfig {
 							evt, err := event.New(evtScanStarted, cmd.StreamID(), StreamTypeScanRun,
 								v.Increment(), ScanStartedPayload{
 									RunID:       cmd.StreamID().Get(),
-									StartedAt:   time.Now(),
+									StartedAt:   event.NewInstantNow(),
 									InputDomain: cmd.InputDomain,
 									Skipped:     cmd.Skipped,
 									Workers:     cmd.Workers,
-								})
+								}, event.WithSchemaVersion(1))
 							if err != nil {
 								return nil, err
 							}
@@ -98,10 +98,10 @@ func Domain() system.DomainConfig {
 							evt, err := event.New(evtScanCompleted, cmd.StreamID(), StreamTypeScanRun,
 								v.Increment(), ScanCompletedPayload{
 									RunID:       cmd.StreamID().Get(),
-									CompletedAt: time.Now(),
+									CompletedAt: event.NewInstantNow(),
 									Duration:    cmd.Duration,
 									Counts:      cmd.Counts,
-								})
+								}, event.WithSchemaVersion(1))
 							if err != nil {
 								return nil, err
 							}
@@ -137,7 +137,9 @@ func Open(ctx context.Context, dsn string) (*system.System, error) {
 	}
 
 	if err := sys.Start(ctx); err != nil {
-		_ = sys.Close()
+		if closeErr := sys.Close(); closeErr != nil {
+			return nil, fmt.Errorf("start event-sourced scan store: %w (close: %v)", err, closeErr)
+		}
 
 		return nil, fmt.Errorf("start event-sourced scan store: %w", err)
 	}

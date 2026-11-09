@@ -58,7 +58,7 @@ func ReplayJournal(ctx context.Context, sys *system.System, runFilter string) (R
 			}
 
 			if _, seen := runs[p.RunID]; !seen {
-				runs[p.RunID] = &RunSummary{RunID: p.RunID, StartedAt: p.StartedAt}
+				runs[p.RunID] = &RunSummary{RunID: p.RunID, StartedAt: p.StartedAt.Time()}
 				runOrder = append(runOrder, p.RunID)
 			}
 

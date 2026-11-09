@@ -1,11 +1,9 @@
 package scanstore
 
-//cqrs-lint:ignore(F032) deliberate: single-user CLI, the event contract is documented in README + events.go; catalog wiring lands when the journal grows external consumers
-
 import (
 	"time"
 
-	"github.com/larsartmann/go-cqrs-lite/command/v4"
+	"github.com/larsartmann/go-cqrs-lite/command/v4" //cqrs-lint:ignore(F032) deliberate: single-user CLI, event contract documented in README + events.go; catalog wiring lands when the journal grows external consumers
 	"github.com/larsartmann/go-cqrs-lite/event/v4"
 
 	"github.com/larsartmann/google-domain-detector/internal/classify"
@@ -34,11 +32,11 @@ const (
 
 // ScanStartedPayload opens a run.
 type ScanStartedPayload struct {
-	RunID       string    `json:"run_id"`
-	StartedAt   time.Time `json:"started_at"`
-	InputDomain int       `json:"input_domains"`
-	Skipped     int       `json:"skipped"`
-	Workers     int       `json:"workers"`
+	RunID       string        `json:"run_id"`
+	StartedAt   event.Instant `json:"started_at"`
+	InputDomain int           `json:"input_domains"`
+	Skipped     int           `json:"skipped"`
+	Workers     int           `json:"workers"`
 }
 
 // DomainObservedPayload records everything one scan learned about one
@@ -50,13 +48,13 @@ type DomainObservedPayload struct {
 	RunID      string              `json:"run_id"`
 	Evidence   []classify.Evidence `json:"evidence"`
 	Err        string              `json:"error,omitempty"`
-	ObservedAt time.Time           `json:"observed_at"`
+	ObservedAt event.Instant       `json:"observed_at"`
 }
 
 // ScanCompletedPayload closes a run with the scanner's own tally.
 type ScanCompletedPayload struct {
 	RunID       string          `json:"run_id"`
-	CompletedAt time.Time       `json:"completed_at"`
+	CompletedAt event.Instant   `json:"completed_at"`
 	Duration    time.Duration   `json:"duration"`
 	Counts      classify.Counts `json:"counts"`
 }
