@@ -27,6 +27,22 @@ func New() Resolver {
 	return &netResolver{r: &net.Resolver{PreferGo: true}}
 }
 
+// NewWithAddr returns a resolver that queries one DNS server directly
+// (host or host:port, port defaults to 53) instead of the system resolver —
+// for bulk scans that must not ride the local forwarding resolver.
+func NewWithAddr(addr string) Resolver {
+	if _, _, err := net.SplitHostPort(addr); err != nil {
+		addr = net.JoinHostPort(addr, "53")
+	}
+	return &netResolver{r: &net.Resolver{
+		PreferGo: true,
+		Dial: func(ctx context.Context, network, _ string) (net.Conn, error) {
+			var dialer net.Dialer
+			return dialer.DialContext(ctx, network, addr)
+		},
+	}}
+}
+
 func (n *netResolver) LookupMX(ctx context.Context, host string) ([]*net.MX, error) {
 	return n.r.LookupMX(ctx, host)
 }

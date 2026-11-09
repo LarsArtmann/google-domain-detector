@@ -42,6 +42,7 @@ type ScanFlags struct {
 	CachePath string        `flag:"ranges-cache" env:"GDD_RANGES_CACHE" help:"Range-feed cache file (default ~/.cache/google-domain-detector/cloud.json)"`
 	NoRanges  bool          `flag:"no-ranges" help:"Skip GCP IP-range matching (CNAME/MX/NS evidence only)"`
 	NoDKIM    bool          `flag:"no-dkim" help:"Skip the google._domainkey probe"`
+	Resolver  string        `flag:"resolver" env:"GDD_RESOLVER" help:"Query this DNS server (host or host:port) instead of the system resolver"`
 }
 
 // Run builds the CLI and executes args. Construction errors are printed to
@@ -111,7 +112,12 @@ func runScan(
 		fmt.Fprintf(stderr, "warning: %v (continuing without IP-range evidence)\n", err)
 	}
 
-	results := scan.Run(ctx, res, domains, scan.Options{
+	activeRes := res
+	if f.Resolver != "" {
+		activeRes = resolve.NewWithAddr(f.Resolver)
+	}
+
+	results := scan.Run(ctx, activeRes, domains, scan.Options{
 		Workers:   f.Workers,
 		Timeout:   f.Timeout,
 		GCP:       gcp,
