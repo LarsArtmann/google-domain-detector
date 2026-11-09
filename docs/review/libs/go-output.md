@@ -53,7 +53,7 @@ sub-modules. Root package deps: only `golang.org/x/term` + go-branded-id.
 | — | `escape` helpers                                 | ⚪ N/A             | markdown/CSV escaping already handled inside the renderers                           |
 | — | WriteRendered helpers, MarshalJSONIndent          | ⚪ N/A             | equivalent one-liners exist; JSON path already streams via jsontext encoder         |
 
-Score inputs: N=15 rows, A=8 applicable, Full=2, Partial=1 →
+Score inputs: N=14 rows, A=8 applicable, Full=2, Partial=1 →
 `round(100 × (2 + 0.5) / 8)` = **31 — low band**. Impact-weighted read:
 the two Full rows are the load-bearing core (dispatch + registry), so
 output correctness is not at risk; the score says "surface paid for,

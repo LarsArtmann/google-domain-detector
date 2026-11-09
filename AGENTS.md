@@ -42,6 +42,19 @@ Manual go commands need the cache-env guard (stale inherited GOCACHE):
 Rule changes go in `classify` (pure, table-tested). Probe orchestration
 changes go in `scan`. Never put record-interpretation logic in `scan`.
 
+## Library audit (2026-11-09)
+
+All 22 LarsArtmann libs audited in `docs/review/libs/` (per-lib .md +
+`index.html` dashboard). Durable verdicts: cmdguard 56/100 (unused: validate
+tag, WithDoctorCheck, ExitError, env prefix) and go-output 31/100 (headline:
+yaml/toml/jsonl registered but unreachable via the `--format` enum);
+**go-atomic-write is the one adopt candidate** (S — replace hand-rolled
+`writeCache`, use `WriteWithPerm`, never `WriteIfChanged`: it would skip
+mtime refreshes the 24 h TTL depends on); go-error-family optional scoped to
+`ranges` for exit codes; 18 absences structurally correct (server/UI/state
+libs vs. one-shot CLI). Refresh when the dep set changes or a new
+first-party lib is considered.
+
 ## Invariants (deliberate, do not "fix")
 
 - Workspace verdict: MX (strong) → certain; SPF/DKIM (weak) → likely. Free

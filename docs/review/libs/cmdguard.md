@@ -37,7 +37,7 @@ flightrecorder, schema, lint.
 | `internal/cli/cli.go:88-95`   | `NewBuilder` + `Try` + `Build`                                       |
 | `internal/cli/cli.go:60`      | `ExecuteWithArgs` (repeat-safe, used by tests)                       |
 | `internal/cli/cli.go:83`      | `ArgsFromContext(ctx)`                                               |
-| `internal/cli/cli.go:36-47`   | tags: `flag`,`help`,`short`,`default`,`values`,`env` (7 of 13 tags)  |
+| `internal/cli/cli.go:36-47`   | tags: `flag`,`help`,`short`,`default`,`values`,`env` (6 of 13 tags)  |
 
 ## Capability inventory & grades
 
