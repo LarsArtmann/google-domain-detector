@@ -111,7 +111,7 @@ type jsonResult struct {
 type jsonVerdict classify.Verdict
 
 func jsonVerdictFrom(v classify.Verdict) jsonVerdict {
-	return jsonVerdict{Detected: v.Detected, Confidence: string(v.Confidence)}
+	return jsonVerdict{Detected: v.Detected, Confidence: v.Confidence}
 }
 
 func (v jsonVerdict) MarshalJSON() ([]byte, error) {
@@ -119,9 +119,9 @@ func (v jsonVerdict) MarshalJSON() ([]byte, error) {
 		return []byte(`{"detected":false}`), nil
 	}
 	return json.Marshal(struct {
-		Detected   bool   `json:"detected"`
-		Confidence string `json:"confidence"`
-	}{Detected: true, Confidence: string(v.Confidence)})
+		Detected   bool                 `json:"detected"`
+		Confidence classify.Confidence `json:"confidence"`
+	}{Detected: true, Confidence: v.Confidence})
 }
 
 // EvidenceSummary packs a result's evidence into one table cell:

@@ -152,12 +152,12 @@ func Load(ctx context.Context, opts Options) (*Set, Source, error) {
 
 	data, err := fetch(ctx, client, opts.URL)
 	if err == nil {
-		set, err := Parse(data)
-		if err == nil {
+		set, parseErr := Parse(data)
+		if parseErr == nil {
 			writeCache(opts.CachePath, data)
 			return set, SourceNetwork, nil
 		}
-		return nil, Source(""), fmt.Errorf("fetched feed is unusable: %w", err)
+		return nil, Source(""), fmt.Errorf("fetched feed is unusable: %w", parseErr)
 	}
 
 	if set, ok := readCache(opts.CachePath, anyAge, now); ok {
@@ -185,7 +185,7 @@ func readCache(path string, maxAge time.Duration, now func() time.Time) (*Set, b
 	return set, true
 }
 
-func writeCache(path, data string) {
+func writeCache(path string, data []byte) {
 	if path == "" {
 		return
 	}
@@ -199,23 +199,23 @@ func writeCache(path, data string) {
 	_ = os.Rename(tmp, path)
 }
 
-func fetch(ctx context.Context, client *http.Client, url string) (string, error) {
+func fetch(ctx context.Context, client *http.Client, url string) ([]byte, error) {
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 	resp, err := client.Do(req)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != http.StatusOK {
-		return "", fmt.Errorf("unexpected status %s", resp.Status)
+		return nil, fmt.Errorf("unexpected status %s", resp.Status)
 	}
 	body, err := io.ReadAll(io.LimitReader(resp.Body, maxFeedBytes))
 	if err != nil {
-		return "", err
+		return nil, err
 	}
-	return string(body), nil
+	return body, nil
 }
