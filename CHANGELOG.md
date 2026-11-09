@@ -8,6 +8,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Added
 
+- `--resolver`/`GDD_RESOLVER`: query a given DNS server (host or host:port)
+  directly instead of the system resolver — for bulk scans that must not ride
+  the local forwarding resolver.
+
 - `scan` command: batch DNS probe of apex + www per domain (MX, TXT/SPF,
   google-site-verification, CNAME, A/AAAA, NS, conditional DKIM) behind a
   bounded worker pool with per-domain timeout and NXDOMAIN short-circuit.

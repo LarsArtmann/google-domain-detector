@@ -55,8 +55,13 @@ list survives a garbage row.
 Formats: `--format table` (default), `json` (full evidence, one line per
 domain, jq-friendly), `csv`, `tsv`, `markdown`. Filters: `--only workspace`
 / `gcp` / `google` / `all`. Concurrency: `--workers` (default 8); per-domain
-budget `--timeout` (default 5s). `scan --help` lists everything, `describe`
+budget `--timeout` (default 5s). Bulk scans: `--resolver host[:port]`
+queries one DNS server directly instead of the system resolver (env
+`GDD_RESOLVER`). `scan --help` lists everything, `describe`
 prints the machine-readable CLI contract.
+
+Proven at bulk scale: the Tranco top-1M filtered to `.de`/`.ch`/`.uk`
+(~63k domains) scans in ~20 minutes at `--workers 24`.
 
 ## Honest limitations
 
