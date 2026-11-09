@@ -3,6 +3,7 @@ package cli
 import (
 	"bytes"
 	"context"
+	"encoding/json"
 	"net"
 	"os"
 	"path/filepath"
@@ -206,13 +207,14 @@ func TestScanDomainTimeoutFlagIsUsed(t *testing.T) {
 	}
 }
 
-func TestScanRecordsEventsAndReplayRebuildsIdenticalJSON(t *testing.T) {
+func TestScanRecordsEventsAndReplayRebuildsSameResults(t *testing.T) {
 	t.Parallel()
 
 	store := filepath.Join(t.TempDir(), "scans.db")
 
 	scanOut, scanErr, err := run(t, workspaceDomain(), "",
-		"scan", "--no-ranges", "--format", "json", "--event-store", store, "acme.com")
+		"scan", "--no-ranges", "--format", "json", "--event-store", store,
+		"acme.com", "other.example", "third.example")
 	if err != nil {
 		t.Fatalf("scan with event store failed: %v", err)
 	}
@@ -231,9 +233,47 @@ func TestScanRecordsEventsAndReplayRebuildsIdenticalJSON(t *testing.T) {
 		t.Errorf("replay stderr should summarize the run, got: %q", replayErr)
 	}
 
-	if scanOut != replayOut {
-		t.Errorf("replay JSON differs from scan JSON:\nscan:   %q\nreplay: %q", scanOut, replayOut)
+	// Scan preserves input order; replay preserves journal (completion)
+	// order — the same facts may legitimately arrive in a different order.
+	// What must never differ is the content.
+	scanByDomain := jsonResultsByDomain(t, scanOut)
+	replayByDomain := jsonResultsByDomain(t, replayOut)
+
+	if len(scanByDomain) != 3 {
+		t.Fatalf("scan produced %d results, want 3", len(scanByDomain))
 	}
+
+	for domain, scanned := range scanByDomain {
+		replayed, ok := replayByDomain[domain]
+		if !ok {
+			t.Errorf("replay is missing %s", domain)
+
+			continue
+		}
+
+		if scanned != replayed {
+			t.Errorf("replay result for %s differs:\nscan:   %q\nreplay: %q", domain, scanned, replayed)
+		}
+	}
+}
+
+// jsonResultsByDomain parses the scanner's JSON array output into a
+// domain-keyed map of raw result objects.
+func jsonResultsByDomain(t *testing.T, out string) map[string]any {
+	t.Helper()
+
+	var parsed []map[string]any
+
+	if err := json.Unmarshal([]byte(out), &parsed); err != nil {
+		t.Fatalf("parse JSON output: %v", err)
+	}
+
+	byDomain := make(map[string]any, len(parsed))
+	for _, r := range parsed {
+		byDomain[r["domain"].(string)] = r
+	}
+
+	return byDomain
 }
 
 func TestReplayRequiresEventStore(t *testing.T) {

@@ -75,8 +75,10 @@ google-domain-detector replay --event-store scans.db            # latest run, no
 google-domain-detector replay --event-store scans.db --run ID   # any earlier run
 ```
 
-`replay` rebuilds the report purely from the journal — the scanned report
-and the replayed report are byte-identical (pinned by a test). Built on the
+`replay` rebuilds the report purely from the journal — same results, same
+evidence, zero DNS (3645 domains replay in ~80 ms; pinned by a test). Scan
+output preserves input order, replay preserves journal (completion) order —
+same facts, different orderings. Built on the
 [go-cqrs-lite](https://github.com/LarsArtmann/go-cqrs-lite) `system`
 composition root with metaengine projections; events carry evidence only —
 verdicts are always recomputed from it.
