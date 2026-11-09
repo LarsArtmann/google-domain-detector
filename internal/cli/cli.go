@@ -17,12 +17,14 @@ import (
 	v5 "github.com/larsartmann/cmdguard/v5/pkg/cmdguard/v5"
 	"github.com/larsartmann/go-output"
 
+	"github.com/larsartmann/google-domain-detector/internal/classify"
 	"github.com/larsartmann/google-domain-detector/internal/domain"
 	"github.com/larsartmann/google-domain-detector/internal/input"
 	"github.com/larsartmann/google-domain-detector/internal/ranges"
 	"github.com/larsartmann/google-domain-detector/internal/render"
 	"github.com/larsartmann/google-domain-detector/internal/resolve"
 	"github.com/larsartmann/google-domain-detector/internal/scan"
+	"github.com/larsartmann/google-domain-detector/internal/scanstore"
 )
 
 // Name is the binary name.
@@ -44,6 +46,15 @@ type ScanFlags struct {
 	NoRanges  bool          `flag:"no-ranges"    help:"Skip GCP IP-range matching (CNAME/MX/NS evidence only)"`
 	NoDKIM    bool          `flag:"no-dkim"      help:"Skip the google._domainkey probe"`
 	Resolver  string        `flag:"resolver"     help:"Query this DNS server (host or host:port) instead of the system resolver"                                                                                                                                      env:"GDD_RESOLVER"`
+	EventStore string       `flag:"event-store"  help:"Persist the run as events in this SQLite file (go-cqrs-lite journal; replay with the replay command)"                                                                                                                               env:"GDD_EVENT_STORE"`
+}
+
+// ReplayFlags is the replay command's flag set.
+type ReplayFlags struct {
+	EventStore string `flag:"event-store" help:"SQLite event store written by scan --event-store"     env:"GDD_EVENT_STORE"`
+	Run        string `flag:"run"          help:"Rebuild this run ID (default: the most recent run)"`
+	Format     string `flag:"format"       help:"Output format"                     default:"table" values:"table,json,csv,tsv,markdown"`
+	Only       string `flag:"only"         help:"Report only matching domains"                 default:"all"   values:"all,workspace,gcp,google"`
 }
 
 // Run builds the CLI and executes args. Construction errors are printed to
@@ -85,8 +96,16 @@ func BuildCLI(
 		v5.WithShort("Scan domains for Google Workspace and Google Cloud evidence"),
 	)
 
+	replayCmd, replayErr := v5.NewCommand("replay", ReplayFlags{},
+		func(ctx context.Context, _ *RootConfig, f ReplayFlags) error {
+			return runReplay(ctx, f, stdout, stderr)
+		},
+		v5.WithShort("Rebuild a scan report from the event store, no DNS"),
+	)
+
 	b := v5.NewBuilder(cli)
 	v5.Try(b, scanCmd, cmdErr)
+	v5.Try(b, replayCmd, replayErr)
 
 	if err := b.Build(); err != nil {
 		return nil, err
@@ -135,19 +154,141 @@ func runScan(
 		activeRes = resolve.NewWithAddr(f.Resolver)
 	}
 
-	results := scan.Run(ctx, activeRes, domains, scan.Options{
+	scanOpts := scan.Options{
 		Workers:   f.Workers,
 		Timeout:   f.Timeout,
 		GCP:       gcp,
 		ProbeDKIM: !f.NoDKIM,
-	})
-
-	results = render.Filtered(results, filter)
-	if format == output.FormatJSON {
-		return render.JSON(stdout, results)
 	}
 
-	return render.Table(stdout, results, format)
+	finish, err := attachEventStore(ctx, f, len(domains), len(skipped), stderr, &scanOpts)
+	if err != nil {
+		return err
+	}
+
+	started := time.Now()
+
+	results := scan.Run(ctx, activeRes, domains, scanOpts)
+
+	rendered := renderResults(stdout, results, filter, format)
+
+	if err := finish(ctx, time.Since(started), results); err != nil {
+		return err
+	}
+
+	return rendered
+}
+
+// renderResults filters and writes the report in the requested format.
+func renderResults(w io.Writer, results []classify.Result, filter render.Filter, format output.Format) error {
+	results = render.Filtered(results, filter)
+	if format == output.FormatJSON {
+		return render.JSON(w, results)
+	}
+
+	return render.Table(w, results, format)
+}
+
+// attachEventStore, when --event-store is set, opens the event-sourced scan
+// store, starts a run, and hooks observation recording into opts. It returns
+// the closer that drains and completes the run; without an event store the
+// closer is a no-op.
+func attachEventStore(
+	ctx context.Context,
+	f ScanFlags,
+	inputDomain, skipped int,
+	stderr io.Writer,
+	opts *scan.Options,
+) (func(context.Context, time.Duration, []classify.Result) error, error) {
+	if f.EventStore == "" {
+		return func(context.Context, time.Duration, []classify.Result) error { return nil }, nil
+	}
+
+	sys, err := scanstore.Open(ctx, f.EventStore)
+	if err != nil {
+		return nil, fmt.Errorf("open event store %s: %w", f.EventStore, err)
+	}
+
+	runID := scanstore.NewRunID()
+
+	recorder := scanstore.NewRecorder(sys)
+	if err := recorder.StartScan(ctx, runID, inputDomain, skipped, opts.Workers); err != nil {
+		_ = sys.GracefulClose(context.WithoutCancel(ctx))
+
+		return nil, fmt.Errorf("start run in event store: %w", err)
+	}
+
+	sink := scanstore.NewSink(recorder, runID, sinkDepth)
+	opts.OnResult = sink.OnResult
+
+	return func(closeCtx context.Context, duration time.Duration, results []classify.Result) error {
+		if err := sink.Close(closeCtx, duration, classify.Count(results)); err != nil {
+			fmt.Fprintf(stderr, "warning: event store recording incomplete: %v\n", err)
+		}
+
+		if err := sys.GracefulClose(context.WithoutCancel(closeCtx)); err != nil {
+			fmt.Fprintf(stderr, "warning: close event store: %v\n", err)
+		}
+
+		fmt.Fprintf(stderr, "run %s recorded to %s (replay: %s replay --event-store %s --run %s)\n",
+			runID.Get(), f.EventStore, Name, f.EventStore, runID.Get())
+
+		return nil // recording problems are reported, never fatal to the scan report
+	}, nil
+}
+
+// sinkDepth bounds the buffer between the DNS pool and the event store.
+const sinkDepth = 64
+
+// runReplay rebuilds a scan report from the event journal alone: no DNS.
+func runReplay(ctx context.Context, f ReplayFlags, stdout, stderr io.Writer) error {
+	if f.EventStore == "" {
+		return errors.New("--event-store is required (or set GDD_EVENT_STORE)")
+	}
+
+	filter, err := render.ParseFilter(f.Only)
+	if err != nil {
+		return err
+	}
+
+	format, err := output.ParseFormat(f.Format)
+	if err != nil {
+		return err
+	}
+
+	sys, err := scanstore.Boot(ctx, f.EventStore)
+	if err != nil {
+		return fmt.Errorf("open event store %s: %w", f.EventStore, err)
+	}
+
+	defer func() { _ = sys.Close() }()
+
+	replay, err := scanstore.ReplayJournal(ctx, sys, f.Run)
+	if err != nil {
+		return err
+	}
+
+	if len(replay.Runs) == 0 {
+		return fmt.Errorf("no scan runs found in %s", f.EventStore)
+	}
+
+	var summary *scanstore.RunSummary
+	for i := range replay.Runs {
+		if replay.Runs[i].RunID == replay.RunID {
+			summary = &replay.Runs[i]
+
+			break
+		}
+		}
+
+	if summary != nil {
+		fmt.Fprintf(stderr, "run %s: %d domains, workspace certain %d / likely %d, gcp %d, errors %d\n",
+			summary.RunID, summary.Counts.Scanned,
+			summary.Counts.WorkspaceCertain, summary.Counts.WorkspaceLikely,
+			summary.Counts.GCPCertain, summary.Counts.Errors)
+	}
+
+	return renderResults(stdout, replay.Results, filter, format)
 }
 
 func collectDomains(

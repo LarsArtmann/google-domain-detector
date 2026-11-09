@@ -32,12 +32,17 @@ const (
 
 // Event types persisted to the journal.
 const (
-	evtScanStarted     = event.Type("scan.started")
-	evtDomainObserved  = event.Type("scan.domain_observed")
-	evtScanCompleted   = event.Type("scan.completed")
-	cmdStartScan       = command.Type("scan.start")
-	cmdRecordSingleObs = command.Type("scan.observe")
-	cmdCompleteScan    = command.Type("scan.complete")
+	evtScanStarted    = event.Type("scan.started")
+	evtDomainObserved = event.Type("scan.domain_observed")
+	evtScanCompleted  = event.Type("scan.completed")
+)
+
+// Command types, exported so external tooling and tests can dispatch the
+// same commands the Recorder uses.
+const (
+	CmdStartScan    = command.Type("scan.start")
+	CmdObserve      = command.Type("scan.observe")
+	CmdCompleteScan = command.Type("scan.complete")
 )
 
 // Read-model collections (metaengine Map queries).
@@ -72,9 +77,9 @@ type DomainObservedPayload struct {
 
 // ScanCompletedPayload closes a run with the scanner's own tally.
 type ScanCompletedPayload struct {
-	RunID       string         `json:"run_id"`
-	CompletedAt time.Time      `json:"completed_at"`
-	Duration    time.Duration  `json:"duration"`
+	RunID       string          `json:"run_id"`
+	CompletedAt time.Time       `json:"completed_at"`
+	Duration    time.Duration   `json:"duration"`
 	Counts      classify.Counts `json:"counts"`
 }
 
@@ -149,7 +154,7 @@ type ObservationView struct {
 	Evidence     []classify.Evidence `json:"evidence"`
 	Err          string              `json:"error,omitempty"`
 	ObservedAt   time.Time           `json:"observed_at"`
-	Observations int                  `json:"observations"`
+	Observations int                 `json:"observations"`
 }
 
 // RunView is the read model for one run stream.
@@ -179,7 +184,7 @@ func Domain() system.DomainConfig {
 				Apply:   applyScanRun,
 			}))
 
-			mustRegister(system.RegisterCommand[RecordObservationCmd, DomainState](sys, cmdRecordSingleObs,
+			mustRegister(system.RegisterCommand[RecordObservationCmd, DomainState](sys, CmdObserve,
 				func(cmdCtx context.Context, cmd RecordObservationCmd) system.Op[DomainState] {
 					return system.Execute(cmdCtx, cmd.StreamID(), StreamTypeDomain,
 						func(_ DomainState, v event.Version) ([]event.Event, error) {
@@ -199,7 +204,7 @@ func Domain() system.DomainConfig {
 						})
 				}))
 
-			mustRegister(system.RegisterCommand[StartScanCmd, ScanRunState](sys, cmdStartScan,
+			mustRegister(system.RegisterCommand[StartScanCmd, ScanRunState](sys, CmdStartScan,
 				func(cmdCtx context.Context, cmd StartScanCmd) system.Op[ScanRunState] {
 					return system.Execute(cmdCtx, cmd.StreamID(), StreamTypeScanRun,
 						func(s ScanRunState, v event.Version) ([]event.Event, error) {
@@ -223,7 +228,7 @@ func Domain() system.DomainConfig {
 						})
 				}))
 
-			mustRegister(system.RegisterCommand[CompleteScanCmd, ScanRunState](sys, cmdCompleteScan,
+			mustRegister(system.RegisterCommand[CompleteScanCmd, ScanRunState](sys, CmdCompleteScan,
 				func(cmdCtx context.Context, cmd CompleteScanCmd) system.Op[ScanRunState] {
 					return system.Execute(cmdCtx, cmd.StreamID(), StreamTypeScanRun,
 						func(s ScanRunState, v event.Version) ([]event.Event, error) {
@@ -267,15 +272,27 @@ func Deployment(dsn string) system.DeploymentConfig {
 
 // Open boots the composition root on dsn and starts the projection host.
 func Open(ctx context.Context, dsn string) (*system.System, error) {
-	sys, err := system.New(ctx, Domain(), Deployment(dsn))
+	sys, err := Boot(ctx, dsn)
 	if err != nil {
-		return nil, fmt.Errorf("boot event-sourced scan store: %w", err)
+		return nil, err
 	}
 
 	if err := sys.Start(ctx); err != nil {
 		_ = sys.Close()
 
 		return nil, fmt.Errorf("start event-sourced scan store: %w", err)
+	}
+
+	return sys, nil
+}
+
+// Boot composes the system without starting the projection host. Reads that
+// walk the journal (replay) do not need read models and should not pay for
+// folding the whole store first.
+func Boot(ctx context.Context, dsn string) (*system.System, error) {
+	sys, err := system.New(ctx, Domain(), Deployment(dsn))
+	if err != nil {
+		return nil, fmt.Errorf("boot event-sourced scan store: %w", err)
 	}
 
 	return sys, nil
@@ -300,9 +317,9 @@ func NewRunID() id.StreamID {
 
 // StartScan opens the run.
 func (rec *Recorder) StartScan(ctx context.Context, runID id.StreamID, inputDomain, skipped, workers int) error {
-	basic, err := command.New(cmdStartScan, runID)
+	basic, err := command.New(CmdStartScan, runID)
 	if err != nil {
-		return fmt.Errorf("build %s command: %w", cmdStartScan, err)
+		return fmt.Errorf("build %s command: %w", CmdStartScan, err)
 	}
 
 	cmd := StartScanCmd{BasicCommand: basic, InputDomain: inputDomain, Skipped: skipped, Workers: workers}
@@ -317,9 +334,9 @@ func (rec *Recorder) Observe(ctx context.Context, runID id.StreamID, result clas
 		return err
 	}
 
-	basic, err := command.New(cmdRecordSingleObs, streamID)
+	basic, err := command.New(CmdObserve, streamID)
 	if err != nil {
-		return fmt.Errorf("build %s command: %w", cmdRecordSingleObs, err)
+		return fmt.Errorf("build %s command: %w", CmdObserve, err)
 	}
 
 	cmd := RecordObservationCmd{BasicCommand: basic, RunID: runID.Get(), Result: result}
@@ -334,9 +351,9 @@ func (rec *Recorder) CompleteScan(
 	duration time.Duration,
 	counts classify.Counts,
 ) error {
-	basic, err := command.New(cmdCompleteScan, runID)
+	basic, err := command.New(CmdCompleteScan, runID)
 	if err != nil {
-		return fmt.Errorf("build %s command: %w", cmdCompleteScan, err)
+		return fmt.Errorf("build %s command: %w", CmdCompleteScan, err)
 	}
 
 	cmd := CompleteScanCmd{BasicCommand: basic, Duration: duration, Counts: counts}
@@ -353,6 +370,66 @@ func StreamForDomain(domainName string) (id.StreamID, error) {
 	}
 
 	return streamID, nil
+}
+
+// Sink bridges the scan's worker pool to the recorder: results land on a
+// buffered channel and are recorded sequentially on one goroutine, so the
+// journal order stays stable and writers never contend. The first dispatch
+// error is captured and reported at Close; draining always continues so a
+// store hiccup never blocks the DNS pool.
+type Sink struct {
+	recorder *Recorder
+	runID    id.StreamID
+	events   chan classify.Result
+	done     chan struct{}
+	firstErr error
+}
+
+// NewSink starts recording observations for runID. depth bounds the buffer
+// between the DNS pool and the store.
+func NewSink(recorder *Recorder, runID id.StreamID, depth int) *Sink {
+	sink := &Sink{
+		recorder: recorder,
+		runID:    runID,
+		events:   make(chan classify.Result, depth),
+		done:     make(chan struct{}),
+	}
+
+	go sink.record()
+
+	return sink
+}
+
+// OnResult is the scan.Options.OnResult hook.
+func (sink *Sink) OnResult(result classify.Result) {
+	sink.events <- result
+}
+
+// Close drains every buffered result, completes the run, and returns the
+// first recording error, if any.
+func (sink *Sink) Close(ctx context.Context, duration time.Duration, counts classify.Counts) error {
+	close(sink.events)
+	<-sink.done
+
+	completeErr := sink.recorder.CompleteScan(ctx, sink.runID, duration, counts)
+
+	return errors.Join(sink.firstErr, completeErr)
+}
+
+func (sink *Sink) record() {
+	defer close(sink.done)
+
+	ctx := context.Background()
+
+	for result := range sink.events {
+		if sink.firstErr != nil { // store is broken: keep draining, drop the rest
+			continue
+		}
+
+		if err := sink.recorder.Observe(ctx, sink.runID, result); err != nil {
+			sink.firstErr = fmt.Errorf("record observation for %s: %w", result.Domain, err)
+		}
+	}
 }
 
 // RunSummary is one run as seen while walking the journal.
