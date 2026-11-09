@@ -53,6 +53,9 @@ events — evolve, never rewrite).
 
 ## Library audit (2026-11-09)
 
+> Point-in-time snapshot at the commit of `docs/status/`'s audit session —
+> verdicts may be stale; re-verify against go.mod before acting on them.
+
 All 22 LarsArtmann libs audited in `docs/review/libs/` (per-lib .md +
 `index.html` dashboard). Durable verdicts: cmdguard 56/100 (unused: validate
 tag, WithDoctorCheck, ExitError, env prefix) and go-output 31/100 (headline:

@@ -8,9 +8,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Added
 
+- Event-sourced scans via go-cqrs-lite (`system` + `metaengine`, SQLite
+  engine): `scan --event-store FILE.db` journals every run — one stream per
+  domain (re-scans keep history), one per run — and the new `replay` command
+  rebuilds any run's report from the journal alone, zero DNS. Events carry
+  evidence only; verdicts are always recomputed from it.
 - `--resolver`/`GDD_RESOLVER`: query a given DNS server (host or host:port)
   directly instead of the system resolver — for bulk scans that must not ride
   the local forwarding resolver.
+- Library audit docs: `docs/review/libs/` — one utilization report per
+  LarsArtmann library (22 audited) with adopt/skip verdicts and scored
+  opportunities.
 
 - `scan` command: batch DNS probe of apex + www per domain (MX, TXT/SPF,
   google-site-verification, CNAME, A/AAAA, NS, conditional DKIM) behind a

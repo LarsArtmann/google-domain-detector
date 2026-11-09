@@ -41,3 +41,41 @@ which is paperwork only the account holder can sign:
       (go-release skill owns the process).
 - [ ] Homebrew tap entry (homebrew-tap repo) after the tag.
 - [ ] nix run .#release wiring check (go-nix-helpers release app).
+
+## Library audit follow-ups (2026-11-10, plan: docs/planning/2026-11-10_00-50_*)
+
+- [ ] Widen `--format` enum to +yaml,toml,jsonl (renderers already
+      registered via blank imports — one flag-tag string).
+- [ ] Adopt go-atomic-write `WriteWithPerm` in `ranges.writeCache` (never
+      `WriteIfChanged`: it would skip the mtime refresh the 24 h TTL needs).
+- [ ] CLI hardening: `validate` tag on --workers, `ExitError(2)` for usage
+      errors, `WithEnvPrefix("GDD_")`, RecoveryMiddleware.
+- [ ] `--color auto|always|never` via go-output ColorMode; SetFooter summary
+      row; AddRowChecked.
+- [ ] `WithDoctorCheck` preflight (resolver + ranges feed).
+- [ ] Decide `--format` vs cmdguard's `-o/--output` BEFORE the v0.1.0 tag
+      (breaking rename is cheap now, never later).
+- [ ] cmdguard-lint as a CI step (expected zero findings).
+- [ ] Audit upkeep after the concurrent scanstore session lands: re-verify
+      report citations vs new HEAD, re-shoot index render proof, re-audit
+      go-cqrs-lite/cqrs-htmx verdicts (their event-store work may flip the
+      premise).
+
+## Harvested from the 2026-11-10 status report (docs-gates routing)
+
+- [ ] `AddRowChecked` for the 5-column invariant (S).
+- [ ] `RenderOptions.Title` for markdown/html output (S).
+- [ ] `WithExample`/`WithLong` on the scan command (S).
+- [ ] Add a "verified against commit X" line to every audit report header
+      (point-in-time citation pinning).
+- [ ] vendorHash in flake.nix is stale vs go.mod (nix-checker warning from
+      the concurrent session's dep additions) — run nix-hash-fix when that
+      session finishes.
+- [ ] README lacks an installation section (go-structure-linter info).
+- [x] Harvest status-report section (f) items into TODO_LIST.md
+      (docs-health HARVEST) — done in this commit.
+- [ ] Update STACK.md when opportunities 1-2 (format widening, atomic
+      write) are implemented.
+- [ ] AGENTS.md: add the "reports are point-in-time @ commit" caveat next
+      to the audit section.
+- [ ] `go mod tidy` sweep after the other session's feature stabilizes.
