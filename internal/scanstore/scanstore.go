@@ -236,22 +236,33 @@ func StreamForDomain(domainName string) (id.StreamID, error) {
 	return streamID, nil
 }
 
+// runRecorder is the slice of Recorder the Sink needs; tests inject
+// failures through it.
+type runRecorder interface {
+	Observe(ctx context.Context, runID id.StreamID, result classify.Result) error
+	CompleteScan(ctx context.Context, runID id.StreamID, duration time.Duration, counts classify.Counts) error
+}
+
 // Sink bridges the scan's worker pool to the recorder: results land on a
 // buffered channel and are recorded sequentially on one goroutine, so the
-// journal order stays stable and writers never contend. The first dispatch
-// error is captured and reported at Close; draining always continues so a
-// store hiccup never blocks the DNS pool.
+// journal order stays stable and writers never contend. Each observation
+// gets a bounded retry with backoff (a transient SQLite hiccup must not cost
+// data); once the budget is spent the sink stops writing but keeps draining
+// so a broken store never blocks the DNS pool. Close then reports the first
+// error together with the exact count of dropped observations — never a
+// silent gap in the journal.
 type Sink struct {
-	recorder *Recorder
+	recorder runRecorder
 	runID    id.StreamID
 	events   chan classify.Result
 	done     chan struct{}
 	firstErr error
+	dropped  int
 }
 
 // NewSink starts recording observations for runID. depth bounds the buffer
 // between the DNS pool and the store.
-func NewSink(recorder *Recorder, runID id.StreamID, depth int) *Sink {
+func NewSink(recorder runRecorder, runID id.StreamID, depth int) *Sink {
 	sink := &Sink{
 		recorder: recorder,
 		runID:    runID,
@@ -270,15 +281,34 @@ func (sink *Sink) OnResult(result classify.Result) {
 }
 
 // Close drains every buffered result, completes the run, and returns the
-// first recording error, if any.
+// first recording error plus the dropped-observation count, if any.
 func (sink *Sink) Close(ctx context.Context, duration time.Duration, counts classify.Counts) error {
 	close(sink.events)
 	<-sink.done
 
-	completeErr := sink.recorder.CompleteScan(ctx, sink.runID, duration, counts)
+	// Completing the journal entry is a local write: a canceled scan run
+	// (Ctrl-C) still closes its run record.
+	completeErr := sink.recorder.CompleteScan(context.WithoutCancel(ctx), sink.runID, duration, counts)
 
-	return errors.Join(sink.firstErr, completeErr)
+	err := errors.Join(sink.firstErr, completeErr)
+	if err == nil {
+		return nil
+	}
+
+	if sink.dropped > 0 {
+		return fmt.Errorf("event store recording failed, %d observations dropped: %w", sink.dropped, err)
+	}
+
+	return err
 }
+
+// observeAttempts and observeBackoff bound the per-observation retry: a
+// transient store error costs at most two short pauses, a permanent one
+// fails after three attempts.
+const (
+	observeAttempts = 3
+	observeBackoff  = 25 * time.Millisecond
+)
 
 func (sink *Sink) record() {
 	defer close(sink.done)
@@ -286,14 +316,36 @@ func (sink *Sink) record() {
 	ctx := context.Background()
 
 	for result := range sink.events {
-		if sink.firstErr != nil { // store is broken: keep draining, drop the rest
+		if sink.firstErr != nil { // store is broken: keep draining, count the loss
+			sink.dropped++
+
 			continue
 		}
 
-		if err := sink.recorder.Observe(ctx, sink.runID, result); err != nil {
+		if err := sink.observe(ctx, result); err != nil {
 			sink.firstErr = fmt.Errorf("record observation for %s: %w", result.Domain, err)
+			sink.dropped = 1
 		}
 	}
+}
+
+func (sink *Sink) observe(ctx context.Context, result classify.Result) error {
+	backoff := observeBackoff
+
+	var err error
+
+	for attempt := range observeAttempts {
+		if attempt > 0 {
+			time.Sleep(backoff)
+			backoff *= 2
+		}
+
+		if err = sink.recorder.Observe(ctx, sink.runID, result); err == nil {
+			return nil
+		}
+	}
+
+	return err
 }
 
 func mustRegister(err error) {

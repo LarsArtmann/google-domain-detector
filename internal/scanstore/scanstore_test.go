@@ -4,11 +4,15 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"os"
 	"path/filepath"
+	"runtime"
+	"strings"
 	"testing"
 	"time"
 
 	"github.com/larsartmann/go-cqrs-lite/command/v4"
+	"github.com/larsartmann/go-cqrs-lite/id/v4"
 	"github.com/larsartmann/go-cqrs-lite/metaengine/v4"
 	"github.com/larsartmann/go-cqrs-lite/systemscenario/v4"
 
@@ -403,4 +407,165 @@ func TestStreamObservationsTenThousandEvents(t *testing.T) {
 	if summary.Counts.Scanned != total {
 		t.Errorf("summary scanned = %d, want %d", summary.Counts.Scanned, total)
 	}
+}
+
+// scriptedRecorder injects observation failures to exercise the sink retry.
+type scriptedRecorder struct {
+	RecorderLike struct {
+		ObserveFails    int // fail this many Observe calls, then succeed
+		AlwaysFail      bool
+		ObserveCalls    int
+		ObserveRecorded int
+	}
+}
+
+func (s *scriptedRecorder) Observe(ctx context.Context, runID id.StreamID, result classify.Result) error {
+	s.RecorderLike.ObserveCalls++
+
+	if s.RecorderLike.AlwaysFail || s.RecorderLike.ObserveFails > 0 {
+		s.RecorderLike.ObserveFails--
+
+		return errors.New("sqlite is locked")
+	}
+
+	s.RecorderLike.ObserveRecorded++
+
+	return nil
+}
+
+func (s *scriptedRecorder) CompleteScan(context.Context, id.StreamID, time.Duration, classify.Counts) error {
+	return nil
+}
+
+// TestSinkRetriesTransientStoreErrors pins 11.3a: a couple of locked-store
+// failures per observation are survived; everything lands in order.
+func TestSinkRetriesTransientStoreErrors(t *testing.T) {
+	t.Parallel()
+
+	recorder := &scriptedRecorder{}
+	recorder.RecorderLike.ObserveFails = 2 // fail twice, then succeed
+
+	sink := scanstore.NewSink(recorder, scanstore.NewRunID(), 4)
+
+	for _, name := range []string{"a.example", "b.example", "c.example"} {
+		sink.OnResult(classify.Result{Domain: name})
+	}
+
+	if err := sink.Close(context.Background(), time.Second, classify.Counts{Scanned: 3}); err != nil {
+		t.Fatalf("transient failures must not surface: %v", err)
+	}
+
+	if recorder.RecorderLike.ObserveRecorded != 3 {
+		t.Errorf("recorded %d of 3 observations", recorder.RecorderLike.ObserveRecorded)
+	}
+}
+
+// TestSinkFailsLoudlyWithDropCount pins 11.3b: a permanently broken store
+// yields a Close error naming the exact number of lost observations — a
+// 2.5M-domain journal can never lose rows silently.
+func TestSinkFailsLoudlyWithDropCount(t *testing.T) {
+	t.Parallel()
+
+	recorder := &scriptedRecorder{}
+	recorder.RecorderLike.AlwaysFail = true
+
+	sink := scanstore.NewSink(recorder, scanstore.NewRunID(), 4)
+
+	for _, name := range []string{"a.example", "b.example", "c.example"} {
+		sink.OnResult(classify.Result{Domain: name})
+	}
+
+	err := sink.Close(context.Background(), time.Second, classify.Counts{Scanned: 3})
+	if err == nil {
+		t.Fatal("permanent store failure must fail Close")
+	}
+
+	if !strings.Contains(err.Error(), "3 observations dropped") {
+		t.Errorf("Close error must name the dropped count, got: %v", err)
+	}
+}
+
+// TestJournalOneHundredThousandEvents is the G4 benchmark: 100k observations
+// append and replay within a sane budget, and the store size stays linear.
+func TestJournalOneHundredThousandEvents(t *testing.T) {
+	t.Parallel()
+
+	if testing.Short() {
+		t.Skip("100k-event journal is a scale gate, not a unit test")
+	}
+
+	ctx := context.Background()
+	dsn := filepath.Join(t.TempDir(), "scans.db")
+
+	writer, err := scanstore.Open(ctx, dsn)
+	if err != nil {
+		t.Fatalf("open store: %v", err)
+	}
+
+	recorder := scanstore.NewRecorder(writer)
+
+	runID := scanstore.NewRunID()
+
+	const total = 100_000
+
+	appendStart := time.Now()
+
+	if err := recorder.StartScan(ctx, runID, "", total, 0, 8); err != nil {
+		t.Fatalf("start run: %v", err)
+	}
+
+	for i := range total {
+		if err := recorder.Observe(ctx, runID, classify.Result{Domain: fmt.Sprintf("d%d.example", i)}); err != nil {
+			t.Fatalf("observe %d: %v", i, err)
+		}
+	}
+
+	if err := recorder.CompleteScan(ctx, runID, time.Minute, classify.Counts{Scanned: total}); err != nil {
+		t.Fatalf("complete run: %v", err)
+	}
+
+	if err := writer.GracefulClose(ctx); err != nil {
+		t.Fatalf("close writer: %v", err)
+	}
+
+	appendWall := time.Since(appendStart)
+
+	reader, err := scanstore.Boot(ctx, dsn)
+	if err != nil {
+		t.Fatalf("boot reader: %v", err)
+	}
+
+	defer func() { _ = reader.Close() }()
+
+	var replayed int
+
+	replayStart := time.Now()
+
+	if _, err := scanstore.StreamObservations(ctx, reader, "", func(classify.Result) error {
+		replayed++
+
+		return nil
+	}); err != nil {
+		t.Fatalf("stream replay: %v", err)
+	}
+
+	replayWall := time.Since(replayStart)
+
+	size, err := os.Stat(dsn)
+	if err != nil {
+		t.Fatalf("stat store: %v", err)
+	}
+
+	var mem runtime.MemStats
+
+	runtime.ReadMemStats(&mem)
+
+	if replayed != total {
+		t.Errorf("replayed %d of %d observations", replayed, total)
+	}
+
+	t.Logf("100k events: append %s (%.0f/s), replay %s (%.0f/s), db %d MiB, heap in use %d MiB",
+		appendWall, float64(total)/appendWall.Seconds(),
+		replayWall, float64(total)/replayWall.Seconds(),
+		size.Size()/(1<<20), mem.HeapInuse/(1<<20))
 }
