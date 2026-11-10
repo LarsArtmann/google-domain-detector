@@ -20,9 +20,9 @@ type ReplayFlags struct {
 	EventStore string `env:"EVENT_STORE" flag:"event-store" help:"SQLite event store written by scan --event-store"`
 	Run        string `                  flag:"run"         help:"Rebuild this run ID (default: the most recent run)"`
 	Since      string `                  flag:"since"       help:"Diff mode: report only domains whose verdict flipped since this run ID (the adoption/departure signal)"`
-	Format     string `                  flag:"format"      help:"Output format"                                      default:"table" values:"table,json,csv,tsv,markdown,yaml,toml,jsonl"`
-	Only       string `                  flag:"only"        help:"Report only matching domains"                       default:"all"   values:"all,workspace,gcp,google"`
-	Color      string `                  flag:"color"       help:"Terminal colors for table output"                   default:"auto"  values:"auto,always,never"`
+	Format     string `default:"table" flag:"format" help:"Output format" values:"table,json,csv,tsv,markdown,yaml,toml,jsonl"`
+	Only       string `default:"all" flag:"only" help:"Report only matching domains" values:"all,workspace,gcp,google"`
+	Color      string `default:"auto" flag:"color" help:"Terminal colors for table output" values:"auto,always,never"`
 }
 
 // runSummaryLine is the one-line run readout shared by scan and replay:
@@ -31,7 +31,7 @@ type ReplayFlags struct {
 func runSummaryLine(prefix string, c classify.Counts) string {
 	var b strings.Builder
 
-	fmt.Fprintf(&b, "%s workspace certain %d / likely %d, gcp %d, errors %d%s",
+	_, _ = fmt.Fprintf(&b, "%s workspace certain %d / likely %d, gcp %d, errors %d%s",
 		prefix, c.WorkspaceCertain, c.WorkspaceLikely, c.GCPCertain, c.Errors, errorKindsSuffix(c))
 
 	return b.String()
@@ -59,7 +59,7 @@ func provenanceSuffix(wave string, ruleset classify.Ruleset) string {
 // runReplay rebuilds a scan report from the event journal alone: no DNS.
 func runReplay(ctx context.Context, f ReplayFlags, stdout, stderr io.Writer) error {
 	if f.EventStore == "" {
-		return usageError(errors.New("--event-store is required (or set GDD_EVENT_STORE)"))
+		return usageError(errEventStoreRequired)
 	}
 
 	filter, err := render.ParseFilter(f.Only)
@@ -116,23 +116,23 @@ func runReplay(ctx context.Context, f ReplayFlags, stdout, stderr io.Writer) err
 		})
 		if err != nil {
 			if errors.Is(err, scanstore.ErrNoRuns) {
-				return fmt.Errorf("no scan runs found in %s", f.EventStore)
+				return fmt.Errorf("%s: %w", f.EventStore, err)
 			}
 
 			if errors.Is(err, scanstore.ErrUnknownRun) {
-				return fmt.Errorf("run %q not found in %s", runRefOrLatest(f.Run), f.EventStore)
+				return fmt.Errorf("run %q not found in %s: %w", runRefOrLatest(f.Run), f.EventStore, err)
 			}
 
 			return err
 		}
 
-		fmt.Fprintf(stderr, "run %s: %d domains, %s%s\n",
+		_, _ = fmt.Fprintf(stderr, "run %s: %d domains, %s%s\n",
 			summary.RunID, summary.Counts.Scanned,
 			runSummaryLine("", summary.Counts),
 			provenanceSuffix(summary.Wave, summary.Ruleset))
 
 		if f.Since != "" {
-			fmt.Fprintf(stderr, "delta vs run %s: %d flips\n", f.Since, flips)
+			_, _ = fmt.Fprintf(stderr, "delta vs run %s: %d flips\n", f.Since, flips)
 			warnRulesetMismatch(stderr, fromSummary, &summary)
 		}
 
@@ -142,11 +142,11 @@ func runReplay(ctx context.Context, f ReplayFlags, stdout, stderr io.Writer) err
 	replay, err := scanstore.ReplayJournal(ctx, sys, f.Run)
 	if err != nil {
 		if errors.Is(err, scanstore.ErrNoRuns) {
-			return fmt.Errorf("no scan runs found in %s", f.EventStore)
+			return fmt.Errorf("%s: %w", f.EventStore, err)
 		}
 
 		if errors.Is(err, scanstore.ErrUnknownRun) {
-			return fmt.Errorf("run %q not found in %s", runRefOrLatest(f.Run), f.EventStore)
+			return fmt.Errorf("run %q not found in %s: %w", runRefOrLatest(f.Run), f.EventStore, err)
 		}
 
 		return err
@@ -163,7 +163,7 @@ func runReplay(ctx context.Context, f ReplayFlags, stdout, stderr io.Writer) err
 	}
 
 	if summary != nil {
-		fmt.Fprintf(stderr, "run %s: %d domains, %s%s\n",
+		_, _ = fmt.Fprintf(stderr, "run %s: %d domains, %s%s\n",
 			summary.RunID, summary.Counts.Scanned,
 			runSummaryLine("", summary.Counts),
 			provenanceSuffix(summary.Wave, summary.Ruleset))
@@ -191,7 +191,7 @@ func runReplay(ctx context.Context, f ReplayFlags, stdout, stderr io.Writer) err
 		}
 
 		counts := scanstore.CountFlips(flips)
-		fmt.Fprintf(stderr, "delta vs run %s: %d flips — workspace adopted %d / left %d, gcp adopted %d / left %d\n",
+		_, _ = fmt.Fprintf(stderr, "delta vs run %s: %d flips — workspace adopted %d / left %d, gcp adopted %d / left %d\n",
 			f.Since, len(flips),
 			counts.WorkspaceAdopted, counts.WorkspaceLeft,
 			counts.GCPAdopted, counts.GCPLeft)
@@ -232,11 +232,11 @@ func replayBaseline(ctx context.Context, sys *system.System, sinceRun, eventStor
 	replay, err := scanstore.ReplayJournal(ctx, sys, sinceRun)
 	if err != nil {
 		if errors.Is(err, scanstore.ErrNoRuns) {
-			return baseline{}, fmt.Errorf("no scan runs found in %s", eventStore)
+			return baseline{}, fmt.Errorf("%s: %w", eventStore, err)
 		}
 
 		if errors.Is(err, scanstore.ErrUnknownRun) {
-			return baseline{}, fmt.Errorf("--since run %q not found in %s", sinceRun, eventStore)
+			return baseline{}, fmt.Errorf("--since run %q not found in %s: %w", sinceRun, eventStore, err)
 		}
 
 		return baseline{}, err
