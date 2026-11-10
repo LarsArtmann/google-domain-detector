@@ -220,6 +220,14 @@ which is paperwork only the account holder can sign:
 - [ ] ErrNoRuns error should name the store path; eyeball the describe
       battery output now that --resume/--wave exist (plan v3 E31).
 
+## Harvested from the 10-11 v3-spine report
+
+- [x] Fix the flaky cancel test "accordingly (deterministic cancel
+      trigger first suspect)" — done: both Ctrl-C tests cancel from
+      hangRes.LookupTXT when slow.com's lookup begins (strictly after
+      run-start); wall-clock AfterFunc removed; full -race gates green
+      twice consecutively (2026-11-10).
+
 ## Harvested from the 01-12 and 06-09 reports (docs-gates audit-all)
 
 - [x] Streaming/chunked input loader (30M-domain scale) — done: chunked
