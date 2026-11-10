@@ -67,21 +67,61 @@ func Filtered(results []classify.Result, f Filter) []classify.Result {
 	return out
 }
 
+// TableOptions carries presentation choices for table-shaped output: a
+// document title and terminal color handling.
+type TableOptions struct {
+	Title     string
+	ColorMode output.ColorMode
+}
+
 // Table renders results in the given table-shaped format (validated against
-// go-output's format enum by the caller).
-func Table(w io.Writer, results []classify.Result, format output.Format) error {
+// go-output's format enum by the caller). Human-oriented formats (table,
+// markdown) get a summary footer; delimited formats stay pure data so CSV
+// consumers never see a totals row.
+func Table(w io.Writer, results []classify.Result, format output.Format, opts TableOptions) error {
 	data := output.NewTable([]string{"Domain", "Workspace", "GCP", "Evidence", "Error"})
 	for _, r := range results {
-		data.AddRow([]string{
+		if err := data.AddRowChecked([]string{
 			r.Domain,
 			verdictCell(r.WorkspaceVerdict()),
 			verdictCell(r.GCPVerdict()),
 			EvidenceSummary(r),
 			r.Err,
-		})
+		}); err != nil {
+			return fmt.Errorf("add row for %s: %w", r.Domain, err)
+		}
 	}
 
-	return output.RenderTable(data, format, output.RenderOptions{Writer: w})
+	if format == output.FormatTable || format == output.FormatMarkdown {
+		data.SetFooter(summaryFooter(results))
+	}
+
+		renderOpts := output.RenderOptions{Writer: w, Title: opts.Title, ColorMode: opts.ColorMode}
+
+	return output.RenderTable(data, format, renderOpts)
+}
+
+// summaryFooter is the totals row for human-oriented formats, spread over
+// the table's leading columns.
+func summaryFooter(results []classify.Result) []string {
+	workspace, gcp := 0, 0
+	for _, r := range results {
+		if r.WorkspaceVerdict().Detected {
+			workspace++
+		}
+
+		if r.GCPVerdict().Detected {
+			gcp++
+		}
+	}
+
+	return []string{
+		fmt.Sprintf("%d domains", len(results)),
+		fmt.Sprintf("%d workspace", workspace),
+		fmt.Sprintf("%d gcp", gcp),
+		"",
+		"",
+	}
 }
 
 // JSON writes the full-fidelity results: verdicts expanded, every evidence

@@ -44,9 +44,10 @@ type ScanFlags struct {
 	NoRanges   bool          `flag:"no-ranges"    help:"Skip GCP IP-range matching (CNAME/MX/NS evidence only)"`
 	NoDKIM     bool          `flag:"no-dkim"      help:"Skip the google._domainkey probe"`
 	Resolver   string        `flag:"resolver"     help:"Query this DNS server (host or host:port) instead of the system resolver"                                                                                                                                                                                                         env:"RESOLVER"`
-	EventStore string        `flag:"event-store"  help:"Persist the run as events in this SQLite file (go-cqrs-lite journal; replay with the replay command)"                                                                                                                                                                             env:"EVENT_STORE"`
+	EventStore string        `flag:"event-store"  help:"Persist the run as events in this SQLite file (go-cqrs-lite journal; replay with the replay command)"                                                                                                                                                                                                             env:"EVENT_STORE"`
 	Resume     string        `flag:"resume"       help:"Skip domains already observed in a recorded run (exact run ID, or 'latest'); starts a new run linked to it. Requires --event-store"`
 	Wave       string        `flag:"wave"         help:"Census wave ID stamped into the event journal (e.g. tranco1m-a); empty for ad-hoc runs. Requires --event-store"`
+	Color      string        `flag:"color" help:"Terminal colors for table output" default:"auto" values:"auto,always,never"`
 }
 
 // Run builds the CLI and executes args. Construction errors are printed to
@@ -168,8 +169,15 @@ func runScan(
 
 	format, err := output.ParseFormat(f.Format)
 	if err != nil {
+		return usageError(err)
+	}
+
+	color, err := parseColorMode(f.Color)
+	if err != nil {
 		return err
 	}
+
+	tableOpts := render.TableOptions{ColorMode: color}
 
 	// A --resume run first learns what its source run already observed,
 	// then skips those domains; the new run links back via scan.started.
@@ -309,7 +317,7 @@ func runScan(
 	if stream != nil {
 		rendered = stream.Err() // lines were already written as they completed
 	} else {
-		rendered = renderResults(stdout, results, filter, format)
+		rendered = renderResults(stdout, results, filter, format, tableOpts)
 	}
 
 	fmt.Fprintf(stderr, "%d domains: workspace certain %d / likely %d, gcp %d, errors %d%s\n",
@@ -321,6 +329,21 @@ func runScan(
 	}
 
 	return rendered
+}
+
+// parseColorMode resolves the --color flag, treating the zero value as auto
+// (direct runScan calls skip cmdguard's flag defaults).
+func parseColorMode(value string) (output.ColorMode, error) {
+	if value == "" {
+		value = string(output.ColorModeAuto)
+	}
+
+	mode, err := output.ParseColorMode(value)
+	if err != nil {
+		return mode, usageError(err)
+	}
+
+	return mode, nil
 }
 
 // errorKindsSuffix explains the error total with its kind breakdown, so a
@@ -354,7 +377,7 @@ func chainOnResult(opts *scan.Options, next func(classify.Result)) {
 // bypasses this for jsonl, streaming lines as results complete (see
 // render.JSONLStream); replay keeps the buffered path until journal walks
 // stream natively.
-func renderResults(w io.Writer, results []classify.Result, filter render.Filter, format output.Format) error {
+func renderResults(w io.Writer, results []classify.Result, filter render.Filter, format output.Format, opts render.TableOptions) error {
 	results = render.Filtered(results, filter)
 
 	switch format {
@@ -363,7 +386,7 @@ func renderResults(w io.Writer, results []classify.Result, filter render.Filter,
 	case output.FormatJSONL:
 		return render.JSONL(w, results)
 	default:
-		return render.Table(w, results, format)
+		return render.Table(w, results, format, opts)
 	}
 }
 

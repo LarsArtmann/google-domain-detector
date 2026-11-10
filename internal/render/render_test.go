@@ -103,7 +103,7 @@ func TestTableRendering(t *testing.T) {
 		}
 
 		var buf bytes.Buffer
-		if err := Table(&buf, sampleResults(), f); err != nil {
+		if err := Table(&buf, sampleResults(), f, TableOptions{}); err != nil {
 			t.Fatalf("Table(%s) failed: %v", format, err)
 		}
 
@@ -130,7 +130,7 @@ func TestTableSerializationFormats(t *testing.T) {
 		}
 
 		var buf bytes.Buffer
-		if err := Table(&buf, sampleResults(), f); err != nil {
+		if err := Table(&buf, sampleResults(), f, TableOptions{}); err != nil {
 			t.Fatalf("Table(%s) failed: %v", format, err)
 		}
 

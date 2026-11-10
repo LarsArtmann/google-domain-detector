@@ -19,6 +19,7 @@ import (
 type ShowFlags struct {
 	EventStore string `env:"EVENT_STORE" flag:"event-store" help:"SQLite event store written by scan --event-store"`
 	Format     string `                 flag:"format"      help:"Output format"             default:"table" values:"table,json,csv,tsv,markdown,yaml,toml,jsonl"`
+	Color      string `flag:"color" help:"Terminal colors for table output" default:"auto" values:"auto,always,never"`
 }
 
 var errShowNeedsOneDomain = errors.New("show needs exactly one domain: show example.com --event-store scans.db")
@@ -43,6 +44,11 @@ func runShow(ctx context.Context, f ShowFlags, args []string, stdout, stderr io.
 	format, err := output.ParseFormat(f.Format)
 	if err != nil {
 		return usageError(err)
+	}
+
+	colorMode, err := parseColorMode(f.Color)
+	if err != nil {
+		return err
 	}
 
 	sys, err := scanstore.Open(ctx, f.EventStore)
@@ -71,5 +77,5 @@ func runShow(ctx context.Context, f ShowFlags, args []string, stdout, stderr io.
 		ErrKind:   view.ErrKind,
 	}
 
-	return renderResults(stdout, []classify.Result{result}, render.FilterAll, format)
+	return renderResults(stdout, []classify.Result{result}, render.FilterAll, format, render.TableOptions{ColorMode: colorMode})
 }
