@@ -128,9 +128,51 @@ func TestScanNoDomainsError(t *testing.T) {
 func TestScanRejectsUnknownFormat(t *testing.T) {
 	t.Parallel()
 
-	_, _, err := run(t, workspaceDomain(), "", "scan", "--no-ranges", "--format", "yaml", "acme.com")
+	_, _, err := run(t, workspaceDomain(), "", "scan", "--no-ranges", "--format", "bogus", "acme.com")
 	if err == nil {
-		t.Error("yaml is not a registered table format and must fail the values validation")
+		t.Error("unknown format must fail the values validation")
+	}
+}
+
+func TestScanAcceptsSerializationFormats(t *testing.T) {
+	t.Parallel()
+
+	for _, format := range []string{"yaml", "toml", "jsonl"} {
+		stdout, _, err := run(t, workspaceDomain(), "", "scan", "--no-ranges", "--format", format, "acme.com")
+		if err != nil {
+			t.Errorf("%s: scan failed: %v", format, err)
+
+			continue
+		}
+
+		if !strings.Contains(stdout, "acme.com") {
+			t.Errorf("%s: domain missing from output:\n%s", format, stdout)
+		}
+	}
+}
+
+func TestScanJSONLOutputsOneObjectPerLine(t *testing.T) {
+	t.Parallel()
+
+	stdout, _, err := run(t, workspaceDomain(), "", "scan", "--no-ranges", "--format", "jsonl", "acme.com")
+	if err != nil {
+		t.Fatalf("scan failed: %v", err)
+	}
+
+	lines := strings.Split(strings.TrimRight(stdout, "\n"), "\n")
+	if len(lines) != 1 {
+		t.Fatalf("want 1 line for 1 domain, got %d:\n%s", len(lines), stdout)
+	}
+
+	var got map[string]any
+	if err := json.Unmarshal([]byte(lines[0]), &got); err != nil {
+		t.Fatalf("jsonl line is not a JSON object: %v\n%s", err, lines[0])
+	}
+
+	for _, key := range []string{"domain", "workspace", "gcp", "evidence"} {
+		if _, ok := got[key]; !ok {
+			t.Errorf("jsonl line missing %q:\n%s", key, lines[0])
+		}
 	}
 }
 

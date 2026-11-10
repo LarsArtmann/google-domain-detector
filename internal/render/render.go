@@ -88,19 +88,41 @@ func Table(w io.Writer, results []classify.Result, format output.Format) error {
 func JSON(w io.Writer, results []classify.Result) error {
 	dto := make([]jsonResult, 0, len(results))
 	for _, r := range results {
-		dto = append(dto, jsonResult{
-			Domain:        r.Domain,
-			Workspace:     jsonVerdictFrom(r.WorkspaceVerdict()),
-			GCP:           jsonVerdictFrom(r.GCPVerdict()),
-			GenericGoogle: r.GenericGoogle(),
-			Evidences:     r.Evidences,
-			Error:         r.Err,
-		})
+		dto = append(dto, jsonResultFrom(r))
 	}
 
 	enc := jsontext.NewEncoder(w)
 
 	return json.MarshalEncode(enc, dto)
+}
+
+// JSONL writes one result object per line: the JSON DTO without the array
+// wrapper, so output can be consumed line-by-line and appended to across
+// runs.
+func JSONL(w io.Writer, results []classify.Result) error {
+	for _, r := range results {
+		line, err := json.Marshal(jsonResultFrom(r))
+		if err != nil {
+			return fmt.Errorf("encode %s: %w", r.Domain, err)
+		}
+
+		if _, err := w.Write(append(line, '\n')); err != nil {
+			return fmt.Errorf("write %s: %w", r.Domain, err)
+		}
+	}
+
+	return nil
+}
+
+func jsonResultFrom(r classify.Result) jsonResult {
+	return jsonResult{
+		Domain:        r.Domain,
+		Workspace:     jsonVerdictFrom(r.WorkspaceVerdict()),
+		GCP:           jsonVerdictFrom(r.GCPVerdict()),
+		GenericGoogle: r.GenericGoogle(),
+		Evidences:     r.Evidences,
+		Error:         r.Err,
+	}
 }
 
 type jsonResult struct {

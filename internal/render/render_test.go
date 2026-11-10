@@ -120,6 +120,47 @@ func TestTableRendering(t *testing.T) {
 	}
 }
 
+func TestTableSerializationFormats(t *testing.T) {
+	t.Parallel()
+
+	for _, format := range []string{"yaml", "toml"} {
+		f, err := output.ParseFormat(format)
+		if err != nil {
+			t.Fatalf("format %s: %v", format, err)
+		}
+
+		var buf bytes.Buffer
+		if err := Table(&buf, sampleResults(), f); err != nil {
+			t.Fatalf("Table(%s) failed: %v", format, err)
+		}
+
+		out := buf.String()
+		for _, want := range []string{"acme.com", "certain", "acme.web.app", "gone.example", "domain not found"} {
+			if !strings.Contains(out, want) {
+				t.Errorf("%s output missing %q:\n%s", format, want, out)
+			}
+		}
+	}
+}
+
+func TestJSONLOneObjectPerLine(t *testing.T) {
+	t.Parallel()
+
+	var buf bytes.Buffer
+	if err := JSONL(&buf, sampleResults()); err != nil {
+		t.Fatalf("JSONL failed: %v", err)
+	}
+
+	lines := strings.Split(strings.TrimRight(buf.String(), "\n"), "\n")
+	if len(lines) != len(sampleResults()) {
+		t.Fatalf("want %d lines, got %d:\n%s", len(sampleResults()), len(lines), buf.String())
+	}
+
+	if !strings.Contains(lines[0], `"domain":"acme.com"`) && !strings.Contains(lines[0], `"domain": "acme.com"`) {
+		t.Errorf("first jsonl line must carry the first domain:\n%s", lines[0])
+	}
+}
+
 func TestJSONRoundTrip(t *testing.T) {
 	t.Parallel()
 

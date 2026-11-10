@@ -37,7 +37,7 @@ type RootConfig struct{}
 // ScanFlags is the scan command's own flag set.
 type ScanFlags struct {
 	Input      string        `flag:"input"        help:"Read domains from FILE ('-' reads stdin). Plain lists and CSV with a domain/website/url column both work" short:"i"`
-	Format     string        `flag:"format"       help:"Output format"                                                                                            short:"f" default:"table"                                       values:"table,json,csv,tsv,markdown"`
+	Format     string        `flag:"format"       help:"Output format"                                                                                            short:"f" default:"table"                                       values:"table,json,csv,tsv,markdown,yaml,toml,jsonl"`
 	Workers    int           `flag:"workers"      help:"Parallel DNS lookups"                                                                                     short:"j" default:"8"`
 	Timeout    time.Duration `flag:"timeout"      help:"Per-domain lookup budget"                                                                                           default:"5s"`
 	Only       string        `flag:"only"         help:"Report only matching domains"                                                                                       default:"all"                                         values:"all,workspace,gcp,google"`
@@ -172,13 +172,19 @@ func runScan(
 }
 
 // renderResults filters and writes the report in the requested format.
+// json and jsonl carry the full-evidence DTO (array vs one object per
+// line); every other format is table-shaped via go-output.
 func renderResults(w io.Writer, results []classify.Result, filter render.Filter, format output.Format) error {
 	results = render.Filtered(results, filter)
-	if format == output.FormatJSON {
-		return render.JSON(w, results)
-	}
 
-	return render.Table(w, results, format)
+	switch format {
+	case output.FormatJSON:
+		return render.JSON(w, results)
+	case output.FormatJSONL:
+		return render.JSONL(w, results)
+	default:
+		return render.Table(w, results, format)
+	}
 }
 
 // attachEventStore, when --event-store is set, opens the event-sourced scan
