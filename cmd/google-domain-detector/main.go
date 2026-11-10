@@ -14,7 +14,7 @@ import (
 // version and commit are overridden at link time (-X main.version=...).
 var (
 	version = "dev"
-	commit  = ""
+	commit  = "" //nolint:gochecknoglobals // -X main.commit ldflags stamp; a parameter cannot reach the linker
 )
 
 func main() {

@@ -6,8 +6,8 @@
 set -euo pipefail
 
 if [ $# -lt 2 ]; then
-    echo "usage: $0 <domain-list> <n> [outfile]" >&2
-    exit 2
+	echo "usage: $0 <domain-list> <n> [outfile]" >&2
+	exit 2
 fi
 
 list=$1
@@ -15,12 +15,12 @@ count=$2
 out=${3:-/dev/stdout}
 
 if [ ! -f "$list" ]; then
-    echo "census-slice: no such list: $list" >&2
-    exit 2
+	echo "census-slice: no such list: $list" >&2
+	exit 2
 fi
 if ! [[ $count =~ ^[0-9]+$ ]] || [ "$count" -eq 0 ]; then
-    echo "census-slice: slice size must be a positive integer, got: $count" >&2
-    exit 2
+	echo "census-slice: slice size must be a positive integer, got: $count" >&2
+	exit 2
 fi
 
 tr -d '\r' <"$list" | head -n "$count" >"$out"

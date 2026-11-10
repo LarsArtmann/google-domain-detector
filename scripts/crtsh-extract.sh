@@ -19,38 +19,38 @@ FIXTURE="$REPO_ROOT/scripts/testdata/crtsh-fixture.json"
 FIXTURE_EXPECTED="$REPO_ROOT/scripts/testdata/crtsh-fixture-expected.txt"
 
 selftest() {
-    actual=$(CRTSH_JSON="$FIXTURE" "$0" ch /dev/stdout)
-    expected=$(cat "$FIXTURE_EXPECTED")
-    if [ "$actual" != "$expected" ]; then
-        echo "crtsh-extract self-test FAILED" >&2
-        diff <(printf '%s\n' "$expected") <(printf '%s\n' "$actual") >&2 || true
-        exit 1
-    fi
-    echo "crtsh-extract self-test PASS"
-    exit 0
+	actual=$(CRTSH_JSON="$FIXTURE" "$0" ch /dev/stdout)
+	expected=$(cat "$FIXTURE_EXPECTED")
+	if [ "$actual" != "$expected" ]; then
+		echo "crtsh-extract self-test FAILED" >&2
+		diff <(printf '%s\n' "$expected") <(printf '%s\n' "$actual") >&2 || true
+		exit 1
+	fi
+	echo "crtsh-extract self-test PASS"
+	exit 0
 }
 
 [ "${1:-}" = "--test" ] && selftest
 
 if [ $# -lt 1 ]; then
-    echo "usage: $0 <tld> [outfile]   (--test runs the fixture self-test)" >&2
-    exit 2
+	echo "usage: $0 <tld> [outfile]   (--test runs the fixture self-test)" >&2
+	exit 2
 fi
 
 tld=${1#.}
 out=${2:-/dev/stdout}
 
 if [[ ! "$tld" =~ ^[a-z]{2,}$ ]]; then
-    echo "crtsh-extract: TLD must be 2+ letters, got: $tld" >&2
-    exit 2
+	echo "crtsh-extract: TLD must be 2+ letters, got: $tld" >&2
+	exit 2
 fi
 
 if [ -n "${CRTSH_JSON:-}" ]; then
-    cat "$CRTSH_JSON"
+	cat "$CRTSH_JSON"
 else
-    # --resolve not needed here (this host's resolver handles crt.sh; if it
-    # ever does not, download the dump separately and pass CRTSH_JSON=...).
-    curl -fsSL --max-time 300 "https://crt.sh/?q=%25.${tld}&output=json"
+	# --resolve not needed here (this host's resolver handles crt.sh; if it
+	# ever does not, download the dump separately and pass CRTSH_JSON=...).
+	curl -fsSL --max-time 300 "https://crt.sh/?q=%25.${tld}&output=json"
 fi | jq -r '
     # crt.sh rows carry name_value as newline-joined SAN lists and
     # common_name separately; both can carry wildcards and subdomains.

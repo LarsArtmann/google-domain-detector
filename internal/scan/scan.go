@@ -44,7 +44,7 @@ type Options struct {
 // input order. Context cancellation aborts pending domains; their results
 // carry the cancellation as Err.
 func Run(ctx context.Context, res resolve.Resolver, domains []domain.Domain, opts Options) []classify.Result {
-	results := make([]classify.Result, len(domains))
+	results := make([]classify.Result, len(domains)) //nolint:makezero // presized and index-filled in input order; appending would break the order contract
 	if len(domains) == 0 {
 		return results
 	}
@@ -139,7 +139,7 @@ func ScanDomain(ctx context.Context, res resolve.Resolver, d domain.Domain, opts
 	result := classify.Result{Domain: apex}
 
 	lookupErr := probeApexRecords(ctx, res, apex, opts, &result)
-	if lookupErr == errShortCircuit {
+	if errors.Is(lookupErr, errShortCircuit) {
 		return result
 	}
 

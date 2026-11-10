@@ -260,10 +260,10 @@ func TestRunPreservesInputOrder(t *testing.T) {
 func TestRunCancellationMarksPendingDomains(t *testing.T) {
 	t.Parallel()
 
-	f := newFake()
+	res := newFake()
 	release := make(chan struct{})
-	f.mx = map[string][]*net.MX{}
-	f.mxErr = map[string]error{"slow.com": &net.DNSError{Err: "canceled", Name: "slow.com", IsTimeout: true}}
+	res.mx = map[string][]*net.MX{}
+	res.mxErr = map[string]error{"slow.com": &net.DNSError{Err: "canceled", Name: "slow.com", IsTimeout: true}}
 	_ = release
 
 	ctx, cancel := context.WithCancel(context.Background())
@@ -280,7 +280,7 @@ func TestRunCancellationMarksPendingDomains(t *testing.T) {
 
 	cancel()
 
-	results := Run(ctx, f, domains, Options{Workers: 1, Timeout: time.Second})
+	results := Run(ctx, res, domains, Options{Workers: 1, Timeout: time.Second})
 	for _, r := range results {
 		if r.Domain == "" {
 			t.Error("every result must carry its domain")

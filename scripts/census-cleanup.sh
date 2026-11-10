@@ -20,8 +20,8 @@
 set -euo pipefail
 
 if [ $# -lt 4 ]; then
-    echo "usage: $0 <gdd-binary> <event-store> <wave-id> <wave-jsonl> [max-rounds]" >&2
-    exit 2
+	echo "usage: $0 <gdd-binary> <event-store> <wave-id> <wave-jsonl> [max-rounds]" >&2
+	exit 2
 fi
 
 gdd_bin=$1
@@ -35,10 +35,10 @@ timeout_budget=${GDD_CLEANUP_TIMEOUT:-12s}
 bar=${GDD_CLEANUP_BAR_PCT:-0.5}
 
 for f in "$gdd_bin" "$store" "$in_jsonl"; do
-    if [ ! -e "$f" ]; then
-        echo "census-cleanup: no such path: $f" >&2
-        exit 2
-    fi
+	if [ ! -e "$f" ]; then
+		echo "census-cleanup: no such path: $f" >&2
+		exit 2
+	fi
 done
 
 out_dir=$(dirname "$in_jsonl")
@@ -47,8 +47,8 @@ trap 'rm -f "$work_list"' EXIT
 
 base_total=$(wc -l <"$in_jsonl")
 if [ "$base_total" -eq 0 ]; then
-    echo "census-cleanup: empty input: $in_jsonl" >&2
-    exit 2
+	echo "census-cleanup: empty input: $in_jsonl" >&2
+	exit 2
 fi
 
 current=$in_jsonl
@@ -56,32 +56,32 @@ residual=$(jq -r 'select(.error_kind == "timeout" or .error_kind == "servfail" o
 
 round=0
 while [ "$residual" -gt 0 ] && [ "$round" -lt "$max_rounds" ]; do
-    round=$((round + 1))
-    if [ "$round" -eq 1 ]; then workers=4; else workers=2; fi
+	round=$((round + 1))
+	if [ "$round" -eq 1 ]; then workers=4; else workers=2; fi
 
-    jq -r 'select(.error_kind == "timeout" or .error_kind == "servfail" or .error_kind == "canceled" or .error_kind == "other") | .domain' "$current" >"$work_list"
-    round_jsonl=$out_dir/${wave}-c${round}.jsonl
-    round_stderr=$out_dir/${wave}-c${round}.stderr
+	jq -r 'select(.error_kind == "timeout" or .error_kind == "servfail" or .error_kind == "canceled" or .error_kind == "other") | .domain' "$current" >"$work_list"
+	round_jsonl=$out_dir/${wave}-c${round}.jsonl
+	round_stderr=$out_dir/${wave}-c${round}.stderr
 
-    echo "census-cleanup: round $round — $residual unknown(s), workers $workers, timeout $timeout_budget"
-    "$gdd_bin" scan --no-ranges --workers "$workers" --timeout "$timeout_budget" \
-        --resolver "$resolver" --event-store "$store" --wave "${wave}-c${round}" \
-        --input "$work_list" --format jsonl >"$round_jsonl" 2>"$round_stderr"
+	echo "census-cleanup: round $round — $residual unknown(s), workers $workers, timeout $timeout_budget"
+	"$gdd_bin" scan --no-ranges --workers "$workers" --timeout "$timeout_budget" \
+		--resolver "$resolver" --event-store "$store" --wave "${wave}-c${round}" \
+		--input "$work_list" --format jsonl >"$round_jsonl" 2>"$round_stderr"
 
-    current=$round_jsonl
-    residual=$(jq -r 'select(.error_kind == "timeout" or .error_kind == "servfail" or .error_kind == "canceled" or .error_kind == "other") | .domain' "$current" | wc -l)
-    pct=$(awk -v r="$residual" -v t="$base_total" 'BEGIN { printf "%.2f", r * 100.0 / t }')
-    echo "census-cleanup: after round $round — residual $residual/$base_total (${pct}%)"
+	current=$round_jsonl
+	residual=$(jq -r 'select(.error_kind == "timeout" or .error_kind == "servfail" or .error_kind == "canceled" or .error_kind == "other") | .domain' "$current" | wc -l)
+	pct=$(awk -v r="$residual" -v t="$base_total" 'BEGIN { printf "%.2f", r * 100.0 / t }')
+	echo "census-cleanup: after round $round — residual $residual/$base_total (${pct}%)"
 done
 
 pct=$(awk -v r="$residual" -v t="$base_total" 'BEGIN { printf "%.2f", r * 100.0 / t }')
 under=$(awk -v p="$pct" -v b="$bar" 'BEGIN { print (p < b) ? 1 : 0 }')
 if [ "$residual" -eq 0 ]; then
-    echo "census-cleanup: CLEAN — zero unknowns after $round round(s)"
-    exit 0
+	echo "census-cleanup: CLEAN — zero unknowns after $round round(s)"
+	exit 0
 elif [ "$under" -eq 1 ]; then
-    echo "census-cleanup: PASS — residual ${residual}/${base_total} (${pct}%) under bar ${bar}%"
-    exit 0
+	echo "census-cleanup: PASS — residual ${residual}/${base_total} (${pct}%) under bar ${bar}%"
+	exit 0
 fi
 echo "census-cleanup: STILL OVER BAR — residual ${residual}/${base_total} (${pct}%) vs bar ${bar}% after $round round(s)"
 echo "census-cleanup: next levers: another round, then assess stable-SERVFAIL (census-gate.sh --servfail-stable; D3 refinement in docs/census.md)"

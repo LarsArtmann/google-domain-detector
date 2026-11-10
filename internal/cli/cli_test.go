@@ -321,7 +321,7 @@ func TestScanJSONLCancelMidStream(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	d, err := BuildCLI(
+	dispatcher, err := BuildCLI(
 		stdout,
 		&stderr,
 		"test",
@@ -339,7 +339,7 @@ func TestScanJSONLCancelMidStream(t *testing.T) {
 	// deadline; a parent deadline would classify as a per-domain timeout.
 	// The cancel fires from inside hangRes only after fast1.com's line is
 	// emitted — deterministic order under any suite load.
-	err = d.ExecuteWithArgs(ctx, []string{"scan", "--no-ranges", "--format", "jsonl", "fast1.com", "slow.com"})
+	err = dispatcher.ExecuteWithArgs(ctx, []string{"scan", "--no-ranges", "--format", "jsonl", "fast1.com", "slow.com"})
 	if err != nil {
 		t.Fatalf("canceled scan must still finish the report: %v", err)
 	}
@@ -768,7 +768,7 @@ func TestScanMultiChunkRunRecordsAndReplays(t *testing.T) {
 
 	store := filepath.Join(t.TempDir(), "scans.db")
 
-	domains := make([]string, 11) // 4 + 4 + 3 chunks
+	domains := make([]string, 11) //nolint:makezero // presized and index-filled; append order is not the contract here // 4 + 4 + 3 chunks
 	for i := range domains {
 		domains[i] = fmt.Sprintf("d%d.example", i)
 	}

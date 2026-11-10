@@ -28,7 +28,7 @@ func FuzzParse(f *testing.F) {
 		"trailing,comma,\n,\n,\n",
 		"weird\\\"quote\"escape\n",
 		"\xff\xfe\x00bom-utf16-ish\n",
-		"UDPATED_HEADER\ndomain,host\nacme.com\n",
+		"UPDATED_HEADER\ndomain,host\nacme.com\n",
 		strings.Repeat("a,b,c,d,e\n", 500),
 	}
 
@@ -61,6 +61,8 @@ func TestFuzzCorpusOnDisk(t *testing.T) {
 
 	for _, entry := range entries {
 		t.Run(entry.Name(), func(t *testing.T) {
+			t.Parallel()
+
 			raw, err := os.ReadFile(filepath.Join(corpus, entry.Name()))
 			if err != nil {
 				t.Fatalf("read corpus file: %v", err)

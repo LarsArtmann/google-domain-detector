@@ -35,7 +35,7 @@ scripts/unbound.sh start     # also: stop | status | restart
   SERVFAIL that persists across ≥2 cleanup rounds through a verified
   healthy forwarder is a domain-side broken delegation (dead or
   misconfigured authoritative servers), not tool state. It counts as
-  *explained* in coverage — but never silently: confirm resolver health
+  _explained_ in coverage — but never silently: confirm resolver health
   first, then pass `--servfail-stable` to `census-gate.sh` so the
   reclassification is explicit in the gate output. E10 evidence: 567
   SERVFAILs stable across two rounds (r1 heavy-load, r2 healthy
@@ -84,25 +84,25 @@ operator decision, not an accounting default.
 
 ### Wave ledger
 
-| Wave        | Ranks          | List  | Manifest sha256 (first 12) | Status |
-| ----------- | -------------- | ----- | -------------------------- | ------ |
-| tranco1m-a  | 1–100 000      | 947N2 | b4450f660567               | pending |
-| tranco1m-b  | 100 001–500 000| 947N2 | b6d5b3821c90               | pending |
-| tranco1m-c  | 500 001–1 000 000 | 947N2 | b0317d71873a             | pending |
+| Wave       | Ranks             | List  | Manifest sha256 (first 12) | Status  |
+| ---------- | ----------------- | ----- | -------------------------- | ------- |
+| tranco1m-a | 1–100 000         | 947N2 | b4450f660567               | pending |
+| tranco1m-b | 100 001–500 000   | 947N2 | b6d5b3821c90               | pending |
+| tranco1m-c | 500 001–1 000 000 | 947N2 | b0317d71873a               | pending |
 
 ## Worker-pressure findings (E7/E9 ladder, measured 2026-11-10)
 
 Two resolver modes were measured, cold cache, 10s timeout, mixed-TLD
 Tranco slices (worst-case single-TLD .ch noted where it differs):
 
-| Mode            | Workers | dom/s | unknown% | Gate |
-| --------------- | ------- | ----- | -------- | ---- |
-| full recursion  | 2       | 2.9   | 3.0%     | FAIL |
-| full recursion  | 4       | 1.2   | 19.5–24% | FAIL |
-| full recursion  | 8       | 0.7   | 20–22%   | FAIL |
-| **forwarder**   | 4       | 3.7   | 0.5%     | PASS |
-| **forwarder**   | **8**   | **4.1** | **1.5%** | **PASS** |
-| forwarder       | 16      | 1.9   | 65.5%    | FAIL |
+| Mode           | Workers | dom/s   | unknown% | Gate     |
+| -------------- | ------- | ------- | -------- | -------- |
+| full recursion | 2       | 2.9     | 3.0%     | FAIL     |
+| full recursion | 4       | 1.2     | 19.5–24% | FAIL     |
+| full recursion | 8       | 0.7     | 20–22%   | FAIL     |
+| **forwarder**  | 4       | 3.7     | 0.5%     | PASS     |
+| **forwarder**  | **8**   | **4.1** | **1.5%** | **PASS** |
+| forwarder      | 16      | 1.9     | 65.5%    | FAIL     |
 
 Full recursion from this host collapses under scan bursts: cold
 recursions take 10–20s+ at ≥4 workers (every victim resolves instantly

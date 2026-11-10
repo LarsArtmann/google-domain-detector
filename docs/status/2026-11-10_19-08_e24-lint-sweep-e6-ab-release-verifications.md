@@ -315,6 +315,7 @@ was fixed before this report (build green at write time).
    story), or parked with you as owner tooling?
 
 ---
-*Point-in-time snapshot 19:08 CET, tree uncommitted-but-green (E24
+
+_Point-in-time snapshot 19:08 CET, tree uncommitted-but-green (E24
 batch), `64c6b80` pushed to both remotes. Census sibling ACTIVE
-(scripts/unbound.* at 14:54). E7/E6 artifacts archived in reports/.*
+(scripts/unbound._ at 14:54). E7/E6 artifacts archived in reports/.*

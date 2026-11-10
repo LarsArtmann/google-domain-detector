@@ -227,11 +227,11 @@ which is paperwork only the account holder can sign:
       census input (docs/zone-data/switch-ch.md has the exact AXFR
       command; once/24h limit) — feeds the pre-filter (plan v3 E28).
 - [~] Re-verify the nxdomain bucket via a FRESH-cache resolver (unbound,
-      census E7) before quoting any coverage number — the E1 replication
-      found stale negative-cache lies at ~92% of the sampled bucket; D3's
-      tail bar is only assessable on unbound-backed runs. (plan v3 E7/E10
-      feed this.) — in progress: the 7,204-recovery run covers exactly
-      this bucket (incl. the 1,235 lying-NXDOMAIN victims).
+  census E7) before quoting any coverage number — the E1 replication
+  found stale negative-cache lies at ~92% of the sampled bucket; D3's
+  tail bar is only assessable on unbound-backed runs. (plan v3 E7/E10
+  feed this.) — in progress: the 7,204-recovery run covers exactly
+  this bucket (incl. the 1,235 lying-NXDOMAIN victims).
 - [ ] Fuzz the input parser (CSV quoting/encoding edges) — plan v3 E33.
 - [ ] IPv6 resolver-address handling check (`--resolver` only IPv4-tested)
       — plan v3 E31.

@@ -215,6 +215,9 @@ linters:
         - a
         - b
         - v
+        # cmdguard convention: every runX takes its flag struct as `f XxxFlags`;
+        # the flags struct is the function's subject, not an anonymous value.
+        - f
       ignore-type-assert-ok: true
       max-distance: 15
       min-name-length: 2

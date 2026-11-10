@@ -21,28 +21,31 @@ set -euo pipefail
 
 sf_stable=0
 while [ $# -gt 0 ]; do
-    case $1 in
-        --servfail-stable) sf_stable=1; shift ;;
-        *) break ;;
-    esac
+	case $1 in
+	--servfail-stable)
+		sf_stable=1
+		shift
+		;;
+	*) break ;;
+	esac
 done
 
 if [ $# -lt 1 ]; then
-    echo "usage: $0 [--servfail-stable] <stderr-or-jsonl-file> [max-unknown-pct]" >&2
-    exit 2
+	echo "usage: $0 [--servfail-stable] <stderr-or-jsonl-file> [max-unknown-pct]" >&2
+	exit 2
 fi
 
 file=$1
 budget=${2:-2}
 
 if [ ! -f "$file" ]; then
-    echo "census-gate: no such file: $file" >&2
-    exit 2
+	echo "census-gate: no such file: $file" >&2
+	exit 2
 fi
 
 pass_fail() {
-    local total=$1 nxdomain=$2 servfail=$3 unknown=$4
-    awk -v total="$total" -v nx="$nxdomain" -v sf="$servfail" -v unk="$unknown" -v budget="$budget" -v sf_stable="$sf_stable" '
+	local total=$1 nxdomain=$2 servfail=$3 unknown=$4
+	awk -v total="$total" -v nx="$nxdomain" -v sf="$servfail" -v unk="$unknown" -v budget="$budget" -v sf_stable="$sf_stable" '
         BEGIN {
             if (total <= 0) { print "census-gate: FAIL (no domains counted)"; exit 1 }
             rate = unk * 100.0 / total
@@ -58,20 +61,20 @@ pass_fail() {
 summary_pattern='^[0-9]+ domains: workspace certain [0-9]+ / likely [0-9]+, gcp [0-9]+, errors [0-9]+'
 
 if grep -Eq "$summary_pattern" "$file"; then
-    # stderr run-summary form:
-    # "N domains: workspace certain X / likely Y, gcp Z, errors E (nxdomain a, timeout b, servfail c, canceled d, other e)"
-    line="$(grep -E "$summary_pattern" "$file" | tail -1)"
-    read -r total nx timeouts servfail canceled other <<<"$(printf '%s\n' "$line" | sed -E '
+	# stderr run-summary form:
+	# "N domains: workspace certain X / likely Y, gcp Z, errors E (nxdomain a, timeout b, servfail c, canceled d, other e)"
+	line="$(grep -E "$summary_pattern" "$file" | tail -1)"
+	read -r total nx timeouts servfail canceled other <<<"$(printf '%s\n' "$line" | sed -E '
         s/^([0-9]+) domains:.*errors [0-9]+ \(nxdomain ([0-9]+), timeout ([0-9]+), servfail ([0-9]+), canceled ([0-9]+), other ([0-9]+)\).*/\1 \2 \3 \4 \5 \6/')"
-    if [ -z "${total:-}" ] || [ "$total" = "$line" ]; then
-        echo "census-gate: found summary line but could not parse it: $line" >&2
-        exit 2
-    fi
-    if [ "$sf_stable" = 1 ]; then unknown=$((timeouts + canceled + other)); else unknown=$((timeouts + servfail + canceled + other)); fi
-    pass_fail "$total" "$nx" "$servfail" "$unknown"
+	if [ -z "${total:-}" ] || [ "$total" = "$line" ]; then
+		echo "census-gate: found summary line but could not parse it: $line" >&2
+		exit 2
+	fi
+	if [ "$sf_stable" = 1 ]; then unknown=$((timeouts + canceled + other)); else unknown=$((timeouts + servfail + canceled + other)); fi
+	pass_fail "$total" "$nx" "$servfail" "$unknown"
 elif grep -q '"error_kind"' "$file"; then
-    # jsonl form: count per-line error_kind values
-    read -r total errors nx timeouts servfail canceled other <<<"$(jq -r '[.error_kind // "none"] | @tsv' "$file" | awk -F'\t' '
+	# jsonl form: count per-line error_kind values
+	read -r total errors nx timeouts servfail canceled other <<<"$(jq -r '[.error_kind // "none"] | @tsv' "$file" | awk -F'\t' '
         { total++; k=$1 }
         k=="none"    { ok++ }
         k=="nxdomain" { nx++ }
@@ -80,9 +83,9 @@ elif grep -q '"error_kind"' "$file"; then
         k=="canceled" { c++ }
         k=="other"    { o++ }
         END { printf "%d %d %d %d %d %d %d\n", total, total-(nx+t+s+c+o), nx+0, t+0, s+0, c+0, o+0 }')"
-    if [ "$sf_stable" = 1 ]; then unknown=$((timeouts + canceled + other)); else unknown=$((timeouts + servfail + canceled + other)); fi
-    pass_fail "$total" "$nx" "$servfail" "$unknown"
+	if [ "$sf_stable" = 1 ]; then unknown=$((timeouts + canceled + other)); else unknown=$((timeouts + servfail + canceled + other)); fi
+	pass_fail "$total" "$nx" "$servfail" "$unknown"
 else
-    echo "census-gate: $file is neither a run summary (stderr) nor jsonl output" >&2
-    exit 2
+	echo "census-gate: $file is neither a run summary (stderr) nor jsonl output" >&2
+	exit 2
 fi

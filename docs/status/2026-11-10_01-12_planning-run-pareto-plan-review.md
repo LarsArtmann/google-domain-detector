@@ -134,8 +134,8 @@ _The plan file owns the detailed list; this is the ranked digest._
 
 **Scale readiness:**
 7. T7: JSONL streaming output (90m) — RESOLVED-DONE (landed as render
-   JSONLStream + scan/replay streaming paths; struck row in TODO_LIST
-   Detection coverage; annotated 2026-11-10 because tokens went generic).
+JSONLStream + scan/replay streaming paths; struck row in TODO_LIST
+Detection coverage; annotated 2026-11-10 because tokens went generic).
 8. T8: chunked input streaming (90m)
 9. T9: resume/checkpointing (90m)
 10. T10: one-shot transient retry (45m)

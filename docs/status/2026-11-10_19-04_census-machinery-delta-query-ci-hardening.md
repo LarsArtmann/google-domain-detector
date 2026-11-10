@@ -10,6 +10,7 @@ E10 on real data, E18 (delta query), E23, E33-fuzz, and the release/CI
 tail (f1/f3/f42–f45, tap, soak workflow, E22 headers, TODO truth pass).
 
 **Scope line — verified with commands this session:**
+
 - Full `-race` suite green on the E18 tree (72.6s scanstore, rest fast);
   gofmt clean at every commit; docs-gates 5/5 PASS at commit time.
 - Soak workflow dispatch run GREEN (9m13s) — the nightly schedule is real.
@@ -192,50 +193,50 @@ tail (f1/f3/f42–f45, tap, soak workflow, E22 headers, TODO truth pass).
    trigger).
 7. Script the E16 cleanup loop (extract-unknowns → rescan → gate bar).
 8. Wave B (gated on A + pilot); 9. Wave C → full census.
-10. E17 census report (journal-derived, per-TLD, coverage table).
-11. census-gate + docs/census.md: servfail-stable semantics (§e3).
-12. describe contract test (31.2) once the tree compiles.
-13. scripts/audit-freshness.sh — pinned-vs-go.mod version guard (31.4).
-14. E24 .golangci.yml policy layer (tagliatelle snake_case contract,
+9. E17 census report (journal-derived, per-TLD, coverage table).
+10. census-gate + docs/census.md: servfail-stable semantics (§e3).
+11. describe contract test (31.2) once the tree compiles.
+12. scripts/audit-freshness.sh — pinned-vs-go.mod version guard (31.4).
+13. E24 .golangci.yml policy layer (tagliatelle snake_case contract,
     err113-in-tests, wrapcheck first-party) once the sibling lane lands.
-15. E24 mechanical: errcheck, mnd, varnamelen, cyclop (ScanDomain 15>12),
+14. E24 mechanical: errcheck, mnd, varnamelen, cyclop (ScanDomain 15>12),
     exhaustive, paralleltest, modernize, perfsprint, unparam.
-16. E25: CI cmdguard-lint + golangci-lint + govulncheck; watch first run.
-17. E33: coverage profile → gap list → test batches (69 → 90).
-18. TimeoutMiddleware whole-run budget (E31).
-19. .ch zone pull via SWITCH TSIG (once/24h) → whole-TLD input.
-20. E28 --pre-filter A-existence sweep + volume measurement.
-21. E29 CSV enrichment (journal-backed column append).
-22. E32 daily delta timer (Tranco refresh + new-domain diff vs journal).
-23. E32 journal-only stats; delete the ad-hoc JSON path; parity check.
-24. E32 lead scoring v1 (workspace-certain × gcp × Tranco rank).
-25. GoReleaser wiring so future releases ship binaries (tap stays
+15. E25: CI cmdguard-lint + golangci-lint + govulncheck; watch first run.
+16. E33: coverage profile → gap list → test batches (69 → 90).
+17. TimeoutMiddleware whole-run budget (E31).
+18. .ch zone pull via SWITCH TSIG (once/24h) → whole-TLD input.
+19. E28 --pre-filter A-existence sweep + volume measurement.
+20. E29 CSV enrichment (journal-backed column append).
+21. E32 daily delta timer (Tranco refresh + new-domain diff vs journal).
+22. E32 journal-only stats; delete the ad-hoc JSON path; parity check.
+23. E32 lead scoring v1 (workspace-certain × gcp × Tranco rank).
+24. GoReleaser wiring so future releases ship binaries (tap stays
     source-build until then).
-26. asciinema/GIF demo for the README (E20 leftover).
-27. AGENTS: jq-shim gotcha.
-28. AGENTS: census pointer row (params + runbook link).
-29. README: link docs/census.md from the bulk/limitations section.
-30. E22 full re-audit: go-cqrs-lite + cqrs-htmx (premise flipped).
-31. E22: re-verify all 22 audit citations vs HEAD; fix drift.
-32. E22: re-screenshot the audit index; href check.
-33. IPv6 `--resolver` handling check (IPv4-only tested).
-34. TXT truncation investigation (cloudflare "cannot unmarshal" class).
-35. docs-gates cache-key investigation + ETag-if-polled (31.5).
-36. Nominet DAA email (owner action; draft exists).
-37. SWITCH TSIG pull automation script.
-38. ccTLD data-use constraint review note (23.4).
-39. Watch tonight's 03:17 UTC scheduled Soak (first cron firing).
-40. Wave-manifest sha256 verification step before each wave launch.
-41. Census db backup cadence before waves (≈1.2 GiB at 1M events).
-42. unbound.log rotation for multi-hour waves.
-43. mixed-TLD sustained qps measurement → possible w6 sweet spot.
-44. Post-census journal-compaction decision (ROADMAP parked item).
-45. Consumer propagation sweep for v0.1.0 (likely zero consumers).
-46. Retract-note dry run (documentation-only emergency procedure).
-47. Coverage re-measure after E24 churn (baseline drift).
-48. GPG signing policy for agent commits (owner decision).
-49. BuildFlow#56 fleet fix (owner approval gate).
-50. FEATURES.md refresh (census tooling, delta query, tap, soak CI).
+25. asciinema/GIF demo for the README (E20 leftover).
+26. AGENTS: jq-shim gotcha.
+27. AGENTS: census pointer row (params + runbook link).
+28. README: link docs/census.md from the bulk/limitations section.
+29. E22 full re-audit: go-cqrs-lite + cqrs-htmx (premise flipped).
+30. E22: re-verify all 22 audit citations vs HEAD; fix drift.
+31. E22: re-screenshot the audit index; href check.
+32. IPv6 `--resolver` handling check (IPv4-only tested).
+33. TXT truncation investigation (cloudflare "cannot unmarshal" class).
+34. docs-gates cache-key investigation + ETag-if-polled (31.5).
+35. Nominet DAA email (owner action; draft exists).
+36. SWITCH TSIG pull automation script.
+37. ccTLD data-use constraint review note (23.4).
+38. Watch tonight's 03:17 UTC scheduled Soak (first cron firing).
+39. Wave-manifest sha256 verification step before each wave launch.
+40. Census db backup cadence before waves (≈1.2 GiB at 1M events).
+41. unbound.log rotation for multi-hour waves.
+42. mixed-TLD sustained qps measurement → possible w6 sweet spot.
+43. Post-census journal-compaction decision (ROADMAP parked item).
+44. Consumer propagation sweep for v0.1.0 (likely zero consumers).
+45. Retract-note dry run (documentation-only emergency procedure).
+46. Coverage re-measure after E24 churn (baseline drift).
+47. GPG signing policy for agent commits (owner decision).
+48. BuildFlow#56 fleet fix (owner approval gate).
+49. FEATURES.md refresh (census tooling, delta query, tap, soak CI).
 
 ## g) Questions I cannot answer myself
 
