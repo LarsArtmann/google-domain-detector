@@ -60,6 +60,44 @@ const (
 	SourceCache   Source = "cache"
 )
 
+// ErrorKind classifies a range-feed failure: the feed could not be fetched
+// (transient, worth retrying later) or could not be parsed (corrupt, not
+// worth retrying unchanged).
+type ErrorKind string
+
+const (
+	KindFetch   ErrorKind = "fetch"
+	KindCorrupt ErrorKind = "corrupt"
+)
+
+// Exit codes for the feed-failure families, from sysexits(3): 75
+// (EX_TEMPFAIL) when the feed cannot be fetched, 65 (EX_DATAERR) when a
+// fetched feed is corrupt.
+const (
+	ExitFetch   = 75
+	ExitCorrupt = 65
+)
+
+// Error is a range-feed failure carrying its exit-code family. It satisfies
+// cmdguard's ExitCoder structurally, so a scan whose feed dies exits 75/65
+// instead of the generic 1.
+type Error struct {
+	Kind ErrorKind
+	err  error
+}
+
+func (e *Error) Error() string { return e.err.Error() }
+
+func (e *Error) Unwrap() error { return e.err }
+
+func (e *Error) ExitCode() int {
+	if e.Kind == KindCorrupt {
+		return ExitCorrupt
+	}
+
+	return ExitFetch
+}
+
 // Parse decodes a cloud.json document.
 func Parse(data []byte) (*Set, error) {
 	var f feed
@@ -190,14 +228,14 @@ func Load(ctx context.Context, opts Options) (*Set, Source, error) {
 			return set, SourceNetwork, nil
 		}
 
-		return nil, Source(""), fmt.Errorf("fetched feed is unusable: %w", parseErr)
+		return nil, Source(""), &Error{Kind: KindCorrupt, err: fmt.Errorf("fetched feed is unusable: %w", parseErr)}
 	}
 
 	if set, ok := readCache(opts.CachePath, anyAge, now); ok {
 		return set, SourceCache, nil
 	}
 
-	return nil, Source(""), fmt.Errorf("fetch %s: %w", opts.URL, err)
+	return nil, Source(""), &Error{Kind: KindFetch, err: fmt.Errorf("fetch %s: %w", opts.URL, err)}
 }
 
 func readCache(path string, maxAge time.Duration, now func() time.Time) (*Set, bool) {

@@ -2,6 +2,7 @@ package ranges
 
 import (
 	"context"
+	"errors"
 	"net"
 	"net/http"
 	"net/http/httptest"
@@ -151,6 +152,46 @@ func TestConcurrentLoadSharesCacheSafely(t *testing.T) {
 
 	if _, err := Parse(data); err != nil {
 		t.Fatalf("cache is torn/corrupt after concurrent atomic writes: %v", err)
+	}
+}
+
+func TestLoadFetchFailureExits75(t *testing.T) {
+	t.Parallel()
+
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		w.WriteHeader(http.StatusServiceUnavailable)
+	}))
+	defer server.Close()
+
+	_, _, err := Load(context.Background(), Options{
+		URL:       server.URL,
+		CachePath: filepath.Join(t.TempDir(), "absent", "cloud.json"),
+		Now:       time.Now,
+	})
+
+	var feedErr *Error
+	if !errors.As(err, &feedErr) || feedErr.Kind != KindFetch || feedErr.ExitCode() != ExitFetch {
+		t.Fatalf("fetch failure must be Kind fetch with exit 75, got %v", err)
+	}
+}
+
+func TestLoadCorruptFeedExits65(t *testing.T) {
+	t.Parallel()
+
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		_, _ = w.Write([]byte("not json at all"))
+	}))
+	defer server.Close()
+
+	_, _, err := Load(context.Background(), Options{
+		URL:       server.URL,
+		CachePath: filepath.Join(t.TempDir(), "absent", "cloud.json"),
+		Now:       time.Now,
+	})
+
+	var feedErr *Error
+	if !errors.As(err, &feedErr) || feedErr.Kind != KindCorrupt || feedErr.ExitCode() != ExitCorrupt {
+		t.Fatalf("corrupt feed must be Kind corrupt with exit 65, got %v", err)
 	}
 }
 
