@@ -8,6 +8,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Added
 
+- Crash-safe GCP range-feed cache writes via go-atomic-write `WriteWithPerm`
+  (0600): a killed run can no longer leave a torn `cloud.json` behind, and
+  identical feed rewrites still refresh the cache mtime the 24 h TTL reads.
+  The feed fetch now sends `User-Agent: google-domain-detector/<version>`.
 - `--format yaml`, `--format toml`, and `--format jsonl` on both `scan` and
   `replay`: the renderers were already compiled in (go-output serialization
   blank imports) but unreachable through the flag enum. `jsonl` emits the

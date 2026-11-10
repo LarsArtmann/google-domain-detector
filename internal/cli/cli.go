@@ -83,7 +83,7 @@ func BuildCLI(
 
 	scanCmd, cmdErr := v5.NewCommand("scan", ScanFlags{},
 		func(ctx context.Context, _ *RootConfig, f ScanFlags) error {
-			return runScan(ctx, f, v5.ArgsFromContext(ctx), stdout, stderr, res, stdin, stdinTTY)
+			return runScan(ctx, f, v5.ArgsFromContext(ctx), stdout, stderr, res, stdin, stdinTTY, version)
 		},
 		v5.WithShort("Scan domains for Google Workspace and Google Cloud evidence"),
 	)
@@ -116,6 +116,7 @@ func runScan(
 	res resolve.Resolver,
 	stdin io.Reader,
 	stdinTTY bool,
+	version string,
 ) error {
 	filter, err := render.ParseFilter(f.Only)
 	if err != nil {
@@ -136,7 +137,7 @@ func runScan(
 		fmt.Fprintf(stderr, "skipped %d unparseable input entries (first: %q)\n", len(skipped), skipped[0])
 	}
 
-	gcp, err := loadRanges(ctx, f)
+	gcp, err := loadRanges(ctx, f, version)
 	if err != nil {
 		fmt.Fprintf(stderr, "warning: %v (continuing without IP-range evidence)\n", err)
 	}
@@ -304,7 +305,7 @@ func parseLenient(r io.Reader) input.Result {
 	return res
 }
 
-func loadRanges(ctx context.Context, f ScanFlags) (*ranges.Set, error) {
+func loadRanges(ctx context.Context, f ScanFlags, version string) (*ranges.Set, error) {
 	if f.NoRanges {
 		return nil, nil
 	}
@@ -319,7 +320,12 @@ func loadRanges(ctx context.Context, f ScanFlags) (*ranges.Set, error) {
 		cache = filepath.Join(home, ".cache", Name, "cloud.json")
 	}
 
-	set, _, err := ranges.Load(ctx, ranges.Options{URL: f.RangesURL, CachePath: cache})
+	userAgent := Name
+	if version != "" {
+		userAgent = Name + "/" + version
+	}
+
+	set, _, err := ranges.Load(ctx, ranges.Options{URL: f.RangesURL, CachePath: cache, UserAgent: userAgent})
 	if err != nil {
 		return nil, err
 	}

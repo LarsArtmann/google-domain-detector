@@ -19,10 +19,16 @@ import (
 	"os"
 	"path/filepath"
 	"time"
+
+	"github.com/larsartmann/go-atomic-write"
 )
 
 // DefaultURL is Google's official machine-readable GCP range feed.
 const DefaultURL = "https://www.gstatic.com/ipranges/cloud.json"
+
+// DefaultUserAgent identifies the tool to the feed server when Options
+// carries no explicit agent.
+const DefaultUserAgent = "google-domain-detector"
 
 // DefaultTTL is how long a cached feed stays fresh.
 const DefaultTTL = 24 * time.Hour
@@ -138,6 +144,8 @@ type Options struct {
 	TTL time.Duration
 	// Client used for the fetch; nil means a client with a 10 s timeout.
 	Client *http.Client
+	// UserAgent sent to the feed server; empty means DefaultUserAgent.
+	UserAgent string
 	// Now overrides the clock (tests); nil means time.Now.
 	Now func() time.Time
 }
@@ -159,6 +167,11 @@ func Load(ctx context.Context, opts Options) (*Set, Source, error) {
 		client = &http.Client{Timeout: 10 * time.Second}
 	}
 
+	userAgent := opts.UserAgent
+	if userAgent == "" {
+		userAgent = DefaultUserAgent
+	}
+
 	now := time.Now
 	if opts.Now != nil {
 		now = opts.Now
@@ -168,7 +181,7 @@ func Load(ctx context.Context, opts Options) (*Set, Source, error) {
 		return set, SourceCache, nil
 	}
 
-	data, err := fetch(ctx, client, opts.URL)
+	data, err := fetch(ctx, client, opts.URL, userAgent)
 	if err == nil {
 		set, parseErr := Parse(data)
 		if parseErr == nil {
@@ -219,19 +232,18 @@ func writeCache(path string, data []byte) {
 		return
 	}
 
-	tmp := path + ".tmp"
-	if err := os.WriteFile(tmp, []byte(data), 0o600); err != nil {
-		return
-	}
-
-	_ = os.Rename(tmp, path)
+	// WriteWithPerm, never WriteIfChanged: a feed whose bytes did not change
+	// must still refresh the mtime the TTL freshness check reads.
+	_ = atomicwrite.WriteWithPerm(path, data, 0o600)
 }
 
-func fetch(ctx context.Context, client *http.Client, url string) ([]byte, error) {
+func fetch(ctx context.Context, client *http.Client, url, userAgent string) ([]byte, error) {
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
 		return nil, err
 	}
+
+	req.Header.Set("User-Agent", userAgent)
 
 	resp, err := client.Do(req)
 	if err != nil {
