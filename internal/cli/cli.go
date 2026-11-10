@@ -273,8 +273,8 @@ func runScan(
 	defer finishProgress()
 
 	started := time.Now()
-	results, counts, scanErr := scanAllChunks(ctx, feeder, first, last, scanOpts, activeRes, stream)
 
+	results, counts, scanErr := scanAllChunks(ctx, feeder, first, last, scanOpts, activeRes, stream)
 	if scanErr != nil {
 		return scanErr
 	}
