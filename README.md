@@ -55,7 +55,9 @@ list survives a garbage row.
 Formats: `--format table` (default), `json` (full evidence, one line per
 domain, jq-friendly), `csv`, `tsv`, `markdown`. Filters: `--only workspace`
 / `gcp` / `google` / `all`. Concurrency: `--workers` (default 8); per-domain
-budget `--timeout` (default 5s). Bulk scans: `--resolver host[:port]`
+budget `--timeout` (default 5s). Colors: `--color auto|always|never`
+(`auto` respects `NO_COLOR`; `--no-color` is the never shorthand). Bulk
+scans: `--resolver host[:port]`
 queries one DNS server directly instead of the system resolver (env
 `GDD_RESOLVER`). `scan --help` lists everything, `describe`
 prints the machine-readable CLI contract.

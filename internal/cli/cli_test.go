@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json/v2"
+	"errors"
 	"fmt"
 	"net"
 	"os"
@@ -858,6 +859,31 @@ func TestRunsEmptyStoreFails(t *testing.T) {
 
 	if _, _, err := run(t, workspaceDomain(), "", "runs", "--event-store", store); err == nil {
 		t.Fatal("runs on a store without runs must fail")
+	}
+}
+
+func TestScanColorInvalidExitsTwo(t *testing.T) {
+	t.Parallel()
+
+	_, _, err := run(t, workspaceDomain(), "", "scan", "--color", "neon", "acme.com")
+
+	var exitErr *v5.ExitError
+	if !errors.As(err, &exitErr) || exitErr.ExitCode() != 2 {
+		t.Fatalf("invalid --color must be a usage error (exit 2), got: %v", err)
+	}
+}
+
+func TestScanColorNeverEmitsNoANSI(t *testing.T) {
+	t.Parallel()
+
+	stdout, _, err := run(t, workspaceDomain(), "",
+		"scan", "--no-ranges", "--color", "never", "acme.com")
+	if err != nil {
+		t.Fatalf("scan failed: %v", err)
+	}
+
+	if strings.Contains(stdout, "\x1b[") {
+		t.Errorf("--color never must suppress ANSI codes:\n%q", stdout)
 	}
 }
 

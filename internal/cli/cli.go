@@ -52,7 +52,9 @@ type ScanFlags struct {
 
 // Run builds the CLI and executes args. Construction errors are printed to
 // stderr and returned; the execution error is returned unprinted because
-// cmdguard reports it exactly once.
+// cmdguard reports it exactly once. Flag-value rejections from cmdguard's
+// binding layer (bad enum, duration, or validate-tag bound) are re-tagged as
+// usage errors so the process exits 2 like every other bad invocation.
 func Run(ctx context.Context, args []string, stdout, stderr io.Writer, version, commit string) error {
 	d, err := BuildCLI(stdout, stderr, version, commit, resolve.New(), os.Stdin, stdinIsTTY())
 	if err != nil {
@@ -61,7 +63,23 @@ func Run(ctx context.Context, args []string, stdout, stderr io.Writer, version, 
 		return err
 	}
 
-	return d.ExecuteWithArgs(ctx, args)
+	err = d.ExecuteWithArgs(ctx, args)
+	if isFlagValueError(err) {
+		return usageError(err)
+	}
+
+	return err
+}
+
+// isFlagValueError reports whether err comes from cmdguard's flag-binding
+// validation: ConfigError (wraps enum/validate rejections), EnumError, or
+// DurationError.
+func isFlagValueError(err error) bool {
+	var configErr *v5.ConfigError
+	var enumErr *v5.EnumError
+	var durationErr *v5.DurationError
+
+	return errors.As(err, &configErr) || errors.As(err, &enumErr) || errors.As(err, &durationErr)
 }
 
 // cliOptions is the root option set: version/commit stamps, the GDD_ env
