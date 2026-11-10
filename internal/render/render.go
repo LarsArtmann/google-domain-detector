@@ -9,6 +9,7 @@ import (
 	"encoding/json/v2"
 	"fmt"
 	"io"
+	"sort"
 	"strings"
 	"sync"
 
@@ -149,6 +150,35 @@ func renderJSONLUnknown(w io.Writer, data any, _ output.RenderOptions) error {
 	}
 
 	return JSONL(w, results)
+}
+
+// SupportedFormats derives the formats this binary can actually render for
+// scan results: every registered table-marshal format (table, csv, tsv,
+// markdown, yaml, toml) plus the DTO unknown-renderers this package
+// installs (json, jsonl). The CLI --format enums are pinned to it by
+// TestFormatEnumsMatchRegistry — dropping a blank import or adding a
+// renderer must update those tags or the build fails.
+func SupportedFormats() []output.Format {
+	seen := make(map[output.Format]bool, 8)
+	out := make([]output.Format, 0, 8)
+
+	for _, f := range output.RegisteredTableMarshalFormats() {
+		if !seen[f] {
+			seen[f] = true
+			out = append(out, f)
+		}
+	}
+
+	for _, f := range output.RegisteredUnknownFormats() {
+		if !seen[f] {
+			seen[f] = true
+			out = append(out, f)
+		}
+	}
+
+	sort.Slice(out, func(i, j int) bool { return out[i] < out[j] })
+
+	return out
 }
 
 // JSON writes the full-fidelity results: verdicts expanded, every evidence
