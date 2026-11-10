@@ -293,13 +293,26 @@ func TestScanJSONLCancelMidStream(t *testing.T) {
 	}
 
 	lines := strings.Split(strings.TrimRight(stdout.String(), "\n"), "\n")
-	if len(lines) != 2 || !strings.Contains(lines[0], "fast1.com") {
-		t.Fatalf("want fast1 line then canceled slow line, got %d lines:\n%s\nstderr:\n%s",
+	if len(lines) != 2 {
+		t.Fatalf("want exactly 2 jsonl lines, got %d:\n%s\nstderr:\n%s",
 			len(lines), stdout.String(), stderr.String())
 	}
 
-	if !strings.Contains(lines[1], "slow.com") || !strings.Contains(lines[1], "canceled") {
-		t.Errorf("hung domain must report its cancellation:\n%s", lines[1])
+	// The stream writes in COMPLETION order, and the deterministic cancel
+	// fires the moment slow.com's lookup begins — under scheduler load the
+	// canceled slow line can legitimately land before fast1's. Assert the
+	// set: fast1 completes normally, slow reports its cancellation.
+	if !strings.Contains(stdout.String(), `"domain":"fast1.com"`) {
+		t.Errorf("completed domain must stream its line:\n%s", stdout.String())
+	}
+
+	slowLine := lines[0]
+	if strings.Contains(lines[1], "slow.com") {
+		slowLine = lines[1]
+	}
+
+	if !strings.Contains(slowLine, "slow.com") || !strings.Contains(slowLine, "canceled") {
+		t.Errorf("hung domain must report its cancellation:\n%s", slowLine)
 	}
 }
 
