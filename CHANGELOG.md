@@ -8,6 +8,23 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Added
 
+- Nothing yet.
+
+### Fixed
+
+- Nothing yet.
+
+## [0.1.0] - 2026-11-10
+
+First tagged release. Validation: 3 645-domain `.ch` slice scanned clean
+(G3 PASS — journal round-trip byte-identical, 12 independent dig
+cross-checks, error tail fully explained by taxonomy; see
+docs/status/2026-11-10_07-46). Rollback plan if a fatal defect is found:
+add a `retract v0.1.0` directive to go.mod and tag v0.1.1 — the module
+proxy is immutable, re-tagging is never the answer.
+
+### Added
+
 - Explained error tails: every result error is classified (nxdomain, timeout,
   servfail, canceled) end to end — scan summary, replay summary, JSON DTO
   (`error_kind`), and the event journal all carry it. Transient lookup
