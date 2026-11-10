@@ -199,6 +199,10 @@ func walkRuns(ctx context.Context, store event.Store, runFilter string) (Replay,
 		runFilter = latest
 	}
 
+	if len(runs) == 0 {
+		return Replay{}, ErrNoRuns
+	}
+
 	if _, known := runs[runFilter]; !known {
 		return Replay{}, fmt.Errorf("%w: %q", ErrUnknownRun, runFilter)
 	}

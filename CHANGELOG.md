@@ -8,11 +8,25 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Added
 
-- Nothing yet.
+- `replay --since RUN_ID`: delta mode reporting exactly the domains whose
+  Workspace/GCP verdict flipped since an earlier run (adopted/left counts
+  on stderr, all output formats incl. streaming jsonl). Errored lookups
+  count as unknown — never as a departure; flips across different
+  detection rulesets carry an explicit warning.
+- Census tooling: `scripts/unbound.sh` lifecycle (user-scoped caching
+  forwarder on 127.0.0.1:5353), pilot gate `scripts/census-gate.sh`
+  (unknown-rate bar from a run summary or jsonl), Tranco manifest
+  freezer `scripts/tranco-manifests.sh`, and the census runbook
+  `docs/census.md` (resolver design, wave ledger, error semantics).
+- Nightly `Soak` workflow runs the opt-in 100k-event journal soak
+  (GDD_SOAK=1) on a schedule; CI's race step now carries `-timeout 20m`
+  (runners are slower than local and the 10m default panicked mid-suite).
 
 ### Fixed
 
-- Nothing yet.
+- `replay --run <unknown-id>` silently returned an empty report; it now
+  fails naming the run and store (new `scanstore.ErrUnknownRun`), as does
+  `--since` with an unknown baseline.
 
 ## [0.1.0] - 2026-11-10
 

@@ -206,7 +206,9 @@ is designed but untested); SQLite journal behavior at whole-TLD scale
 42. Re-run go-cqrs-lite/cqrs-htmx audit verdicts post-scanstore.
 43. "Verified against commit X" header line on every report.
 44. Batch-retry-once for transient resolver failures.
-45. `--jsonl` streaming scan output.
+45. `--jsonl` streaming scan output. — RESOLVED-DONE (landed as render
+    JSONLStream + scan/replay streaming paths; struck row in TODO_LIST
+    Detection coverage; annotated 2026-11-10 because tokens went generic).
 46. CSV enrichment mode (append verdict columns to input CSV).
 47. Pre-filter pass (A-record existence sweep) before whole-TLD scans.
 48. catalog wiring when the journal grows external consumers.

@@ -43,7 +43,7 @@ Manual go commands need the cache-env guard (stale inherited GOCACHE):
 | `internal/resolve`   | Resolver interface + PreferGo net.Resolver adapter                                                                                                              |
 | `internal/scan`      | worker pool, per-domain timeout, NXDOMAIN short-circuit, DKIM probe only when MX+SPF silent; `Options.OnResult` streams finished results to sinks (event store) |
 | `internal/render`    | go-output table formats + compact full-evidence JSON DTO                                                                                                        |
-| `internal/scanstore` | event-sourced persistence via go-cqrs-lite `system.New` composition root: commands/events/deciders, metaengine projections, journal replay                      |
+| `internal/scanstore` | event-sourced persistence via go-cqrs-lite `system.New` composition root: commands/events/deciders, metaengine projections, journal replay, verdict-flip delta (FlipDiff — errored lookups are unknowns, never departures) |
 | `internal/cli`       | cmdguard wiring; `runScan` takes injected deps (test seam); `domains.go` = streaming chunked input feeder; `show.go` = read-model queries                       |
 
 Rule changes go in `classify` (pure, table-tested). Probe orchestration

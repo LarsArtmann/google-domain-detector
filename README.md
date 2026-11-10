@@ -97,6 +97,24 @@ same facts, different orderings. Built on the
 composition root with metaengine projections; events carry evidence only —
 verdicts are always recomputed from it.
 
+### Deltas: who adopted or left Google (`--since`)
+
+The journal's killer feature. Re-scan the same list later, then diff the
+runs — the domains whose verdict flipped are the story:
+
+```bash
+google-domain-detector scan  --event-store scans.db --resolver 127.0.0.1:53 -j 8 domains.txt   # next week
+google-domain-detector replay --event-store scans.db --since <previous-run-id>                  # flips only
+```
+
+`--since` reports exactly the domains whose Workspace or GCP detection
+changed since the named run, with adopted/left counts on stderr. Errored
+lookups are treated as unknown, never as a departure — a domain that
+timed out this week did not leave Google. Flips across different
+detection rulesets (each run stamps its ruleset) get an explicit warning:
+rule changes can masquerade as adoption. Works with every `--format`,
+including streaming `jsonl`.
+
 ## Honest limitations
 
 - **Only externally visible services are detectable.** A backend on Cloud Run
