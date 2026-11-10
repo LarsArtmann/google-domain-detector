@@ -3,24 +3,46 @@
 Short- and mid-term improvement tasks for google-domain-detector. Status
 markers: `[ ]` open, `[~]` in progress, `[x]` done.
 
+## Census: Tranco top-1M (plan: docs/planning/2026-11-10_06-18_tranco-1m-census-event-sourced.md)
+
+Ownership (agreed with the concurrent v2-journal plan,
+docs/planning/2026-11-10_01-18_*): that plan stays CANONICAL for
+scanstore/CLI-internal work (its T-series, plans T3/T4/T9/T10 already
+landed); this census plan owns everything downstream of the journal:
+waves, manifests, unbound, pilot gates, reports, deltas.
+
+- [ ] T02 Evidence-schema version (detection ruleset ID) + wave ID stamped
+      into events BEFORE any census wave.
+- [ ] T05 Unbound spike: user-scoped nix shell, 127.0.0.1:5353, probe via
+      `--resolver` — removes the public-resolver throttle wall.
+- [ ] T07 Pilot harness: slice-Nk + error-rate gate + pre-flight doc.
+- [ ] T08 Throughput benchmark: worker sweep on a 10k slice → wave params.
+- [ ] T09 Recover the 7,204 legacy unknowns (.de/.ch/.uk) via unbound +
+      `--resume`.
+- [ ] T10 Tranco full-list import + wave manifests (frozen rank bands).
+- [ ] T11–T13 Waves A (1–100k), B (100–500k), C (500k–1M) with pilot gates.
+- [ ] T14 Unknown-cleanup loop per wave (<0.5% unknown).
+- [ ] T15 Census report (journal-derived) archived under reports/.
+- [ ] T16 Delta query: verdict flips between runs (the sales signal).
+
 ## Detection coverage
 
-- [ ] Batch retry (once) for transient resolver failures — PROVEN necessary at
-      bulk scale (2026-11-09 run: blocky under 24-worker load returned
-      malformed replies; Quad9 then 8.8.8.8 throttled the client after ~2 h
-      sustained; two retry passes recovered 7.1k of 14.3k failures).
+- [x] Batch retry (once) for transient resolver failures — done:
+      retryResolver in internal/scan (transient only, NXDOMAIN never
+      retried), commit 49b87fc.
 - [ ] Own recursive resolver guidance for whole-zone scale (unbound/knot) —
       public resolvers throttle bulk scanners; results stay ~11 % unknown
-      otherwise (see reports/2026-11-09-tranco-de-ch-uk).
-- [ ] `--jsonl` streaming output for very large batches (render results as
-      they complete instead of after the whole run).
-- [ ] Resume/checkpointing for multi-hour runs (`--resume results.jsonl`:
-      skip domains already in the output file) — required before any
-      whole-zone scan.
+      otherwise (see reports/2026-11-09-tranco-de-ch-uk). = census T05.
+- [x] `--jsonl` streaming output for very large batches (render results as
+      they complete instead of after the whole run) — done: render
+      JSONLStream + scan/replay streaming paths.
+- [x] Resume/checkpointing for multi-hour runs — done differently: the
+      event journal IS the checkpoint (`--resume ID|latest` skips observed
+      domains, links runs via scan.started), commit 3674285.
 - [ ] Consider CAA/other record classes only if a real fingerprint emerges —
       do not add speculative probes.
 - [ ] Optional CSV enrichment mode: emit the input CSV with appended
-      workspace/gcp columns, preserving all original columns.
+      workspace/gcp columns, preserving all original columns. = census T18.
 
 ## Whole-TLD coverage (the "all active .de/.ch/.uk" goal)
 
@@ -37,7 +59,10 @@ which is paperwork only the account holder can sign:
       existence pass (or NXDOMAIN pre-sweep) would drop the parked share and
       cut scan volume several-fold.
 - [ ] Memory: input currently loads fully into RAM (~30M domains ≈ 1.5 GB) —
-      stream input in chunks before any whole-zone run.
+      stream input in chunks before any whole-zone run. — UPDATE: input
+      streams in 4096-domain chunks since the streaming feeder landed
+      (internal/cli/domains.go); this row is about RENDERED OUTPUT of
+      buffered formats only. Downgrade to jsonl-for-bulk guidance.
 
 ## Operational
 
@@ -52,8 +77,10 @@ which is paperwork only the account holder can sign:
       registered via blank imports — one flag-tag string).
 - [ ] Adopt go-atomic-write `WriteWithPerm` in `ranges.writeCache` (never
       `WriteIfChanged`: it would skip the mtime refresh the 24 h TTL needs).
-- [ ] CLI hardening: `validate` tag on --workers, `ExitError(2)` for usage
-      errors, `WithEnvPrefix("GDD_")`, RecoveryMiddleware.
+- [x] CLI hardening: `validate` tag on --workers, `ExitError(2)` for usage
+      errors, `WithEnvPrefix("GDD_")`, RecoveryMiddleware — done (ScanFlags
+      validate:"min=1,max=512", exitCodeUsage, env prefix + recovery wired
+      in cliOptions).
 - [ ] `--color auto|always|never` via go-output ColorMode; SetFooter summary
       row; AddRowChecked.
 - [ ] `WithDoctorCheck` preflight (resolver + ranges feed).
@@ -87,12 +114,13 @@ which is paperwork only the account holder can sign:
 
 ## Scanstore session follow-ups (docs/status/2026-11-10_01-12_*)
 
-- [ ] Error taxonomy in `classify.Counts`: break Errors into
-      nxdomain/timeout/servfail (would have explained the 1730-error tail
-      with data instead of interpretation).
-- [ ] Sink retry/backoff instead of drop-after-first-error in scanstore
-      recording (one store hiccup must not discard a 2.5M-domain journal).
-- [ ] Streaming/chunked input loader for whole-TLD scale.
+- [x] Error taxonomy in `classify.Counts`: break Errors into
+      nxdomain/timeout/servfail — done: classify.ErrorKind end to end
+      (counts breakdown, JSON error_kind, journal ErrKind, stderr summary),
+      commit 49b87fc.
+- [x] Sink retry/backoff instead of drop-after-first-error in scanstore
+      recording — done: Sink retries each observation 3× with backoff,
+      counts and reports dropped observations on Close.
 - [ ] cmdguard extras: WithCLICommit in nix build; WithExample/WithLong on
       scan.
 - [ ] RegisterUnknownRenderer(FormatJSON, dto) to dissolve the cli.go JSON
