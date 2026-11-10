@@ -1,0 +1,5 @@
+domain.ch
+dot.ch
+example.ch
+mixed-case.ch
+wild.ch

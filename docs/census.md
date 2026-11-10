@@ -54,6 +54,12 @@ second argument overrides the unknown budget (2 = D3 bar default,
 - Frozen manifests under `reports/census/waves/` (`tranco1m-a/b/c.txt`,
   sha256 in `MANIFEST.sha256`). NEVER re-cut mid-census; a new Tranco
   freeze is a new wave with a new ID.
+- Non-Tranco zone inputs: `.ch` zone pulls via the public SWITCH TSIG
+  keys (docs/zone-data/switch-ch.md, once/24h) and certificate
+  transparency via `scripts/crtsh-extract.sh <tld>` (the only `.de`
+  fallback — DENIC refuses all third-party zone access; crt.sh is
+  rate-limited, at most once a day per TLD; `--test` runs its fixture
+  self-test).
 - Tranco list IDs and manifest hashes are recorded in the wave ledger
   below. Current freeze: list `947N2` (2026-11-10).
 - Every wave run uses `--event-store reports/census/census.db --wave

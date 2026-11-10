@@ -1,0 +1,51 @@
+[
+  {
+    "common_name": "shop.example.ch",
+    "name_value": "shop.example.ch\nwww.shop.example.ch",
+    "issuer_name": "C=US, O=Let's Encrypt",
+    "not_before": "2026-01-02T00:00:00Z",
+    "not_after": "2026-04-02T00:00:00Z"
+  },
+  {
+    "common_name": "example.ch",
+    "name_value": "example.ch\nexample.net",
+    "issuer_name": "C=US, O=Let's Encrypt",
+    "not_before": "2026-02-01T00:00:00Z",
+    "not_after": "2026-05-01T00:00:00Z"
+  },
+  {
+    "common_name": "*.wild.ch",
+    "name_value": "*.wild.ch\nmail.wild.ch",
+    "issuer_name": "C=US, O=DigiCert",
+    "not_before": "2025-12-01T00:00:00Z",
+    "not_after": "2026-12-01T00:00:00Z"
+  },
+  {
+    "common_name": "MIXED-Case.CH",
+    "name_value": "Mixed-Case.CH",
+    "issuer_name": "C=US, O=Let's Encrypt",
+    "not_before": "2026-03-01T00:00:00Z",
+    "not_after": "2026-06-01T00:00:00Z"
+  },
+  {
+    "common_name": "deep.sub.domain.ch",
+    "name_value": "deep.sub.domain.ch",
+    "issuer_name": "C=US, O=Let's Encrypt",
+    "not_before": "2026-01-15T00:00:00Z",
+    "not_after": "2026-04-15T00:00:00Z"
+  },
+  {
+    "common_name": "not-the-tld.example",
+    "name_value": "not-the-tld.example",
+    "issuer_name": "C=US, O=Let's Encrypt",
+    "not_before": "2026-01-15T00:00:00Z",
+    "not_after": "2026-04-15T00:00:00Z"
+  },
+  {
+    "common_name": "trailing.dot.ch.",
+    "name_value": "trailing.dot.ch.",
+    "issuer_name": "C=US, O=Let's Encrypt",
+    "not_before": "2026-01-20T00:00:00Z",
+    "not_after": "2026-04-20T00:00:00Z"
+  }
+]
