@@ -238,28 +238,13 @@ func runScan(
 		return err
 	}
 
-	feeder, err := newDomainFeeder(args, f.Input, stdin, stdinTTY, resumeSkipSet(resume), chunkSize)
+	feeder, first, last, err := scanTargets(ctx, f, args, stdin, stdinTTY, chunkSize, resume, stderr)
 	if err != nil {
 		return err
 	}
 
-	first, last, err := feeder.next()
-	if err != nil {
-		return err
-	}
-
-	if len(first) == 0 {
-		if resume != nil {
-			_, _ = fmt.Fprintf(
-				stderr,
-				"resume: run %s already observed every input domain — nothing to do\n",
-				resume.RunID,
-			)
-
-			return nil
-		}
-
-		return usageError(errNoValidDomains)
+	if feeder == nil { // --resume with nothing left to scan: the no-op was already announced
+		return nil
 	}
 
 	gcp, err := loadRanges(ctx, f, version)
@@ -279,18 +264,7 @@ func runScan(
 		ProbeDKIM: !f.NoDKIM,
 	}
 
-	if f.Wave != "" && f.EventStore == "" {
-		return usageError(errWaveNeedsStore)
-	}
-
-	inputDomains, skipped := 0, 0
-
-	if last {
-		skippedTotal, _ := feeder.skippedEntries()
-		inputDomains, skipped = len(first), skippedTotal
-	}
-
-	finish, err := attachEventStore(ctx, f, resumeRunID(resume), inputDomains, skipped, stderr, &scanOpts)
+	finish, err := attachScanRecording(ctx, f, stderr, &scanOpts, resume, feeder, first, last)
 	if err != nil {
 		return err
 	}
@@ -320,6 +294,71 @@ func runScan(
 	}
 
 	return rendered
+}
+
+// scanTargets builds the domain feeder and pulls the first chunk. Empty
+// input is a usage error; a --resume run whose input was fully observed
+// already is a printed no-op, signaled by a nil feeder and nil error.
+func scanTargets(
+	ctx context.Context,
+	f ScanFlags,
+	args []string,
+	stdin io.Reader,
+	stdinTTY bool,
+	chunkSize int,
+	resume *scanstore.ResumeSource,
+	stderr io.Writer,
+) (*domainFeeder, []domain.Domain, bool, error) {
+	feeder, err := newDomainFeeder(args, f.Input, stdin, stdinTTY, resumeSkipSet(resume), chunkSize)
+	if err != nil {
+		return nil, nil, false, err
+	}
+
+	first, last, err := feeder.next()
+	if err != nil {
+		return nil, nil, false, err
+	}
+
+	if len(first) > 0 {
+		return feeder, first, last, nil
+	}
+
+	if resume != nil {
+		_, _ = fmt.Fprintf(stderr, "resume: run %s already observed every input domain — nothing to do\n", resume.RunID)
+
+		return nil, nil, false, nil
+	}
+
+	return nil, nil, false, usageError(errNoValidDomains)
+}
+
+// attachScanRecording journals the run start when --event-store is set and
+// returns the closer that completes the run. Input totals are exact when
+// everything fit in one chunk (the common case); a streamed multi-chunk run
+// journals 0 = unknown, and the scan.completed tally stays the authoritative
+// count. A --wave without a store is a usage error.
+func attachScanRecording(
+	ctx context.Context,
+	f ScanFlags,
+	stderr io.Writer,
+	opts *scan.Options,
+	resume *scanstore.ResumeSource,
+	feeder *domainFeeder,
+	first []domain.Domain,
+	last bool,
+) (func(context.Context, time.Duration, classify.Counts) error, error) {
+	if f.Wave != "" && f.EventStore == "" {
+		return nil, usageError(errWaveNeedsStore)
+	}
+
+	inputDomains, skipped := 0, 0
+
+	if last {
+		skippedTotal, _ := feeder.skippedEntries()
+		inputDomains, skipped = len(first), skippedTotal
+	}
+
+	return attachEventStore(ctx, f, resumeRunID(resume), inputDomains, skipped, stderr, opts)
 }
 
 // scanOutputOpts parses the --only/--format/--color trio into the render
