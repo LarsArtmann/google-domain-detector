@@ -69,7 +69,7 @@ func runRes(t *testing.T, res resolve.Resolver, stdin string, args ...string) (s
 
 	var stdout, stderr bytes.Buffer
 
-	d, err := BuildCLI(&stdout, &stderr, "test", "", res, strings.NewReader(stdin), false)
+	d, err := BuildCLI(&stdout, &stderr, "test", "", res, strings.NewReader(stdin), false, false)
 	if err != nil {
 		t.Fatalf("BuildCLI failed: %v", err)
 	}
@@ -278,7 +278,7 @@ func TestScanJSONLCancelMidStream(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	d, err := BuildCLI(&stdout, &stderr, "test", "", &hangRes{fakeRes: &fakeRes{}, cancel: cancel}, strings.NewReader(""), false)
+	d, err := BuildCLI(&stdout, &stderr, "test", "", &hangRes{fakeRes: &fakeRes{}, cancel: cancel}, strings.NewReader(""), false, false)
 	if err != nil {
 		t.Fatalf("BuildCLI failed: %v", err)
 	}
@@ -619,7 +619,7 @@ func TestScanMultiChunkRunRecordsAndReplays(t *testing.T) {
 	}
 
 	if err := runScan(context.Background(), flags, domains, &stdout, &stderr,
-		&fakeRes{}, strings.NewReader(""), false, "test", 4); err != nil {
+		&fakeRes{}, strings.NewReader(""), false, false, "test", 4); err != nil {
 		t.Fatalf("scan failed: %v", err)
 	}
 
@@ -910,7 +910,7 @@ func TestScanCancelMidRunDrainsEventStore(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	d, err := BuildCLI(&stdout, &stderr, "test", "", &hangRes{fakeRes: &fakeRes{}, cancel: cancel}, strings.NewReader(""), false)
+	d, err := BuildCLI(&stdout, &stderr, "test", "", &hangRes{fakeRes: &fakeRes{}, cancel: cancel}, strings.NewReader(""), false, false)
 	if err != nil {
 		t.Fatalf("BuildCLI failed: %v", err)
 	}

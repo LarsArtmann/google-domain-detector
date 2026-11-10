@@ -328,4 +328,34 @@ func TestRunCallsOnResultForEachDomain(t *testing.T) {
 	}
 }
 
+func TestRunCallsOnDomainStartForEachDomain(t *testing.T) {
+	t.Parallel()
+
+	f := newFake()
+	f.txt = map[string][]string{"acme.com": {"v=spf1 include:_spf.google.com ~all"}}
+
+	names := []string{"acme.com", "other.example"}
+
+	var mu sync.Mutex
+
+	started := map[string]int{}
+
+	Run(context.Background(), f, mustDomains(t, names...), Options{
+		Workers: 4,
+		Timeout: time.Second,
+		OnDomainStart: func(domain string) {
+			mu.Lock()
+			defer mu.Unlock()
+
+			started[domain]++
+		},
+	})
+
+	for _, name := range names {
+		if started[name] != 1 {
+			t.Errorf("OnDomainStart saw %s %d times, want exactly 1", name, started[name])
+		}
+	}
+}
+
 var _ resolve.Resolver = (*fake)(nil)

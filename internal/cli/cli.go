@@ -55,7 +55,7 @@ type ScanFlags struct {
 // binding layer (bad enum, duration, or validate-tag bound) are re-tagged as
 // usage errors so the process exits 2 like every other bad invocation.
 func Run(ctx context.Context, args []string, stdout, stderr io.Writer, version, commit string) error {
-	d, err := BuildCLI(stdout, stderr, version, commit, resolve.New(), os.Stdin, stdinIsTTY())
+	d, err := BuildCLI(stdout, stderr, version, commit, resolve.New(), os.Stdin, stdinIsTTY(), stdoutIsTTY())
 	if err != nil {
 		fmt.Fprintf(stderr, "Error: %v\n", err)
 
@@ -65,6 +65,17 @@ func Run(ctx context.Context, args []string, stdout, stderr io.Writer, version, 
 	err = executeWithUsageContract(d, ctx, args)
 
 	return err
+}
+
+// stdoutIsTTY reports whether the process stdout is a terminal; live
+// progress only renders there.
+func stdoutIsTTY() bool {
+	info, err := os.Stdout.Stat()
+	if err != nil {
+		return false
+	}
+
+	return info.Mode()&os.ModeCharDevice != 0
 }
 
 // executeWithUsageContract runs the built CLI through cmdguard and re-tags
@@ -119,13 +130,17 @@ func cliOptions(version, commit string) []v5.CLIOption {
 	return opts
 }
 
-// BuildCLI assembles the command tree with injected dependencies.
+// BuildCLI assembles the command tree with injected dependencies. The
+// stdin/stdout TTY flags steer interactive-only behavior (prompts, live
+// progress) independently of the injected writers, which tests set to
+// buffers.
 func BuildCLI(
 	stdout, stderr io.Writer,
 	version, commit string,
 	res resolve.Resolver,
 	stdin io.Reader,
 	stdinTTY bool,
+	stdoutTTY bool,
 ) (*v5.CLI[RootConfig], error) {
 	cli, err := v5.NewCLI(
 		Name,
@@ -141,7 +156,7 @@ func BuildCLI(
 		"scan",
 		ScanFlags{},
 		func(ctx context.Context, _ *RootConfig, f ScanFlags) error {
-			return runScan(ctx, f, v5.ArgsFromContext(ctx), stdout, stderr, res, stdin, stdinTTY, version, 0)
+		return runScan(ctx, f, v5.ArgsFromContext(ctx), stdout, stderr, res, stdin, stdinTTY, stdoutTTY, version, 0)
 		},
 		v5.WithShort("Scan domains for Google Workspace and Google Cloud evidence"),
 		v5.WithExample(
@@ -207,6 +222,7 @@ func runScan(
 	res resolve.Resolver,
 	stdin io.Reader,
 	stdinTTY bool,
+	stdoutTTY bool,
 	version string,
 	chunkSize int,
 ) error {
@@ -320,6 +336,16 @@ func runScan(
 				stream.Write(r)
 			}
 		})
+	} else if stdoutTTY {
+		// Live progress on an interactive terminal: pipes and jsonl streams
+		// keep byte-identical output (the stream owns stdout; in-place
+		// redraws would corrupt its lines). finish runs before the report
+		// renders, so the final frame never fights the table for the screen.
+		progress := newNomProgress(ctx, stdout)
+		scanOpts.OnDomainStart = progress.domainStarted
+		chainOnResult(&scanOpts, progress.domainDone)
+
+		defer progress.finish()
 	}
 
 	started := time.Now()
