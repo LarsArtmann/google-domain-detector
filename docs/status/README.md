@@ -5,16 +5,16 @@ moment — verify claims against current code before citing (reports carry
 their HEAD when known; see the "verified against" convention in
 TODO_LIST).
 
-| Report | Scope |
-| ------ | ----- |
-| [2026-11-10_10-11](2026-11-10_10-11_v3-spine-race-blocked-session-status.md) | Plan v3 spine: E3/E4/E5 landed, E1 replication (best run), release blocked on a flaky cancel test (since fixed deterministically — see 2026-11-10 E1 finding below) |
-| [2026-11-10_07-46](2026-11-10_07-46_t5-validated-read-models-cli-polish.md) | T5 validation, show/runs read models, CLI polish; **nxdomain-bucket conclusion retracted** — see the correction note at the top |
-| [2026-11-10_06-58](2026-11-10_06-58_scale-tier-execution-session-status.md) | Scale-tier execution session |
-| [2026-11-10_06-09](2026-11-10_06-09_toolship-and-first-mass-scan.md) | Toolship + first 63k-domain mass scan (Tranco .de/.ch/.uk) |
-| [2026-11-10_01-49](2026-11-10_01-49_full-plan-execution-session-status.md) | Plan v2 full execution session |
-| [2026-11-10_01-12](2026-11-10_01-12_event-sourced-scans-session-status.md) | Event-sourced scans (scanstore) session |
-| [2026-11-10_01-12 planning](2026-11-10_01-12_planning-run-pareto-plan-review.md) | Planning run / pareto plan review |
-| [2026-11-10_00-36](2026-11-10_00-36_library-audit-session-review.md) | Library audit session (22 LarsArtmann libs) |
+| Report                                                                           | Scope                                                                                                                                                               |
+| -------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [2026-11-10_10-11](2026-11-10_10-11_v3-spine-race-blocked-session-status.md)     | Plan v3 spine: E3/E4/E5 landed, E1 replication (best run), release blocked on a flaky cancel test (since fixed deterministically — see 2026-11-10 E1 finding below) |
+| [2026-11-10_07-46](2026-11-10_07-46_t5-validated-read-models-cli-polish.md)      | T5 validation, show/runs read models, CLI polish; **nxdomain-bucket conclusion retracted** — see the correction note at the top                                     |
+| [2026-11-10_06-58](2026-11-10_06-58_scale-tier-execution-session-status.md)      | Scale-tier execution session                                                                                                                                        |
+| [2026-11-10_06-09](2026-11-10_06-09_toolship-and-first-mass-scan.md)             | Toolship + first 63k-domain mass scan (Tranco .de/.ch/.uk)                                                                                                          |
+| [2026-11-10_01-49](2026-11-10_01-49_full-plan-execution-session-status.md)       | Plan v2 full execution session                                                                                                                                      |
+| [2026-11-10_01-12](2026-11-10_01-12_event-sourced-scans-session-status.md)       | Event-sourced scans (scanstore) session                                                                                                                             |
+| [2026-11-10_01-12 planning](2026-11-10_01-12_planning-run-pareto-plan-review.md) | Planning run / pareto plan review                                                                                                                                   |
+| [2026-11-10_00-36](2026-11-10_00-36_library-audit-session-review.md)             | Library audit session (22 LarsArtmann libs)                                                                                                                         |
 
 ## Cross-report truth notes
 

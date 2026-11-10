@@ -11,6 +11,7 @@ session's work.
 ## Scope line — verified vs not verified
 
 **Verified, with commands:**
+
 - Plan v3 graph compiles: `mmdc 12.0.0` → 232 KiB SVG, rc=0. Committed
   0c76abd, pushed to origin AND github.
 - E3 ctrl-C drain test: PASSED (plain and under `-race` in isolation,
@@ -20,7 +21,7 @@ session's work.
   spot-verified against the live binary (`--color`, `--no-color`,
   `--resume`, `--wave`, `show`, `runs` all present in `--help`).
 - docs-gates: 5/5 PASS after the E5 harvest (was: freshness DRIFT 8 items
-  + audit-all DRIFT 12 items; both cleared). Committed f61d8f5, pushed.
+  - audit-all DRIFT 12 items; both cleared). Committed f61d8f5, pushed.
 - Release pre-checks: go.mod clean (no replace, no pseudo-versions, no
   prior tags); `gh api` works despite a scary `gh auth status` warning;
   CI workflow exists (ci.yml).
@@ -32,6 +33,7 @@ session's work.
   65 MiB, recorded to /tmp/e1-run3.db.
 
 **NOT verified / blocked:**
+
 - **The full-suite `-race` gate FAILED twice** on
   `TestScanCancelMidRunDrainsEventStore` (my new E3 test) — but passes
   4/4 under `-race` in isolation. Timing-sensitive under parallel suite
@@ -228,7 +230,8 @@ infra + owner actions). G5 sibling-lane tasks deliberately untouched.
    ~5 min per release)?
 
 ---
-*Artifacts this session: plan v3 (0c76abd), truth-debt commits (58b914a,
+
+_Artifacts this session: plan v3 (0c76abd), truth-debt commits (58b914a,
 f61d8f5), daemon-swept CHANGELOG cut (e712a1f), release notes
-(/tmp/v0.1.0-release-notes.md), E1 run #3 (/tmp/e1-run3.*), race failure
+(/tmp/v0.1.0-release-notes.md), E1 run #3 (/tmp/e1-run3._), race failure
 evidence LOST (see §d.2).*

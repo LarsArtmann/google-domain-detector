@@ -7,11 +7,11 @@ can sign; this directory carries the researched requirements and the drafted
 applications so sending them is a 5-minute owner action, not a research
 project.
 
-| TLD | Registry | Program (verified 2026-11-10)              | Fee   | Draft           | Status             |
-| --- | -------- | ------------------------------------------ | ----- | --------------- | ------------------ |
-| .uk | Nominet  | .UK Zone Files Access Licence              | free  | `nominet-uk.md` | draft ready        |
-| .de | DENIC    | (research pending)                         | (tbd) | `denic-de.md`   | researching        |
-| .ch | SWITCH   | none — open data: public TSIG keys + AXFR   | free  | `switch-ch.md`  | ready — no owner action |
+| TLD | Registry | Program (verified 2026-11-10)             | Fee   | Draft           | Status                  |
+| --- | -------- | ----------------------------------------- | ----- | --------------- | ----------------------- |
+| .uk | Nominet  | .UK Zone Files Access Licence             | free  | `nominet-uk.md` | draft ready             |
+| .de | DENIC    | (research pending)                        | (tbd) | `denic-de.md`   | researching             |
+| .ch | SWITCH   | none — open data: public TSIG keys + AXFR | free  | `switch-ch.md`  | ready — no owner action |
 
 ## Constraint review (what the licences permit)
 

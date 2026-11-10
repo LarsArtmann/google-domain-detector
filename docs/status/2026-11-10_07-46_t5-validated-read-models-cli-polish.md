@@ -88,7 +88,7 @@ session's landed work. NOT a whole-project audit.
    - `docs/zone-data/README.md` checklist updated (.ch actionable now).
 5. **T12 read-model consumers — show/runs (commit 80c1c60)**:
    - `scanstore/queries.go`: LatestObservation (TypedReader point lookup)
-     + ListRuns (scan, newest-first).
+     - ListRuns (scan, newest-first).
    - `show <domain>`: latest observation, verdicts derived from evidence,
      observation count, last run; any output format; usage errors exit 2.
    - `runs`: run list with status, wave/resumed-from provenance, tallies.
@@ -199,9 +199,9 @@ session's landed work. NOT a whole-project audit.
    (README bulk-scan section) and eventually tooling (a `--retry-errors`
    that queries the journal).
 5. **False-NXDOMAIN awareness**: ~10% of nxdomain verdicts under a
-  stressed resolver were wrong in this run. Any consumer treating
-  nxdomain as ground truth (pre-sweep T24 especially!) must re-verify
-  against a second resolver. Pin this in T24's design notes.
+   stressed resolver were wrong in this run. Any consumer treating
+   nxdomain as ground truth (pre-sweep T24 especially!) must re-verify
+   against a second resolver. Pin this in T24's design notes.
 6. **Editor LSP cache is stale** (still reports counts.go:47 ErrKind
    undefined and scanChunkSize-as-global; both are fixed in code). Stop
    trusting project diagnostics from the editor; trust build/vet/test.
@@ -212,6 +212,7 @@ session's landed work. NOT a whole-project audit.
 ## f) Next — up to 50, impact-ordered
 
 **Ship the release (spine completion):**
+
 1. Record T5 G3 verdict in TODO_LIST + CHANGELOG (10 min).
 2. Finish T13 tests: footer table/markdown, csv/tsv footer-free, --color
    parse errors exit 2, --color never (no ANSI) (25 min).
@@ -231,52 +232,52 @@ session's landed work. NOT a whole-project audit.
 11. T15 doctor preflight (resolver reachability + ranges feed check).
 12. T16 nom live progress (TTY-only) for long scans.
 13. `--retry-errors <run>`: journal-driven error-tail re-sweep (my T5
-    manual workflow, productized; needs the same linked-run semantics as
-    --resume).
+manual workflow, productized; needs the same linked-run semantics as
+--resume).
 14. Delta query: verdict flips between runs (census T16; the killer
-    prospecting signal).
+prospecting signal).
 15. Exit-code scoping in internal/ranges (T26: 75 fetch / 65 corrupt).
 
 **Scale readiness (G4 → whole-TLD):**
 16. T24 pre-sweep design doc — MUST incorporate the false-NXDOMAIN
-    finding (re-verify pass before dropping domains).
+finding (re-verify pass before dropping domains).
 17. Unbound local resolver spike (census T05) — kills the throttle wall
-    the T5 run hit at 24 workers.
+the T5 run hit at 24 workers.
 18. Recover the 7,204 legacy unknowns via unbound + error-tail files.
 19. Throughput benchmark + qps politeness budget doc (census T08).
 20. Pilot harness slice + error-rate gate as documented pre-flight.
 21. .ch zone AXFR dry-run against zonedata.switch.ch (keys are public;
-    once/24h; verify the ~2.4M-name extraction path end-to-end).
+once/24h; verify the ~2.4M-name extraction path end-to-end).
 
 **Zone paperwork (owner actions):**
 22. Send the Nominet .uk application email (draft ready in
-    docs/zone-data/nominet-uk.md) — weeks of lead time.
+docs/zone-data/nominet-uk.md) — weeks of lead time.
 23. Decide the .ch research-purpose question (public-interest clause vs
-    commercial lead-gen use) before the first .ch census wave.
+commercial lead-gen use) before the first .ch census wave.
 24. Drop/rewrite the stale DENIC rows in TODO_LIST (research landed:
-    impossible).
+impossible).
 
 **Quality gates:**
 25. T20 lint sweep to zero (~70 warnings; err113/wrapcheck/varnamelen/
-    tagalign/cyclop/gocognit/makezero/nilnil/golines).
+tagalign/cyclop/gocognit/makezero/nilnil/golines).
 26. T21 cmdguard-lint CI step.
 27. Full `-race` suite re-run after T13 tests (the pre-T13 run was green).
 28. buildflow gate run (blocked by BuildFlow#56 toolchain skew — the
-    other session owns it; keep --no-verify + direct verification).
+other session owns it; keep --no-verify + direct verification).
 29. T18: refresh docs/review/* dashboards with verified-at-commit
-    headers; re-audit go-cqrs-lite verdict now that it's a direct dep.
+headers; re-audit go-cqrs-lite verdict now that it's a direct dep.
 30. cli coverage 69% → 90 (toolship §f31).
 
 **Docs upkeep (T17 finish):**
 31. TODO_LIST sync: strike T5/T7/T8/T9/T11/T12 + stale DENIC/Nominet
-    rows; harvest the 06-09 toolship §f and this report's f.
+rows; harvest the 06-09 toolship §f and this report's f.
 32. FEATURES.md refresh (event sourcing FULLY_FUNCTIONAL: resume, show,
-    runs, streaming, retry, taxonomy).
+runs, streaming, retry, taxonomy).
 33. docs/status index in README (discoverability).
 34. `go mod tidy` sweep (post-stabilization).
 35. docs-gates green pass.
 36. AGENTS.md architecture map: add show/runs + queries.go + feeder
-    (v2 session's files unreviewed by the 06-09 session; mine are).
+(v2 session's files unreviewed by the 06-09 session; mine are).
 37. ROADMAP.md: park CAA watch, ETag-if-polled, M365 detection ideas.
 38. VendorHash refresh after any dependency change (nix-hash-fix).
 
@@ -293,10 +294,10 @@ session's landed work. NOT a whole-project audit.
 
 **Coordination:**
 48. Merge the census plan's task numbering with plan v2's under one
-    TODO_LIST view (two T-numbering systems coexist now).
+TODO_LIST view (two T-numbering systems coexist now).
 49. Decide reports/ gitignore vs README pointer (data-not-code policy).
 50. Session handoff note for the v2/toolship session: T12 landed on top
-    of their scanstore work (additive only), chunk-size seam moved.
+of their scanstore work (additive only), chunk-size seam moved.
 
 ## g) Questions I cannot answer myself
 

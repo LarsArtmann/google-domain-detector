@@ -11,6 +11,7 @@ the scale tier. **Note:** session resumed after a ~5 h pause (last action
 ## Scope line — verified vs not verified
 
 **Verified, with commands:**
+
 - Baseline at session start: `go build ./... && go vet ./...` green, tree
   clean at ff0a81b.
 - T5 original run (launched by session 1): completed 01:54 — 3645 domains,
@@ -32,6 +33,7 @@ the scale tier. **Note:** session resumed after a ~5 h pause (last action
   documented in AGENTS.md); direct gates used per that policy.
 
 **NOT verified / invalid:**
+
 - The T5 "clean rerun" (--resolver 9.9.9.9, job started 01:53, done during
   the pause): EXIT=0, 657s, 65MiB, but **timeout 2157** — 9.9.9.9
   rate-limited 24 workers; verdict counts (168 certain / 92 likely / 16
@@ -241,6 +243,7 @@ pre-sweep; T9 ✓, G4 nearly ✓, T19 pending), T25 (CSV enrichment), T26
    codified first?
 
 ---
-*Session artifacts: /tmp/t5-clean.{db,json,stderr} (run 2), /tmp/t5.db +
-/tmp/t5-scan.json (run 1), /tmp/t7-50k-* (streaming smoke), invalid A/B at
+
+_Session artifacts: /tmp/t5-clean.{db,json,stderr} (run 2), /tmp/t5.db +
+/tmp/t5-scan.json (run 1), /tmp/t7-50k-_ (streaming smoke), invalid A/B at
 /tmp/t7-50k-before.* (killed mid-run). Test gates green at report time.*
