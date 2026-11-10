@@ -11,6 +11,7 @@ import (
 	"path/filepath"
 	"reflect"
 	"strings"
+	"sync"
 	"testing"
 	"time"
 
@@ -244,17 +245,33 @@ func TestScanJSONLStreamsInCompletionOrder(t *testing.T) {
 
 // hangRes blocks the TXT lookup of slow.com until its context dies, so the
 // run can be canceled mid-flight while another domain already completed.
-// When cancel is non-nil it fires the moment slow.com's TXT lookup begins —
-// a deterministic trigger strictly after the event-store run record exists
-// (attachEventStore precedes the worker pool), so suite-load timing can
-// never pre-empt run-start the way the old wall-clock AfterFunc did.
+// When cancel is non-nil it fires once slow.com's TXT lookup begins AND
+// (when wait is set) fast1.com's JSONL line is already visible in the run's
+// stdout — both strictly after the event-store run record exists
+// (attachEventStore precedes the worker pool). Waiting for the emitted line
+// pins the completion order — the sink chains before the stream, so the
+// result is classified before its line appears — so suite-load timing can
+// neither pre-empt run-start nor flip the two lines the way the wall-clock
+// AfterFunc and a bare lookup-start trigger could.
 type hangRes struct {
 	*fakeRes
 	cancel context.CancelFunc
+	wait   *snapshotWriter
 }
 
 func (h hangRes) LookupTXT(ctx context.Context, host string) ([]string, error) {
 	if host == "slow.com" {
+		deadline := time.Now().Add(5 * time.Second)
+		parentDead := false
+
+		for !parentDead && h.wait != nil && !strings.Contains(h.wait.String(), "fast1.com") && time.Now().Before(deadline) {
+			select {
+			case <-ctx.Done():
+				parentDead = true
+			case <-time.After(500 * time.Microsecond):
+			}
+		}
+
 		if h.cancel != nil {
 			h.cancel()
 		}
@@ -267,26 +284,50 @@ func (h hangRes) LookupTXT(ctx context.Context, host string) ([]string, error) {
 	return h.fakeRes.LookupTXT(ctx, host)
 }
 
+// snapshotWriter is a mutex-guarded buffer: the scan goroutines write while
+// hangRes polls String from a worker goroutine — a bare bytes.Buffer would
+// be a data race under -race.
+type snapshotWriter struct {
+	mu  sync.Mutex
+	buf bytes.Buffer
+}
+
+func (w *snapshotWriter) Write(p []byte) (int, error) {
+	w.mu.Lock()
+	defer w.mu.Unlock()
+
+	return w.buf.Write(p)
+}
+
+func (w *snapshotWriter) String() string {
+	w.mu.Lock()
+	defer w.mu.Unlock()
+
+	return w.buf.String()
+}
+
 // TestScanJSONLCancelMidStream proves cancellation stops the stream cleanly:
 // the completed domain has its line, the hung domain reports the
 // cancellation instead of hanging the run.
 func TestScanJSONLCancelMidStream(t *testing.T) {
 	t.Parallel()
 
-	var stdout, stderr bytes.Buffer
+	var stderr bytes.Buffer
+
+	stdout := &snapshotWriter{}
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	d, err := BuildCLI(&stdout, &stderr, "test", "", &hangRes{fakeRes: &fakeRes{}, cancel: cancel}, strings.NewReader(""), false, false)
+	d, err := BuildCLI(stdout, &stderr, "test", "", &hangRes{fakeRes: &fakeRes{}, cancel: cancel, wait: stdout}, strings.NewReader(""), false, false)
 	if err != nil {
 		t.Fatalf("BuildCLI failed: %v", err)
 	}
 
 	// Ctrl-C sends an explicit cancellation (context.Canceled), not a
 	// deadline; a parent deadline would classify as a per-domain timeout.
-	// The cancel fires from inside hangRes when slow.com's lookup begins —
-	// deterministic under any suite load.
+	// The cancel fires from inside hangRes only after fast1.com's line is
+	// emitted — deterministic order under any suite load.
 	err = d.ExecuteWithArgs(ctx, []string{"scan", "--no-ranges", "--format", "jsonl", "fast1.com", "slow.com"})
 	if err != nil {
 		t.Fatalf("canceled scan must still finish the report: %v", err)
@@ -918,12 +959,14 @@ func TestScanCancelMidRunDrainsEventStore(t *testing.T) {
 
 	store := filepath.Join(t.TempDir(), "scans.db")
 
-	var stdout, stderr bytes.Buffer
+	var stderr bytes.Buffer
+
+	stdout := &snapshotWriter{}
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	d, err := BuildCLI(&stdout, &stderr, "test", "", &hangRes{fakeRes: &fakeRes{}, cancel: cancel}, strings.NewReader(""), false, false)
+	d, err := BuildCLI(stdout, &stderr, "test", "", &hangRes{fakeRes: &fakeRes{}, cancel: cancel, wait: stdout}, strings.NewReader(""), false, false)
 	if err != nil {
 		t.Fatalf("BuildCLI failed: %v", err)
 	}
