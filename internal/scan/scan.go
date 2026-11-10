@@ -44,6 +44,10 @@ func Run(ctx context.Context, res resolve.Resolver, domains []domain.Domain, opt
 		return results
 	}
 
+	// One retry per lookup clears transient resolver trouble without hiding
+	// authoritative answers (NXDOMAIN is never retried).
+	res = retryResolver{inner: res}
+
 	workers := opts.Workers
 	if workers <= 0 {
 		workers = defaultWorkers
@@ -90,7 +94,8 @@ func Run(ctx context.Context, res resolve.Resolver, domains []domain.Domain, opt
 
 	for i := range results {
 		if results[i].Domain == "" {
-			results[i] = classify.Result{Domain: domains[i].String(), Err: ctx.Err().Error()}
+			err := ctx.Err()
+			results[i] = classify.Result{Domain: domains[i].String(), Err: err.Error(), ErrKind: classify.ErrorKindOf(err)}
 		}
 	}
 
@@ -112,6 +117,7 @@ func ScanDomain(ctx context.Context, res resolve.Resolver, d domain.Domain, opts
 	if err != nil {
 		if dnsErr, ok := errors.AsType[*net.DNSError](err); ok && dnsErr.IsNotFound {
 			r.Err = "domain not found: " + err.Error()
+			r.ErrKind = classify.ErrorNXDomain
 
 			return r
 		}
@@ -157,9 +163,46 @@ func ScanDomain(ctx context.Context, res resolve.Resolver, d domain.Domain, opts
 
 	if lookupErr != nil && len(r.Evidences) == 0 {
 		r.Err = lookupErr.Error()
+		r.ErrKind = classify.ErrorKindOf(lookupErr)
 	}
 
 	return r
+}
+
+// retryResolver retries every lookup once when the failure is transient
+// (timeout, SERVFAIL, refused). Authoritative answers and cancellations
+// return immediately; both attempts share the domain's lookup context.
+type retryResolver struct {
+	inner resolve.Resolver
+}
+
+func retryOnce[T any](lookup func() (T, error)) (T, error) {
+	value, err := lookup()
+	if classify.IsTransient(err) {
+		return lookup()
+	}
+
+	return value, err
+}
+
+func (r retryResolver) LookupTXT(ctx context.Context, host string) ([]string, error) {
+	return retryOnce(func() ([]string, error) { return r.inner.LookupTXT(ctx, host) })
+}
+
+func (r retryResolver) LookupMX(ctx context.Context, host string) ([]*net.MX, error) {
+	return retryOnce(func() ([]*net.MX, error) { return r.inner.LookupMX(ctx, host) })
+}
+
+func (r retryResolver) LookupCNAME(ctx context.Context, host string) (string, error) {
+	return retryOnce(func() (string, error) { return r.inner.LookupCNAME(ctx, host) })
+}
+
+func (r retryResolver) LookupIP(ctx context.Context, host string) ([]net.IP, error) {
+	return retryOnce(func() ([]net.IP, error) { return r.inner.LookupIP(ctx, host) })
+}
+
+func (r retryResolver) LookupNS(ctx context.Context, host string) ([]*net.NS, error) {
+	return retryOnce(func() ([]*net.NS, error) { return r.inner.LookupNS(ctx, host) })
 }
 
 func firstErr(existing, candidate error) error {

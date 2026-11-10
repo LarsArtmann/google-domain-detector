@@ -63,10 +63,10 @@ func runReplay(ctx context.Context, f ReplayFlags, stdout, stderr io.Writer) err
 	}
 
 	if summary != nil {
-		fmt.Fprintf(stderr, "run %s: %d domains, workspace certain %d / likely %d, gcp %d, errors %d\n",
+		fmt.Fprintf(stderr, "run %s: %d domains, workspace certain %d / likely %d, gcp %d, errors %d%s\n",
 			summary.RunID, summary.Counts.Scanned,
 			summary.Counts.WorkspaceCertain, summary.Counts.WorkspaceLikely,
-			summary.Counts.GCPCertain, summary.Counts.Errors)
+			summary.Counts.GCPCertain, summary.Counts.Errors, errorKindsSuffix(summary.Counts))
 	}
 
 	return renderResults(stdout, replay.Results, filter, format)

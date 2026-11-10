@@ -183,11 +183,29 @@ func runScan(
 
 	rendered := renderResults(stdout, results, filter, format)
 
+	counts := classify.Count(results)
+	fmt.Fprintf(stderr, "%d domains: workspace certain %d / likely %d, gcp %d, errors %d%s\n",
+		counts.Scanned, counts.WorkspaceCertain, counts.WorkspaceLikely,
+		counts.GCPCertain, counts.Errors, errorKindsSuffix(counts))
+
 	if err := finish(ctx, time.Since(started), results); err != nil {
 		return err
 	}
 
 	return rendered
+}
+
+// errorKindsSuffix explains the error total with its kind breakdown, so a
+// big tail reads as data instead of a mystery.
+func errorKindsSuffix(c classify.Counts) string {
+	if c.Errors == 0 {
+		return ""
+	}
+
+	k := c.ErrorKinds
+
+	return fmt.Sprintf(" (nxdomain %d, timeout %d, servfail %d, canceled %d, other %d)",
+		k.NXDomain, k.Timeout, k.ServFail, k.Canceled, k.Other)
 }
 
 // renderResults filters and writes the report in the requested format.

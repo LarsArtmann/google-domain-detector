@@ -53,6 +53,7 @@ func Domain() system.DomainConfig {
 									RunID:      cmd.RunID,
 									Evidence:   cmd.Result.Evidences,
 									Err:        cmd.Result.Err,
+									ErrKind:    cmd.Result.ErrKind,
 									ObservedAt: event.NewInstantNow(),
 								}, event.WithSchemaVersion(1))
 							if err != nil {

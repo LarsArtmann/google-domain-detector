@@ -29,6 +29,7 @@ type ObservationView struct {
 	LastRunID    string              `json:"last_run_id"`
 	Evidence     []classify.Evidence `json:"evidence"`
 	Err          string              `json:"error,omitempty"`
+	ErrKind      classify.ErrorKind  `json:"error_kind,omitempty"`
 	ObservedAt   time.Time           `json:"observed_at"`
 	Observations int                 `json:"observations"`
 }

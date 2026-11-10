@@ -109,7 +109,7 @@ func ReplayJournal(ctx context.Context, sys *system.System, runFilter string) (R
 			domainOrder = append(domainOrder, p.Domain)
 		}
 
-		byDomain[p.Domain] = classify.Result{Domain: p.Domain, Evidences: p.Evidence, Err: p.Err}
+		byDomain[p.Domain] = classify.Result{Domain: p.Domain, Evidences: p.Evidence, Err: p.Err, ErrKind: p.ErrKind}
 	}
 
 	for _, name := range domainOrder {

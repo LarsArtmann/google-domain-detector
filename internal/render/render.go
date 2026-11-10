@@ -122,6 +122,7 @@ func jsonResultFrom(r classify.Result) jsonResult {
 		GenericGoogle: r.GenericGoogle(),
 		Evidences:     r.Evidences,
 		Error:         r.Err,
+		ErrorKind:     r.ErrKind,
 	}
 }
 
@@ -132,6 +133,7 @@ type jsonResult struct {
 	GenericGoogle bool                `json:"google_other_evidence"`
 	Evidences     []classify.Evidence `json:"evidence"`
 	Error         string              `json:"error,omitempty"`
+	ErrorKind     classify.ErrorKind  `json:"error_kind,omitempty"`
 }
 
 type jsonVerdict classify.Verdict

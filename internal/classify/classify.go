@@ -106,6 +106,8 @@ type Result struct {
 	// Err carries the dominant lookup error (e.g. NXDOMAIN) when the domain
 	// yielded no evidence at all.
 	Err string `json:"error,omitempty"`
+	// ErrKind classifies Err (see ErrorKind); empty when Err is empty.
+	ErrKind ErrorKind `json:"error_kind,omitempty"`
 }
 
 // WorkspaceVerdict: MX evidence is certain (mail is delivered to Google);

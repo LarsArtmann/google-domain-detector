@@ -48,6 +48,7 @@ type DomainObservedPayload struct {
 	RunID      string              `json:"run_id"`
 	Evidence   []classify.Evidence `json:"evidence"`
 	Err        string              `json:"error,omitempty"`
+	ErrKind    classify.ErrorKind  `json:"error_kind,omitempty"`
 	ObservedAt event.Instant       `json:"observed_at"`
 }
 
