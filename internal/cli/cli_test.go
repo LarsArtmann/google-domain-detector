@@ -10,6 +10,8 @@ import (
 	"reflect"
 	"strings"
 	"testing"
+
+	v5 "github.com/larsartmann/cmdguard/v5/pkg/cmdguard/v5"
 )
 
 // fakeRes is the same scripted resolver shape as scan's, reduced to what the
@@ -54,7 +56,7 @@ func run(t *testing.T, res *fakeRes, stdin string, args ...string) (string, stri
 
 	var stdout, stderr bytes.Buffer
 
-	d, err := BuildCLI(&stdout, &stderr, "test", res, strings.NewReader(stdin), false)
+	d, err := BuildCLI(&stdout, &stderr, "test", "", res, strings.NewReader(stdin), false)
 	if err != nil {
 		t.Fatalf("BuildCLI failed: %v", err)
 	}
@@ -182,6 +184,96 @@ func TestScanRejectsUnknownFilter(t *testing.T) {
 	_, _, err := run(t, workspaceDomain(), "", "scan", "--no-ranges", "--only", "everything", "acme.com")
 	if err == nil {
 		t.Error("unknown filter must fail the values validation")
+	}
+}
+
+func TestScanRejectsInvalidWorkers(t *testing.T) {
+	t.Parallel()
+
+	for _, workers := range []string{"0", "-1", "513"} {
+		_, _, err := run(t, workspaceDomain(), "", "scan", "--no-ranges", "--workers", workers, "acme.com")
+		if err == nil {
+			t.Errorf("--workers %s must fail the validate tag", workers)
+		}
+	}
+}
+
+func TestUsageErrorsExitTwo(t *testing.T) {
+	t.Parallel()
+
+	_, _, err := run(t, workspaceDomain(), "", "scan", "--no-ranges")
+	if err == nil {
+		t.Fatal("empty non-TTY scan must fail")
+	}
+
+	if code := v5.ExitCode(err); code != 2 {
+		t.Errorf("no-valid-domains exit code = %d, want 2 (usage error)", code)
+	}
+
+	_, _, err = run(t, workspaceDomain(), "", "replay")
+	if err == nil {
+		t.Fatal("replay without an event store must fail")
+	}
+
+	if code := v5.ExitCode(err); code != 2 {
+		t.Errorf("replay-without-store exit code = %d, want 2 (usage error)", code)
+	}
+}
+
+func TestScanFailureExitsOne(t *testing.T) {
+	t.Parallel()
+
+	broken := filepath.Join(t.TempDir(), "no-such-dir", "store.db")
+	_, _, err := run(t, workspaceDomain(), "", "scan", "--no-ranges", "--event-store", broken, "acme.com")
+	if err == nil {
+		t.Fatal("scan against an unopenable event store must fail")
+	}
+
+	if code := v5.ExitCode(err); code != 1 {
+		t.Errorf("scan-failure exit code = %d, want 1", code)
+	}
+}
+
+func TestEnvPrefixResolution(t *testing.T) {
+	// Not parallel: t.Setenv is incompatible with parallel subtests.
+	store := filepath.Join(t.TempDir(), "events.db")
+	t.Setenv("GDD_EVENT_STORE", store)
+
+	if _, _, err := run(t, workspaceDomain(), "", "scan", "--no-ranges", "acme.com"); err != nil {
+		t.Fatalf("scan failed: %v", err)
+	}
+
+	if _, err := os.Stat(store); err != nil {
+		t.Errorf("GDD_EVENT_STORE did not resolve through the GDD_ env prefix: %v", err)
+	}
+}
+
+func TestRecoveryMiddlewareRecoversPanics(t *testing.T) {
+	t.Parallel()
+
+	cli, err := v5.NewCLI(Name, "test", RootConfig{}, cliOptions("test", "")...)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	boom, boomErr := v5.NewCommand("boom", v5.NoFlags{},
+		func(context.Context, *RootConfig, v5.NoFlags) error { panic("boom") },
+		v5.WithShort("panics on purpose"),
+	)
+	b := v5.NewBuilder(cli)
+	v5.Try(b, boom, boomErr)
+
+	if err := b.Build(); err != nil {
+		t.Fatal(err)
+	}
+
+	err = cli.ExecuteWithArgs(context.Background(), []string{"boom"})
+	if err == nil {
+		t.Fatal("a recovered panic must surface as an error, never as success")
+	}
+
+	if !strings.Contains(err.Error(), "boom") {
+		t.Errorf("panic message lost by recovery middleware: %v", err)
 	}
 }
 

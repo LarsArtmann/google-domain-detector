@@ -38,22 +38,22 @@ type RootConfig struct{}
 type ScanFlags struct {
 	Input      string        `flag:"input"        help:"Read domains from FILE ('-' reads stdin). Plain lists and CSV with a domain/website/url column both work" short:"i"`
 	Format     string        `flag:"format"       help:"Output format"                                                                                            short:"f" default:"table"                                       values:"table,json,csv,tsv,markdown,yaml,toml,jsonl"`
-	Workers    int           `flag:"workers"      help:"Parallel DNS lookups"                                                                                     short:"j" default:"8"`
+	Workers    int           `flag:"workers"      help:"Parallel DNS lookups"                                                                                     short:"j" default:"8"   validate:"min=1,max=512"`
 	Timeout    time.Duration `flag:"timeout"      help:"Per-domain lookup budget"                                                                                           default:"5s"`
 	Only       string        `flag:"only"         help:"Report only matching domains"                                                                                       default:"all"                                         values:"all,workspace,gcp,google"`
 	RangesURL  string        `flag:"ranges-url"   help:"GCP IP-range feed"                                                                                                  default:"https://www.gstatic.com/ipranges/cloud.json"`
-	CachePath  string        `flag:"ranges-cache" help:"Range-feed cache file (default ~/.cache/google-domain-detector/cloud.json)"                                                                                                                                    env:"GDD_RANGES_CACHE"`
+	CachePath  string        `flag:"ranges-cache" help:"Range-feed cache file (default ~/.cache/google-domain-detector/cloud.json)"                                                                                                                                    env:"RANGES_CACHE"`
 	NoRanges   bool          `flag:"no-ranges"    help:"Skip GCP IP-range matching (CNAME/MX/NS evidence only)"`
 	NoDKIM     bool          `flag:"no-dkim"      help:"Skip the google._domainkey probe"`
-	Resolver   string        `flag:"resolver"     help:"Query this DNS server (host or host:port) instead of the system resolver"                                                                                                                                      env:"GDD_RESOLVER"`
-	EventStore string        `flag:"event-store"  help:"Persist the run as events in this SQLite file (go-cqrs-lite journal; replay with the replay command)"                                                                                                          env:"GDD_EVENT_STORE"`
+	Resolver   string        `flag:"resolver"     help:"Query this DNS server (host or host:port) instead of the system resolver"                                                                                                                                      env:"RESOLVER"`
+	EventStore string        `flag:"event-store"  help:"Persist the run as events in this SQLite file (go-cqrs-lite journal; replay with the replay command)"                                                                                                          env:"EVENT_STORE"`
 }
 
 // Run builds the CLI and executes args. Construction errors are printed to
 // stderr and returned; the execution error is returned unprinted because
 // cmdguard reports it exactly once.
-func Run(ctx context.Context, args []string, stdout, stderr io.Writer, version string) error {
-	d, err := BuildCLI(stdout, stderr, version, resolve.New(), os.Stdin, stdinIsTTY())
+func Run(ctx context.Context, args []string, stdout, stderr io.Writer, version, commit string) error {
+	d, err := BuildCLI(stdout, stderr, version, commit, resolve.New(), os.Stdin, stdinIsTTY())
 	if err != nil {
 		fmt.Fprintf(stderr, "Error: %v\n", err)
 
@@ -63,10 +63,27 @@ func Run(ctx context.Context, args []string, stdout, stderr io.Writer, version s
 	return d.ExecuteWithArgs(ctx, args)
 }
 
+// cliOptions is the root option set: version/commit stamps, the GDD_ env
+// prefix every env tag resolves under, and panic recovery so a bug reports
+// an error instead of crashing the process.
+func cliOptions(version, commit string) []v5.CLIOption {
+	opts := []v5.CLIOption{
+		v5.WithCLIVersion(version),
+		v5.WithEnvPrefix("GDD_"),
+		v5.WithMiddleware[RootConfig](v5.RecoveryMiddleware[RootConfig]()),
+	}
+
+	if commit != "" {
+		opts = append(opts, v5.WithCLICommit(commit))
+	}
+
+	return opts
+}
+
 // BuildCLI assembles the command tree with injected dependencies.
 func BuildCLI(
 	stdout, stderr io.Writer,
-	version string,
+	version, commit string,
 	res resolve.Resolver,
 	stdin io.Reader,
 	stdinTTY bool,
@@ -75,7 +92,7 @@ func BuildCLI(
 		Name,
 		"Detect which domains run Google Workspace or Google Cloud, from public DNS alone",
 		RootConfig{},
-		v5.WithCLIVersion(version),
+		cliOptions(version, commit)...,
 	)
 	if err != nil {
 		return nil, err
@@ -86,6 +103,7 @@ func BuildCLI(
 			return runScan(ctx, f, v5.ArgsFromContext(ctx), stdout, stderr, res, stdin, stdinTTY, version)
 		},
 		v5.WithShort("Scan domains for Google Workspace and Google Cloud evidence"),
+		v5.WithExample("  # Scan domains passed as arguments\n  google-domain-detector scan --format json example.com\n\n  # Scan a list on stdin, keep only Workspace hits\n  cat domains.txt | google-domain-detector scan --only workspace --format csv"),
 	)
 
 	replayCmd, replayErr := v5.NewCommand("replay", ReplayFlags{},
@@ -239,6 +257,25 @@ func attachEventStore(
 // sinkDepth bounds the buffer between the DNS pool and the event store.
 const sinkDepth = 64
 
+// exitCodeUsage marks a bad invocation; every other failure exits 1 so
+// scripts can tell "called it wrong" from "scan went wrong".
+const exitCodeUsage = 2
+
+var (
+	errNoDomainsGiven = errors.New("no domains given: pass domains as arguments, via --input FILE, or pipe a list on stdin")
+	errNoValidDomains = errors.New("no valid domains given: pass domains as arguments, via --input FILE, or pipe a list on stdin")
+)
+
+// usageError wraps err so the process exits 2 instead of the default 1.
+func usageError(err error) error {
+	exitErr, invalid := v5.NewExitError(exitCodeUsage, err)
+	if invalid != nil {
+		return err
+	}
+
+	return exitErr
+}
+
 func collectDomains(
 	args []string,
 	inputPath string,
@@ -264,9 +301,7 @@ func collectDomains(
 		parsed = append(parsed, parseLenient(file))
 	case len(args) == 0:
 		if stdinTTY {
-			return nil, nil, errors.New(
-				"no domains given: pass domains as arguments, via --input FILE, or pipe a list on stdin",
-			)
+			return nil, nil, usageError(errNoDomainsGiven)
 		}
 
 		parsed = append(parsed, parseLenient(stdin))
@@ -289,9 +324,7 @@ func collectDomains(
 	}
 
 	if len(domains) == 0 {
-		return nil, skipped, errors.New(
-			"no valid domains given: pass domains as arguments, via --input FILE, or pipe a list on stdin",
-		)
+		return nil, skipped, usageError(errNoValidDomains)
 	}
 
 	return domains, skipped, nil

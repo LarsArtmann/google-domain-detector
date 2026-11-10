@@ -8,6 +8,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Added
 
+- Scriptable exit codes: bad invocations (no domains given, replay without
+  an event store) exit 2, scan failures exit 1. `--workers` is validated at
+  parse time (1–512); env vars resolve under a single `GDD_` prefix
+  (`GDD_RESOLVER`, `GDD_EVENT_STORE`, `GDD_RANGES_CACHE`); panics surface as
+  printed errors instead of crashes (RecoveryMiddleware); version output can
+  carry the build commit (`-X main.commit=...`), and `scan --help` gained a
+  usage example block.
 - Crash-safe GCP range-feed cache writes via go-atomic-write `WriteWithPerm`
   (0600): a killed run can no longer leave a torn `cloud.json` behind, and
   identical feed rewrites still refresh the cache mtime the 24 h TTL reads.

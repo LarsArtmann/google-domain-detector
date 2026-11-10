@@ -11,8 +11,11 @@ import (
 	"github.com/larsartmann/google-domain-detector/internal/cli"
 )
 
-// version is overridden at link time (-X main.version=...).
-var version = "dev"
+// version and commit are overridden at link time (-X main.version=...).
+var (
+	version = "dev"
+	commit  = ""
+)
 
 func main() {
 	os.Exit(v5.ExitCode(run(context.Background(), os.Args[1:])))
@@ -22,5 +25,5 @@ func main() {
 // errors are printed here; the execution error is printed by cmdguard exactly
 // once and returned unprinted.
 func run(ctx context.Context, args []string) error {
-	return cli.Run(ctx, args, os.Stdout, os.Stderr, version)
+	return cli.Run(ctx, args, os.Stdout, os.Stderr, version, commit)
 }
