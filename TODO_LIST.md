@@ -151,7 +151,9 @@ which is paperwork only the account holder can sign:
 - [ ] Lint-cleanup pass: pre-existing golangci warnings (err113,
       wrapcheck, varnamelen, tagalign, cyclop) to zero — plan v3 E24
       (gate G5: after sibling cli/render lane lands).
-- [ ] docs/status index (README) so status reports are discoverable.
+- [x] docs/status index (README) so status reports are discoverable —
+      done: docs/status/README.md table (newest first) + cross-report
+      truth notes (E1 negative-cache finding, flaky-test closure).
 - [ ] Version-freshness guard: CI/docs step flagging reports whose pinned
       lib released a newer tag.
 - [ ] TimeoutMiddleware whole-run budget for huge inputs — plan v3 E31.
