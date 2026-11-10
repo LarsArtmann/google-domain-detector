@@ -190,3 +190,27 @@ which is paperwork only the account holder can sign:
       (plan v3 E6).
 - [ ] ErrNoRuns error should name the store path; eyeball the describe
       battery output now that --resume/--wave exist (plan v3 E31).
+
+## Harvested from the 01-12 and 06-09 reports (docs-gates audit-all)
+
+- [x] Streaming/chunked input loader (30M-domain scale) — done: chunked
+      domainFeeder + input.Streamer (plan v2 T8); buffered formats still
+      materialize their report (bulk = jsonl).
+- [x] WithOutputFormat adoption + JSON error envelopes — resolved-as-
+      decided-against with `-o` (T1; STACK.md decision log); error
+      envelopes may return post-tag if a need appears.
+- [ ] Enrichment join: imprint/contact crawl for the top-N matches
+      (legal care: robots/ToS) or company-master-data cross-ref —
+      post-census idea (06-09 §f12).
+- [ ] Dedup by registrant/organization for portfolio-owned domain
+      clusters — needs zone/WHOIS data first (06-09 §f13).
+- [ ] M365/Exchange fingerprints (outlook MX/SPF includes) — one scanner,
+      full email-stack picture; detection-rule addition, classify-only
+      (06-09 §f14).
+- [x] SWITCH terms (.ch) — done: verified terms + public TSIG access in
+      docs/zone-data/switch-ch.md (report 07-46).
+- [ ] golangci-lint + govulncheck CI steps — plan v3 E25 (06-09 §f29).
+- [ ] cli package coverage 69% → 90+ — plan v3 E33.
+- [ ] asciinema/GIF for the README — with T14/README work (plan v3 E20).
+- [ ] Feed-freshness/UA integration note once the README install section
+      lands (plan v3 E20).
