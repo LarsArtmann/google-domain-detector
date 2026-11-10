@@ -119,7 +119,10 @@ which is paperwork only the account holder can sign:
 - [x] vendorHash in flake.nix is stale vs go.mod (nix-checker warning from
       the concurrent session's dep additions) — done: nix-hash-fix repaired
       it, hermetic nix build + buildflow gate green (2026-11-10).
-- [ ] README lacks an installation section (go-structure-linter info).
+- [x] README lacks an installation section (go-structure-linter info) —
+      done: Install section (go install @latest, nix flake, UA note, tap
+      planned post-tag) + honest json-vs-jsonl claims + journal quickstart
+      incl. show/runs/--resume (2026-11-10).
 - [x] Harvest status-report section (f) items into TODO_LIST.md
       (docs-health HARVEST) — done in this commit.
 - [x] Update STACK.md when opportunities 1-2 (format widening, atomic

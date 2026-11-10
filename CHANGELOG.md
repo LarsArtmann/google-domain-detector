@@ -17,9 +17,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ## [0.1.0] - 2026-11-10
 
 First tagged release. Validation: 3 645-domain `.ch` slice scanned clean
-(G3 PASS — journal round-trip byte-identical, 12 independent dig
+(G3 PASS — journal round-trip byte-identical, independent dig
 cross-checks, error tail fully explained by taxonomy; see
-docs/status/2026-11-10_07-46). Rollback plan if a fatal defect is found:
+docs/status/2026-11-10_07-46 — its NXDOMAIN-tail conclusion is corrected
+by reports/2026-11-10-e1-validation/README.md: shared-cache negatives
+after resolver distress are unreliable, 11/12 sampled "dead" domains were
+alive). Rollback plan if a fatal defect is found:
 add a `retract v0.1.0` directive to go.mod and tag v0.1.1 — the module
 proxy is immutable, re-tagging is never the answer.
 

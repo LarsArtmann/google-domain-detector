@@ -52,19 +52,21 @@ Input modes (combined freely, first-seen order, deduplicated):
 Unparseable entries are skipped and counted, never fatal — a 500-row lead
 list survives a garbage row.
 
-Formats: `--format table` (default), `json` (full evidence, one line per
-domain, jq-friendly), `csv`, `tsv`, `markdown`. Filters: `--only workspace`
-/ `gcp` / `google` / `all`. Concurrency: `--workers` (default 8); per-domain
-budget `--timeout` (default 5s). Colors: `--color auto|always|never`
-(`auto` respects `NO_COLOR`; `--no-color` is the never shorthand). Bulk
-scans: `--resolver host[:port]`
-queries one DNS server directly instead of the system resolver (env
-`GDD_RESOLVER`). `scan --help` lists everything, `describe`
-prints the machine-readable CLI contract, `doctor` preflights the two
-external dependencies — that your resolver answers and the GCP range feed
-loads — before a bulk run wastes minutes discovering it the hard way, and
-interactive scans show live per-domain progress (pipes and `--format
-jsonl` stay clean for scripting).
+Formats: `--format table` (default), `json` (a JSON array carrying full
+evidence per domain — verdicts, confidence, every record), `jsonl` (one
+JSON object per line, written the moment each domain completes — the
+choice for bulk runs; lines appear in completion order, not input order),
+`csv`, `tsv`, `markdown`. Filters: `--only workspace` / `gcp` / `google`
+/ `all`. Concurrency: `--workers` (default 8); per-domain budget
+`--timeout` (default 5s). Colors: `--color auto|always|never` (`auto`
+respects `NO_COLOR`; `--no-color` is the never shorthand). Bulk scans:
+`--resolver host[:port]` queries one DNS server directly instead of the
+system resolver (env `GDD_RESOLVER`). `scan --help` lists everything,
+`describe` prints the machine-readable CLI contract, `doctor` preflights
+the two external dependencies — that your resolver answers and the GCP
+range feed loads — before a bulk run wastes minutes discovering it the
+hard way, and interactive scans show live per-domain progress (pipes and
+`--format jsonl` stay clean for scripting).
 
 Proven at bulk scale: the Tranco top-1M filtered to `.de`/`.ch`/`.uk`
 (~63k domains) scans in ~20 minutes at `--workers 24`.
@@ -79,7 +81,13 @@ their history), one per run (started/completed with the verdict tally):
 google-domain-detector scan --event-store scans.db --resolver 127.0.0.1:53 -j 24 domains.txt
 google-domain-detector replay --event-store scans.db            # latest run, no DNS
 google-domain-detector replay --event-store scans.db --run ID   # any earlier run
+google-domain-detector show acme.com --event-store scans.db     # one domain's full history
+google-domain-detector runs --event-store scans.db              # the run ledger
+google-domain-detector scan --resume latest --event-store scans.db domains.txt  # skip what's done
 ```
+
+A multi-hour run that dies is NOT lost work: `--resume` skips every domain
+the journal already observed and links the new run to the old one.
 
 `replay` rebuilds the report purely from the journal — same results, same
 evidence, zero DNS (3645 domains replay in ~80 ms; pinned by a test). Scan
@@ -106,6 +114,21 @@ verdicts are always recomputed from it.
   alive). Positive verdicts are unaffected — cross-checked against
   independent resolvers — but treat every `Error` cell as "unknown, ask
   again via a fresh `--resolver`", not as a fact about the domain.
+
+## Install
+
+```bash
+go install github.com/larsartmann/google-domain-detector/cmd/google-domain-detector@latest
+```
+
+Requires Go ≥ 1.27. Nix users get a hermetic build from the repo flake
+(`nix build`; the binary lands in `./result/bin/`). A Homebrew tap is
+planned post-tag.
+
+The range feed fetch identifies itself as
+`User-Agent: google-domain-detector/<version>` — a courtesy to Google's
+feed so bulk users are distinguishable from scripts pretending to be
+browsers.
 
 ## Build & test
 
