@@ -43,13 +43,41 @@ func runReplay(ctx context.Context, f ReplayFlags, stdout, stderr io.Writer) err
 
 	defer func() { _ = sys.Close() }()
 
-	replay, err := scanstore.ReplayJournal(ctx, sys, f.Run)
-	if err != nil {
-		return err
+	// jsonl streams straight out of the journal walk — a whole-TLD store
+	// never materializes; every other format rebuilds fully first.
+	if format == output.FormatJSONL {
+		stream := render.NewJSONLStream(stdout)
+
+		summary, err := scanstore.StreamObservations(ctx, sys, f.Run, func(r classify.Result) error {
+			if render.Matches(r, filter) {
+				stream.Write(r)
+			}
+
+			return nil
+		})
+		if err != nil {
+			if errors.Is(err, scanstore.ErrNoRuns) {
+				return fmt.Errorf("no scan runs found in %s", f.EventStore)
+			}
+
+			return err
+		}
+
+		fmt.Fprintf(stderr, "run %s: %d domains, workspace certain %d / likely %d, gcp %d, errors %d%s\n",
+			summary.RunID, summary.Counts.Scanned,
+			summary.Counts.WorkspaceCertain, summary.Counts.WorkspaceLikely,
+			summary.Counts.GCPCertain, summary.Counts.Errors, errorKindsSuffix(summary.Counts))
+
+		return stream.Err()
 	}
 
-	if len(replay.Runs) == 0 {
-		return fmt.Errorf("no scan runs found in %s", f.EventStore)
+	replay, err := scanstore.ReplayJournal(ctx, sys, f.Run)
+	if err != nil {
+		if errors.Is(err, scanstore.ErrNoRuns) {
+			return fmt.Errorf("no scan runs found in %s", f.EventStore)
+		}
+
+		return err
 	}
 
 	var summary *scanstore.RunSummary

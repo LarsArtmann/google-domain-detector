@@ -31,30 +31,130 @@ type Replay struct {
 	Runs    []RunSummary
 }
 
-// ReplayJournal rebuilds a report purely from the event journal — no DNS, no
-// read models. runFilter selects the run to rebuild; empty means the most
-// recently started run.
-func ReplayJournal(ctx context.Context, sys *system.System, runFilter string) (Replay, error) {
-	store := sys.EventStore()
+// ErrNoRuns reports an event store whose journal holds no scan runs.
+var ErrNoRuns = errors.New("no scan runs found in event store")
 
-	events, err := readAll(ctx, store)
+// ReplayJournal rebuilds a report purely from the event journal — no DNS, no
+// read models — in two bounded-memory walks: run bookkeeping first, then the
+// selected run's observations (last one per domain wins, first-seen order).
+// runFilter selects the run to rebuild; empty means the most recently
+// started run.
+func ReplayJournal(ctx context.Context, sys *system.System, runFilter string) (Replay, error) {
+	out, err := walkRuns(ctx, sys.EventStore(), runFilter)
+	if err != nil {
+		return Replay{}, err
+	}
+
+	if out.RunID == "" {
+		return Replay{}, ErrNoRuns
+	}
+
+	byDomain := map[string]classify.Result{}
+
+	var domainOrder []string
+
+	err = walkJournal(ctx, sys.EventStore(), func(evt event.Event) error {
+		if evt.Type() != evtDomainObserved {
+			return nil
+		}
+
+		p, err := event.DecodePayloadAuto[DomainObservedPayload](evt)
+		if err != nil {
+			return fmt.Errorf("decode %s: %w", evtDomainObserved, err)
+		}
+
+		if p.RunID != out.RunID {
+			return nil
+		}
+
+		if _, seen := byDomain[p.Domain]; !seen {
+			domainOrder = append(domainOrder, p.Domain)
+		}
+
+		byDomain[p.Domain] = classify.Result{Domain: p.Domain, Evidences: p.Evidence, Err: p.Err, ErrKind: p.ErrKind}
+
+		return nil
+	})
 	if err != nil {
 		return Replay{}, fmt.Errorf("read event journal: %w", err)
 	}
 
-	// First pass: run bookkeeping and the latest run identity.
+	for _, name := range domainOrder {
+		out.Results = append(out.Results, byDomain[name])
+	}
+
+	return out, nil
+}
+
+// StreamObservations is the streaming counterpart of ReplayJournal for
+// callers that render as they go: it hands observe every observation of the
+// selected run in journal order, walking in batches so a whole-TLD store
+// never materializes. The recorder writes one observation per domain per
+// run; a journal that (manually) repeats a domain yields it twice —
+// last-wins folding stays with ReplayJournal.
+func StreamObservations(
+	ctx context.Context,
+	sys *system.System,
+	runFilter string,
+	observe func(classify.Result) error,
+) (RunSummary, error) {
+	runs, err := walkRuns(ctx, sys.EventStore(), runFilter)
+	if err != nil {
+		return RunSummary{}, err
+	}
+
+	if runs.RunID == "" {
+		return RunSummary{}, ErrNoRuns
+	}
+
+	var selected RunSummary
+
+	for _, r := range runs.Runs {
+		if r.RunID == runs.RunID {
+			selected = r
+
+			break
+		}
+	}
+
+	err = walkJournal(ctx, sys.EventStore(), func(evt event.Event) error {
+		if evt.Type() != evtDomainObserved {
+			return nil
+		}
+
+		p, err := event.DecodePayloadAuto[DomainObservedPayload](evt)
+		if err != nil {
+			return fmt.Errorf("decode %s: %w", evtDomainObserved, err)
+		}
+
+		if p.RunID != runs.RunID {
+			return nil
+		}
+
+		return observe(classify.Result{Domain: p.Domain, Evidences: p.Evidence, Err: p.Err, ErrKind: p.ErrKind})
+	})
+	if err != nil {
+		return selected, fmt.Errorf("read event journal: %w", err)
+	}
+
+	return selected, nil
+}
+
+// walkRuns is the first journal pass: run summaries in first-started order
+// plus the identity of the run to rebuild (runFilter, or the latest started).
+func walkRuns(ctx context.Context, store event.Store, runFilter string) (Replay, error) {
 	runs := map[string]*RunSummary{}
 
 	var runOrder []string
 
 	latest := ""
 
-	for _, evt := range events {
+	err := walkJournal(ctx, store, func(evt event.Event) error {
 		switch evt.Type() {
 		case evtScanStarted:
 			p, err := event.DecodePayloadAuto[ScanStartedPayload](evt)
 			if err != nil {
-				return Replay{}, fmt.Errorf("decode %s: %w", evtScanStarted, err)
+				return fmt.Errorf("decode %s: %w", evtScanStarted, err)
 			}
 
 			if _, seen := runs[p.RunID]; !seen {
@@ -66,7 +166,7 @@ func ReplayJournal(ctx context.Context, sys *system.System, runFilter string) (R
 		case evtScanCompleted:
 			p, err := event.DecodePayloadAuto[ScanCompletedPayload](evt)
 			if err != nil {
-				return Replay{}, fmt.Errorf("decode %s: %w", evtScanCompleted, err)
+				return fmt.Errorf("decode %s: %w", evtScanCompleted, err)
 			}
 
 			if r, ok := runs[p.RunID]; ok {
@@ -74,6 +174,11 @@ func ReplayJournal(ctx context.Context, sys *system.System, runFilter string) (R
 				r.Counts = p.Counts
 			}
 		}
+
+		return nil
+	})
+	if err != nil {
+		return Replay{}, fmt.Errorf("read event journal: %w", err)
 	}
 
 	if runFilter == "" {
@@ -85,70 +190,54 @@ func ReplayJournal(ctx context.Context, sys *system.System, runFilter string) (R
 		out.Runs = append(out.Runs, *runs[runID])
 	}
 
-	// Second pass: the run's observations, last one per domain wins, in
-	// first-seen order.
-	byDomain := map[string]classify.Result{}
-
-	var domainOrder []string
-
-	for _, evt := range events {
-		if evt.Type() != evtDomainObserved {
-			continue
-		}
-
-		p, err := event.DecodePayloadAuto[DomainObservedPayload](evt)
-		if err != nil {
-			return Replay{}, fmt.Errorf("decode %s: %w", evtDomainObserved, err)
-		}
-
-		if p.RunID != runFilter {
-			continue
-		}
-
-		if _, seen := byDomain[p.Domain]; !seen {
-			domainOrder = append(domainOrder, p.Domain)
-		}
-
-		byDomain[p.Domain] = classify.Result{Domain: p.Domain, Evidences: p.Evidence, Err: p.Err, ErrKind: p.ErrKind}
-	}
-
-	for _, name := range domainOrder {
-		out.Results = append(out.Results, byDomain[name])
-	}
-
 	return out, nil
 }
 
 // replayBatchSize bounds journal-walk memory for whole-TLD stores.
 const replayBatchSize = 1000
 
-// readAll walks the journal in batches when the store supports seeking, and
-// falls back to a plain journal read otherwise.
-func readAll(ctx context.Context, store event.Store) ([]event.Event, error) {
+// walkJournal feeds visit every event in the journal in order, batching when
+// the store supports seeking so memory stays bounded by the batch. An error
+// from visit aborts the walk and is returned unchanged.
+func walkJournal(ctx context.Context, store event.Store, visit func(event.Event) error) error {
 	if seekable, ok := store.(event.SeekableJournal); ok {
-		var out []event.Event
-
 		var after id.EventID
 
 		for {
 			batch, err := seekable.ReadFrom(ctx, after, replayBatchSize)
 			if err != nil {
-				return nil, err
+				return err
 			}
 
 			if len(batch) == 0 {
-				return out, nil
+				return nil
 			}
 
-			out = append(out, batch...)
+			for _, evt := range batch {
+				if err := visit(evt); err != nil {
+					return err
+				}
+			}
+
 			after = batch[len(batch)-1].ID()
 		}
 	}
 
 	journal, ok := store.(event.Journal)
 	if !ok {
-		return nil, errors.New("event store supports neither seeking nor journal reads")
+		return errors.New("event store supports neither seeking nor journal reads")
 	}
 
-	return journal.ReadAll(ctx)
+	events, err := journal.ReadAll(ctx)
+	if err != nil {
+		return err
+	}
+
+	for _, evt := range events {
+		if err := visit(evt); err != nil {
+			return err
+		}
+	}
+
+	return nil
 }

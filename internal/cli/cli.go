@@ -11,7 +11,6 @@ import (
 	"io"
 	"os"
 	"path/filepath"
-	"strings"
 	"time"
 
 	v5 "github.com/larsartmann/cmdguard/v5/pkg/cmdguard/v5"
@@ -19,7 +18,6 @@ import (
 
 	"github.com/larsartmann/google-domain-detector/internal/classify"
 	"github.com/larsartmann/google-domain-detector/internal/domain"
-	"github.com/larsartmann/google-domain-detector/internal/input"
 	"github.com/larsartmann/google-domain-detector/internal/ranges"
 	"github.com/larsartmann/google-domain-detector/internal/render"
 	"github.com/larsartmann/google-domain-detector/internal/resolve"
@@ -124,8 +122,9 @@ func BuildCLI(
 	return cli, nil
 }
 
-// runScan is the command body: collect domains, load GCP ranges, scan,
-// filter, render.
+// runScan is the command body: stream domains in chunks, load GCP ranges,
+// scan, filter, render. Buffered formats (table/json/csv/...) materialize
+// the full report; jsonl streams each line as its domain completes.
 func runScan(
 	ctx context.Context,
 	f ScanFlags,
@@ -146,13 +145,18 @@ func runScan(
 		return err
 	}
 
-	domains, skipped, err := collectDomains(args, f.Input, stdin, stdinTTY)
+	feeder, err := newDomainFeeder(args, f.Input, stdin, stdinTTY)
 	if err != nil {
 		return err
 	}
 
-	if len(skipped) > 0 {
-		fmt.Fprintf(stderr, "skipped %d unparseable input entries (first: %q)\n", len(skipped), skipped[0])
+	first, last, err := feeder.next()
+	if err != nil {
+		return err
+	}
+
+	if len(first) == 0 {
+		return usageError(errNoValidDomains)
 	}
 
 	gcp, err := loadRanges(ctx, f, version)
@@ -172,7 +176,16 @@ func runScan(
 		ProbeDKIM: !f.NoDKIM,
 	}
 
-	finish, err := attachEventStore(ctx, f, len(domains), len(skipped), stderr, &scanOpts)
+	// Input totals are exact when everything fit in one chunk (the common
+	// case); a streamed multi-chunk run journals 0 = unknown, and the
+	// scan.completed tally stays the authoritative count.
+	inputDomains, skipped := 0, 0
+	if last {
+		skippedTotal, _ := feeder.skippedEntries()
+		inputDomains, skipped = len(first), skippedTotal
+	}
+
+	finish, err := attachEventStore(ctx, f, inputDomains, skipped, stderr, &scanOpts)
 	if err != nil {
 		return err
 	}
@@ -191,7 +204,41 @@ func runScan(
 
 	started := time.Now()
 
-	results := scan.Run(ctx, activeRes, domains, scanOpts)
+	var (
+		counts  classify.Counts
+		results []classify.Result // buffered formats only; jsonl discards per chunk
+	)
+
+	scanChunk := func(chunk []domain.Domain) {
+		chunkResults := scan.Run(ctx, activeRes, chunk, scanOpts)
+		if stream == nil {
+			results = append(results, chunkResults...)
+		}
+
+		for i := range chunkResults {
+			counts.Tally(chunkResults[i])
+		}
+	}
+
+	scanChunk(first)
+
+	for !last {
+		chunk, isLast, err := feeder.next()
+		if err != nil {
+			return err
+		}
+
+		if len(chunk) == 0 {
+			break
+		}
+
+		last = isLast
+		scanChunk(chunk)
+	}
+
+	if skippedTotal, firstSkipped := feeder.skippedEntries(); skippedTotal > 0 {
+		fmt.Fprintf(stderr, "skipped %d unparseable input entries (first: %q)\n", skippedTotal, firstSkipped)
+	}
 
 	var rendered error
 	if stream != nil {
@@ -200,12 +247,11 @@ func runScan(
 		rendered = renderResults(stdout, results, filter, format)
 	}
 
-	counts := classify.Count(results)
 	fmt.Fprintf(stderr, "%d domains: workspace certain %d / likely %d, gcp %d, errors %d%s\n",
 		counts.Scanned, counts.WorkspaceCertain, counts.WorkspaceLikely,
 		counts.GCPCertain, counts.Errors, errorKindsSuffix(counts))
 
-	if err := finish(ctx, time.Since(started), results); err != nil {
+	if err := finish(ctx, time.Since(started), counts); err != nil {
 		return err
 	}
 
@@ -265,9 +311,9 @@ func attachEventStore(
 	inputDomain, skipped int,
 	stderr io.Writer,
 	opts *scan.Options,
-) (func(context.Context, time.Duration, []classify.Result) error, error) {
+) (func(context.Context, time.Duration, classify.Counts) error, error) {
 	if f.EventStore == "" {
-		return func(context.Context, time.Duration, []classify.Result) error { return nil }, nil
+		return func(context.Context, time.Duration, classify.Counts) error { return nil }, nil
 	}
 
 	sys, err := scanstore.Open(ctx, f.EventStore)
@@ -287,8 +333,8 @@ func attachEventStore(
 	sink := scanstore.NewSink(recorder, runID, sinkDepth)
 	opts.OnResult = sink.OnResult
 
-	return func(closeCtx context.Context, duration time.Duration, results []classify.Result) error {
-		if err := sink.Close(closeCtx, duration, classify.Count(results)); err != nil {
+	return func(closeCtx context.Context, duration time.Duration, counts classify.Counts) error {
+		if err := sink.Close(closeCtx, duration, counts); err != nil {
 			fmt.Fprintf(stderr, "warning: event store recording incomplete: %v\n", err)
 		}
 
@@ -323,68 +369,6 @@ func usageError(err error) error {
 	}
 
 	return exitErr
-}
-
-func collectDomains(
-	args []string,
-	inputPath string,
-	stdin io.Reader,
-	stdinTTY bool,
-) ([]domain.Domain, []string, error) {
-	var parsed []input.Result
-
-	for _, raw := range args {
-		parsed = append(parsed, parseLenient(strings.NewReader(raw)))
-	}
-
-	switch {
-	case inputPath == "-":
-		parsed = append(parsed, parseLenient(stdin))
-	case inputPath != "":
-		file, err := os.Open(inputPath)
-		if err != nil {
-			return nil, nil, fmt.Errorf("open --input %s: %w", inputPath, err)
-		}
-		defer func() { _ = file.Close() }()
-
-		parsed = append(parsed, parseLenient(file))
-	case len(args) == 0:
-		if stdinTTY {
-			return nil, nil, usageError(errNoDomainsGiven)
-		}
-
-		parsed = append(parsed, parseLenient(stdin))
-	}
-
-	seen := map[string]bool{}
-
-	var (
-		domains []domain.Domain
-		skipped []string
-	)
-	for _, res := range parsed {
-		skipped = append(skipped, res.Skipped...)
-		for _, d := range res.Domains {
-			if !seen[d.String()] {
-				seen[d.String()] = true
-				domains = append(domains, d)
-			}
-		}
-	}
-
-	if len(domains) == 0 {
-		return nil, skipped, usageError(errNoValidDomains)
-	}
-
-	return domains, skipped, nil
-}
-
-// parseLenient parses one input source, keeping whatever it could use: a
-// garbage argument degrades to a Skipped entry instead of failing the run.
-func parseLenient(r io.Reader) input.Result {
-	res, _ := input.Parse(r)
-
-	return res
 }
 
 func loadRanges(ctx context.Context, f ScanFlags, version string) (*ranges.Set, error) {
