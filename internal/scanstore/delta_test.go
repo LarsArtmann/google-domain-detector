@@ -56,10 +56,10 @@ func TestFlipDiffCensusGuards(t *testing.T) {
 	t.Parallel()
 
 	from := []classify.Result{
-		plainResult("adopter.example"),   // → workspace
+		plainResult("adopter.example"),    // → workspace
 		workspaceResult("leaver.example"), // → plain
 		plainResult("gcp-adopter.example"),
-		spfResult("upgrader.example"), // likely → certain
+		spfResult("upgrader.example"),    // likely → certain
 		workspaceResult("flaky.example"), // answers, then times out
 		plainResult("only-from.example"), // not rescanned
 	}

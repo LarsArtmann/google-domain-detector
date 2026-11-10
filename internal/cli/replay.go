@@ -7,6 +7,7 @@ import (
 	"io"
 	"strings"
 
+	"github.com/larsartmann/go-cqrs-lite/system/v4"
 	"github.com/larsartmann/go-output"
 
 	"github.com/larsartmann/google-domain-detector/internal/classify"
@@ -18,6 +19,7 @@ import (
 type ReplayFlags struct {
 	EventStore string `env:"EVENT_STORE" flag:"event-store" help:"SQLite event store written by scan --event-store"`
 	Run        string `                  flag:"run"         help:"Rebuild this run ID (default: the most recent run)"`
+	Since      string `                  flag:"since"       help:"Diff mode: report only domains whose verdict flipped since this run ID (the adoption/departure signal)"`
 	Format     string `                  flag:"format"      help:"Output format"                                      default:"table" values:"table,json,csv,tsv,markdown,yaml,toml,jsonl"`
 	Only       string `                  flag:"only"        help:"Report only matching domains"                       default:"all"   values:"all,workspace,gcp,google"`
 	Color      string `                  flag:"color"       help:"Terminal colors for table output"                   default:"auto"  values:"auto,always,never"`
@@ -83,13 +85,31 @@ func runReplay(ctx context.Context, f ReplayFlags, stdout, stderr io.Writer) err
 	defer func() { _ = sys.Close() }()
 
 	// jsonl streams straight out of the journal walk — a whole-TLD store
-	// never materializes; every other format rebuilds fully first.
+	// never materializes; every other format rebuilds fully first. Diff mode
+	// (--since) is the one exception on the memory promise: the baseline run
+	// is materialized to make flips comparable, the walked run still streams.
 	if format == output.FormatJSONL {
+		var fromByDomain map[string]classify.Result
+		var fromSummary *scanstore.RunSummary
+
+		if f.Since != "" {
+			from, err := replayBaseline(ctx, sys, f.Since, f.EventStore)
+			if err != nil {
+				return err
+			}
+
+			fromByDomain = from.byDomain()
+			fromSummary = from.summary()
+		}
+
 		stream := render.NewJSONLStream(stdout)
 
+		flips := 0
+
 		summary, err := scanstore.StreamObservations(ctx, sys, f.Run, func(r classify.Result) error {
-			if render.Matches(r, filter) {
+			if render.Matches(r, filter) && isFlipAgainst(fromByDomain, r) {
 				stream.Write(r)
+				flips++
 			}
 
 			return nil
@@ -97,6 +117,10 @@ func runReplay(ctx context.Context, f ReplayFlags, stdout, stderr io.Writer) err
 		if err != nil {
 			if errors.Is(err, scanstore.ErrNoRuns) {
 				return fmt.Errorf("no scan runs found in %s", f.EventStore)
+			}
+
+			if errors.Is(err, scanstore.ErrUnknownRun) {
+				return fmt.Errorf("run %q not found in %s", runRefOrLatest(f.Run), f.EventStore)
 			}
 
 			return err
@@ -107,6 +131,11 @@ func runReplay(ctx context.Context, f ReplayFlags, stdout, stderr io.Writer) err
 			runSummaryLine("", summary.Counts),
 			provenanceSuffix(summary.Wave, summary.Ruleset))
 
+		if f.Since != "" {
+			fmt.Fprintf(stderr, "delta vs run %s: %d flips\n", f.Since, flips)
+			warnRulesetMismatch(stderr, fromSummary, &summary)
+		}
+
 		return stream.Err()
 	}
 
@@ -114,6 +143,10 @@ func runReplay(ctx context.Context, f ReplayFlags, stdout, stderr io.Writer) err
 	if err != nil {
 		if errors.Is(err, scanstore.ErrNoRuns) {
 			return fmt.Errorf("no scan runs found in %s", f.EventStore)
+		}
+
+		if errors.Is(err, scanstore.ErrUnknownRun) {
+			return fmt.Errorf("run %q not found in %s", runRefOrLatest(f.Run), f.EventStore)
 		}
 
 		return err
@@ -136,5 +169,119 @@ func runReplay(ctx context.Context, f ReplayFlags, stdout, stderr io.Writer) err
 			provenanceSuffix(summary.Wave, summary.Ruleset))
 	}
 
-	return renderResults(stdout, replay.Results, filter, format, render.TableOptions{ColorMode: colorMode})
+	results := replay.Results
+
+	if f.Since != "" {
+		from, err := replayBaseline(ctx, sys, f.Since, f.EventStore)
+		if err != nil {
+			return err
+		}
+
+		flips := scanstore.FlipDiff(from.replay.Results, replay.Results)
+		flipSet := make(map[string]bool, len(flips))
+		for _, flip := range flips {
+			flipSet[flip.Domain] = true
+		}
+
+		results = make([]classify.Result, 0, len(flips))
+		for _, r := range replay.Results {
+			if flipSet[r.Domain] {
+				results = append(results, r)
+			}
+		}
+
+		counts := scanstore.CountFlips(flips)
+		fmt.Fprintf(stderr, "delta vs run %s: %d flips — workspace adopted %d / left %d, gcp adopted %d / left %d\n",
+			f.Since, len(flips),
+			counts.WorkspaceAdopted, counts.WorkspaceLeft,
+			counts.GCPAdopted, counts.GCPLeft)
+
+		fromSummary := from.summary()
+		warnRulesetMismatch(stderr, fromSummary, summary)
+	}
+
+	return renderResults(stdout, results, filter, format, render.TableOptions{ColorMode: colorMode})
+}
+
+// baseline is the --since side of a delta replay.
+type baseline struct {
+	replay  scanstore.Replay
+	runByID map[string]scanstore.RunSummary
+}
+
+func (b baseline) byDomain() map[string]classify.Result {
+	byDomain := make(map[string]classify.Result, len(b.replay.Results))
+	for _, r := range b.replay.Results {
+		byDomain[r.Domain] = r
+	}
+
+	return byDomain
+}
+
+func (b baseline) summary() *scanstore.RunSummary {
+	for i := range b.replay.Runs {
+		if b.replay.Runs[i].RunID == b.replay.RunID {
+			return &b.replay.Runs[i]
+		}
+	}
+
+	return nil
+}
+
+func replayBaseline(ctx context.Context, sys *system.System, sinceRun, eventStore string) (baseline, error) {
+	replay, err := scanstore.ReplayJournal(ctx, sys, sinceRun)
+	if err != nil {
+		if errors.Is(err, scanstore.ErrNoRuns) {
+			return baseline{}, fmt.Errorf("no scan runs found in %s", eventStore)
+		}
+
+		if errors.Is(err, scanstore.ErrUnknownRun) {
+			return baseline{}, fmt.Errorf("--since run %q not found in %s", sinceRun, eventStore)
+		}
+
+		return baseline{}, err
+	}
+
+	return baseline{replay: replay}, nil
+}
+
+// runRefOrLatest names the run a not-found error refers to; the empty
+// filter means "latest", which cannot be unknown once any run exists.
+func runRefOrLatest(run string) string {
+	if run == "" {
+		return "latest"
+	}
+
+	return run
+}
+
+// isFlipAgainst reports whether the observation differs from the baseline
+// state for its domain; without a baseline (--since unset) everything passes.
+func isFlipAgainst(fromByDomain map[string]classify.Result, to classify.Result) bool {
+	if fromByDomain == nil {
+		return true
+	}
+
+	from, seen := fromByDomain[to.Domain]
+	if !seen {
+		return false
+	}
+
+	flips := scanstore.FlipDiff([]classify.Result{from}, []classify.Result{to})
+
+	return len(flips) == 1
+}
+
+// warnRulesetMismatch flags delta comparisons across detection-rule
+// changes: flips between different rulesets may be rule artifacts, not
+// adoption. Pre-census journals (empty ruleset) never warn.
+func warnRulesetMismatch(stderr io.Writer, from, to *scanstore.RunSummary) {
+	if from == nil || to == nil {
+		return
+	}
+
+	if from.Ruleset != "" && to.Ruleset != "" && from.Ruleset != to.Ruleset {
+		fmt.Fprintf(stderr, "warning: ruleset changed between runs (%s → %s); flips may be rule artifacts, not adoption\n",
+			from.Ruleset, to.Ruleset)
+	}
 }

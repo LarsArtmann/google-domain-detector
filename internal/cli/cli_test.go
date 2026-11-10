@@ -10,6 +10,7 @@ import (
 	"os"
 	"path/filepath"
 	"reflect"
+	"regexp"
 	"strings"
 	"sync"
 	"testing"
@@ -580,6 +581,107 @@ func TestScanRecordsEventsAndReplayRebuildsSameResults(t *testing.T) {
 			t.Errorf("replay result for %s differs:\nscan:   %q\nreplay: %q", domain, scanned, replayed)
 		}
 	}
+}
+
+// TestReplaySinceReportsVerdictFlips drives the delta query end to end:
+// two scans of the same domains into one store with the resolver's answers
+// changed in between, then `replay --since <run1>` must report exactly the
+// flipped domains and the adoption/departure counts.
+func TestReplaySinceReportsVerdictFlips(t *testing.T) {
+	t.Parallel()
+
+	store := filepath.Join(t.TempDir(), "scans.db")
+
+	googleSPF := "v=spf1 include:_spf.google.com ~all"
+	neutral := "v=spf1 include:mail.example ~all"
+
+	res := &fakeRes{
+		txt: map[string][]string{
+			"adopter.example": {neutral},
+			"leaver.example":  {googleSPF},
+			"steady.example":  {neutral},
+		},
+	}
+
+	_, firstErr, err := run(t, res, "",
+		"scan", "--no-ranges", "--format", "json", "--event-store", store,
+		"adopter.example", "leaver.example", "steady.example")
+	if err != nil {
+		t.Fatalf("first scan failed: %v", err)
+	}
+
+	firstRun := recordedRunID(t, firstErr)
+
+	res.txt["adopter.example"] = []string{googleSPF}
+	res.txt["leaver.example"] = []string{neutral}
+
+	if _, _, err := run(t, res, "",
+		"scan", "--no-ranges", "--format", "json", "--event-store", store,
+		"adopter.example", "leaver.example", "steady.example"); err != nil {
+		t.Fatalf("second scan failed: %v", err)
+	}
+
+	deltaOut, deltaErr, err := run(t, res, "",
+		"replay", "--event-store", store, "--since", firstRun, "--format", "json")
+	if err != nil {
+		t.Fatalf("delta replay failed: %v", err)
+	}
+
+	byDomain := jsonResultsByDomain(t, deltaOut)
+	for _, flipped := range []string{"adopter.example", "leaver.example"} {
+		if _, ok := byDomain[flipped]; !ok {
+			t.Errorf("delta output missing flipped domain %s; got %v", flipped, domainKeys(byDomain))
+		}
+	}
+
+	if _, ok := byDomain["steady.example"]; ok {
+		t.Errorf("steady domain must not appear in delta output; got %v", domainKeys(byDomain))
+	}
+
+	if !strings.Contains(deltaErr, "delta vs run "+firstRun) ||
+		!strings.Contains(deltaErr, "workspace adopted 1 / left 1") {
+		t.Errorf("delta stderr should carry the flip counts, got: %q", deltaErr)
+	}
+
+	streamOut, streamErr, err := run(t, res, "",
+		"replay", "--event-store", store, "--since", firstRun, "--format", "jsonl")
+	if err != nil {
+		t.Fatalf("streaming delta replay failed: %v", err)
+	}
+
+	if lines := strings.Count(strings.TrimSpace(streamOut), "\n") + 1; lines != 2 {
+		t.Errorf("streaming delta emitted %d lines, want exactly the 2 flips", lines)
+	}
+
+	if !strings.Contains(streamErr, "delta vs run "+firstRun+": 2 flips") {
+		t.Errorf("streaming delta stderr should count 2 flips, got: %q", streamErr)
+	}
+
+	if _, _, err := run(t, res, "",
+		"replay", "--event-store", store, "--since", "01NOPE", "--format", "json"); err == nil {
+		t.Fatal("replay --since with an unknown run ID must fail")
+	}
+}
+
+// recordedRunID extracts the run ID from a scan's stderr recording line.
+func recordedRunID(t *testing.T, scanErr string) string {
+	t.Helper()
+
+	match := regexp.MustCompile(`run ([0-9A-Z]+) recorded to`).FindStringSubmatch(scanErr)
+	if len(match) != 2 {
+		t.Fatalf("scan stderr does not name a run ID: %q", scanErr)
+	}
+
+	return match[1]
+}
+
+func domainKeys(byDomain map[string]any) []string {
+	keys := make([]string, 0, len(byDomain))
+	for domain := range byDomain {
+		keys = append(keys, domain)
+	}
+
+	return keys
 }
 
 // jsonResultsByDomain parses the scanner's JSON array output into a

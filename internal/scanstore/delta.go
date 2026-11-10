@@ -53,7 +53,12 @@ func FlipDiff(from, to []classify.Result) []Delta {
 			continue
 		}
 
-		if stateOf(fromResult) != stateOf(toResult) {
+		fromState, toState := stateOf(fromResult), stateOf(toResult)
+		if !fromState.known || !toState.known {
+			continue
+		}
+
+		if fromState != toState {
 			flips = append(flips, Delta{Domain: toResult.Domain, From: fromResult, To: toResult})
 		}
 	}

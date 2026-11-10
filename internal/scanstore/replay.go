@@ -37,6 +37,11 @@ type Replay struct {
 // ErrNoRuns reports an event store whose journal holds no scan runs.
 var ErrNoRuns = errors.New("no scan runs found in event store")
 
+// ErrUnknownRun reports a run filter (from --run or --since) that names no
+// run in the journal — the caller should surface it as a user error naming
+// the filter, never as an empty report.
+var ErrUnknownRun = errors.New("run not found in event store")
+
 // ReplayJournal rebuilds a report purely from the event journal — no DNS, no
 // read models — in two bounded-memory walks: run bookkeeping first, then the
 // selected run's observations (last one per domain wins, first-seen order).
@@ -192,6 +197,10 @@ func walkRuns(ctx context.Context, store event.Store, runFilter string) (Replay,
 
 	if runFilter == "" {
 		runFilter = latest
+	}
+
+	if _, known := runs[runFilter]; !known {
+		return Replay{}, fmt.Errorf("%w: %q", ErrUnknownRun, runFilter)
 	}
 
 	out := Replay{RunID: runFilter}
