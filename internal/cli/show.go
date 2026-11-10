@@ -29,14 +29,14 @@ var errShowNeedsOneDomain = errors.New("show needs exactly one domain: show exam
 // which run saw it last. No DNS, no journal walk.
 func runShow(ctx context.Context, f ShowFlags, args []string, stdout, stderr io.Writer) error {
 	if f.EventStore == "" {
-		return usageError(errors.New("--event-store is required (or set GDD_EVENT_STORE)"))
+		return usageError(errEventStoreRequired)
 	}
 
 	if len(args) != 1 {
 		return usageError(errShowNeedsOneDomain)
 	}
 
-	d, err := domain.Parse(args[0])
+	dom, err := domain.Parse(args[0])
 	if err != nil {
 		return usageError(fmt.Errorf("not a domain: %q: %w", args[0], err))
 	}
@@ -58,16 +58,16 @@ func runShow(ctx context.Context, f ShowFlags, args []string, stdout, stderr io.
 
 	defer func() { _ = sys.Close() }()
 
-	view, found, err := scanstore.LatestObservation(ctx, sys, d.String())
+	view, found, err := scanstore.LatestObservation(ctx, sys, dom.String())
 	if err != nil {
 		return err
 	}
 
 	if !found {
-		return fmt.Errorf("no observations for %s in %s (scan with --event-store first)", d.String(), f.EventStore)
+		return fmt.Errorf("%s in %s: %w", dom.String(), f.EventStore, errNoObservations)
 	}
 
-	fmt.Fprintf(stderr, "%s: %d observation(s), last in run %s at %s\n",
+	_, _ = fmt.Fprintf(stderr, "%s: %d observation(s), last in run %s at %s\n",
 		view.Domain, view.Observations, view.LastRunID, view.ObservedAt.Format(time.RFC3339))
 
 	result := classify.Result{

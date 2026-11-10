@@ -33,20 +33,20 @@ type RootConfig struct{}
 
 // ScanFlags is the scan command's own flag set.
 type ScanFlags struct {
-	Input      string        `flag:"input"        help:"Read domains from FILE ('-' reads stdin). Plain lists and CSV with a domain/website/url column both work"                           short:"i"`
-	Format     string        `flag:"format"       help:"Output format"                                                                                                                      short:"f" default:"table"                                       values:"table,json,csv,tsv,markdown,yaml,toml,jsonl"`
-	Workers    int           `flag:"workers"      help:"Parallel DNS lookups"                                                                                                               short:"j" default:"8"                                                                                                validate:"min=1,max=512"`
-	Timeout    time.Duration `flag:"timeout"      help:"Per-domain lookup budget"                                                                                                                     default:"5s"`
-	Only       string        `flag:"only"         help:"Report only matching domains"                                                                                                                 default:"all"                                         values:"all,workspace,gcp,google"`
-	RangesURL  string        `flag:"ranges-url"   help:"GCP IP-range feed"                                                                                                                            default:"https://www.gstatic.com/ipranges/cloud.json"                                                                               env:"RANGES_URL"`
-	CachePath  string        `flag:"ranges-cache" help:"Range-feed cache file (default ~/.cache/google-domain-detector/cloud.json)"                                                                                                                                                                                                       env:"RANGES_CACHE"`
-	NoRanges   bool          `flag:"no-ranges"    help:"Skip GCP IP-range matching (CNAME/MX/NS evidence only)"`
-	NoDKIM     bool          `flag:"no-dkim"      help:"Skip the google._domainkey probe"`
-	Resolver   string        `flag:"resolver"     help:"Query this DNS server (host or host:port) instead of the system resolver"                                                                                                                                                                                                         env:"RESOLVER"`
-	EventStore string        `flag:"event-store"  help:"Persist the run as events in this SQLite file (go-cqrs-lite journal; replay with the replay command)"                                                                                                                                                                             env:"EVENT_STORE"`
-	Resume     string        `flag:"resume"       help:"Skip domains already observed in a recorded run (exact run ID, or 'latest'); starts a new run linked to it. Requires --event-store"`
-	Wave       string        `flag:"wave"         help:"Census wave ID stamped into the event journal (e.g. tranco1m-a); empty for ad-hoc runs. Requires --event-store"`
-	Color      string        `flag:"color"        help:"Terminal colors for table output"                                                                                                             default:"auto"                                        values:"auto,always,never"`
+	Input      string        `flag:"input" help:"Read domains from FILE ('-' reads stdin). Plain lists and CSV with a domain/website/url column both work" short:"i"`
+	Format     string        `default:"table" flag:"format" help:"Output format" short:"f" values:"table,json,csv,tsv,markdown,yaml,toml,jsonl"`
+	Workers    int           `validate:"min=1,max=512" default:"8" flag:"workers" help:"Parallel DNS lookups" short:"j"`
+	Timeout    time.Duration `default:"5s" flag:"timeout" help:"Per-domain lookup budget"`
+	Only       string        `default:"all" flag:"only" help:"Report only matching domains" values:"all,workspace,gcp,google"`
+	RangesURL  string        `default:"https://www.gstatic.com/ipranges/cloud.json" env:"RANGES_URL" flag:"ranges-url" help:"GCP IP-range feed"`
+	CachePath  string        `env:"RANGES_CACHE" flag:"ranges-cache" help:"Range-feed cache file (default ~/.cache/google-domain-detector/cloud.json)"`
+	NoRanges   bool          `flag:"no-ranges" help:"Skip GCP IP-range matching (CNAME/MX/NS evidence only)"`
+	NoDKIM     bool          `flag:"no-dkim" help:"Skip the google._domainkey probe"`
+	Resolver   string        `env:"RESOLVER" flag:"resolver" help:"Query this DNS server (host or host:port) instead of the system resolver"`
+	EventStore string        `env:"EVENT_STORE" flag:"event-store" help:"Persist the run as events in this SQLite file (go-cqrs-lite journal; replay with the replay command)"`
+	Resume     string        `flag:"resume" help:"Skip domains already observed in a recorded run (exact run ID, or 'latest'); starts a new run linked to it. Requires --event-store"`
+	Wave       string        `flag:"wave" help:"Census wave ID stamped into the event journal (e.g. tranco1m-a); empty for ad-hoc runs. Requires --event-store"`
+	Color      string        `default:"auto" flag:"color" help:"Terminal colors for table output" values:"auto,always,never"`
 }
 
 // Run builds the CLI and executes args. Construction errors are printed to
@@ -57,7 +57,7 @@ type ScanFlags struct {
 func Run(ctx context.Context, args []string, stdout, stderr io.Writer, version, commit string) error {
 	d, err := BuildCLI(stdout, stderr, version, commit, resolve.New(), os.Stdin, stdinIsTTY(), stdoutIsTTY())
 	if err != nil {
-		fmt.Fprintf(stderr, "Error: %v\n", err)
+		_, _ = fmt.Fprintf(stderr, "Error: %v\n", err)
 
 		return err
 	}
@@ -252,7 +252,7 @@ func runScan(
 
 	if f.Resume != "" {
 		if f.EventStore == "" {
-			return usageError(errors.New("--resume requires --event-store (the journal IS the checkpoint)"))
+			return usageError(errResumeNeedsStore)
 		}
 
 		source, err := scanstore.LoadResumeSource(ctx, f.EventStore, f.Resume)
@@ -276,7 +276,7 @@ func runScan(
 
 	if len(first) == 0 {
 		if resume != nil {
-			fmt.Fprintf(stderr, "resume: run %s already observed every input domain — nothing to do\n", resume.RunID)
+			_, _ = fmt.Fprintf(stderr, "resume: run %s already observed every input domain — nothing to do\n", resume.RunID)
 
 			return nil
 		}
@@ -286,7 +286,7 @@ func runScan(
 
 	gcp, err := loadRanges(ctx, f, version)
 	if err != nil {
-		fmt.Fprintf(stderr, "warning: %v (continuing without IP-range evidence)\n", err)
+		_, _ = fmt.Fprintf(stderr, "warning: %v (continuing without IP-range evidence)\n", err)
 	}
 
 	activeRes := res
@@ -317,7 +317,7 @@ func runScan(
 	}
 
 	if f.Wave != "" && f.EventStore == "" {
-		return usageError(errors.New("--wave requires --event-store (waves live in the journal)"))
+		return usageError(errWaveNeedsStore)
 	}
 
 	finish, err := attachEventStore(ctx, f, resumedFrom, inputDomains, skipped, stderr, &scanOpts)
@@ -384,7 +384,7 @@ func runScan(
 	}
 
 	if skippedTotal, firstSkipped := feeder.skippedEntries(); skippedTotal > 0 {
-		fmt.Fprintf(stderr, "skipped %d unparseable input entries (first: %q)\n", skippedTotal, firstSkipped)
+		_, _ = fmt.Fprintf(stderr, "skipped %d unparseable input entries (first: %q)\n", skippedTotal, firstSkipped)
 	}
 
 	var rendered error
@@ -394,7 +394,7 @@ func runScan(
 		rendered = renderResults(stdout, results, filter, format, tableOpts)
 	}
 
-	fmt.Fprintf(stderr, "%d domains: workspace certain %d / likely %d, gcp %d, errors %d%s\n",
+	_, _ = fmt.Fprintf(stderr, "%d domains: workspace certain %d / likely %d, gcp %d, errors %d%s\n",
 		counts.Scanned, counts.WorkspaceCertain, counts.WorkspaceLikely,
 		counts.GCPCertain, counts.Errors, errorKindsSuffix(counts))
 
@@ -460,7 +460,7 @@ func renderResults(
 ) error {
 	results = render.Filtered(results, filter)
 
-	switch format {
+	switch format { //nolint:exhaustive // every registry format renders as a table; unknown shapes route via RenderUnknown
 	case output.FormatJSON, output.FormatJSONL:
 		// Both dispatch through go-output's unknown-data registry; render's
 		// init replaced the generic serialization renderers with the
@@ -506,14 +506,14 @@ func attachEventStore(
 
 	return func(closeCtx context.Context, duration time.Duration, counts classify.Counts) error {
 		if err := sink.Close(closeCtx, duration, counts); err != nil {
-			fmt.Fprintf(stderr, "warning: event store recording incomplete: %v\n", err)
+			_, _ = fmt.Fprintf(stderr, "warning: event store recording incomplete: %v\n", err)
 		}
 
 		if err := sys.GracefulClose(context.WithoutCancel(closeCtx)); err != nil {
-			fmt.Fprintf(stderr, "warning: close event store: %v\n", err)
+			_, _ = fmt.Fprintf(stderr, "warning: close event store: %v\n", err)
 		}
 
-		fmt.Fprintf(stderr, "run %s recorded to %s (replay: %s replay --event-store %s --run %s)\n",
+		_, _ = fmt.Fprintf(stderr, "run %s recorded to %s (replay: %s replay --event-store %s --run %s)\n",
 			runID.Get(), f.EventStore, Name, f.EventStore, runID.Get())
 
 		return nil // recording problems are reported, never fatal to the scan report
@@ -548,7 +548,7 @@ func usageError(err error) error {
 
 func loadRanges(ctx context.Context, f ScanFlags, version string) (*ranges.Set, error) {
 	if f.NoRanges {
-		return nil, nil
+		return nil, nil //nolint:nilnil // --no-ranges disables the set by design; absence is not an error
 	}
 
 	cache := f.CachePath
