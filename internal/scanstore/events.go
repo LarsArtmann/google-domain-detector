@@ -35,13 +35,13 @@ const (
 // names the census wave manifest a run belongs to (empty for ad-hoc runs);
 // Ruleset pins the detection-rule set the run's evidence is produced under.
 type ScanStartedPayload struct {
-	RunID       string        `json:"run_id"`
-	StartedAt   event.Instant `json:"started_at"`
-	InputDomain int           `json:"input_domains"`
-	Skipped     int           `json:"skipped"`
-	Workers     int           `json:"workers"`
-	ResumedFrom string        `json:"resumed_from,omitempty"`
-	Wave        string        `json:"wave,omitempty"`
+	RunID       string           `json:"run_id"`
+	StartedAt   event.Instant    `json:"started_at"`
+	InputDomain int              `json:"input_domains"`
+	Skipped     int              `json:"skipped"`
+	Workers     int              `json:"workers"`
+	ResumedFrom string           `json:"resumed_from,omitempty"`
+	Wave        string           `json:"wave,omitempty"`
 	Ruleset     classify.Ruleset `json:"ruleset,omitempty"`
 }
 

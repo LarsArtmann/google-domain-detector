@@ -156,7 +156,7 @@ func BuildCLI(
 		"scan",
 		ScanFlags{},
 		func(ctx context.Context, _ *RootConfig, f ScanFlags) error {
-		return runScan(ctx, f, v5.ArgsFromContext(ctx), stdout, stderr, res, stdin, stdinTTY, stdoutTTY, version, 0)
+			return runScan(ctx, f, v5.ArgsFromContext(ctx), stdout, stderr, res, stdin, stdinTTY, stdoutTTY, version, 0)
 		},
 		v5.WithShort("Scan domains for Google Workspace and Google Cloud evidence"),
 		v5.WithExample(

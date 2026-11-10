@@ -97,7 +97,7 @@ func Table(w io.Writer, results []classify.Result, format output.Format, opts Ta
 		data.SetFooter(summaryFooter(results))
 	}
 
-		renderOpts := output.RenderOptions{Writer: w, Title: opts.Title, ColorMode: opts.ColorMode}
+	renderOpts := output.RenderOptions{Writer: w, Title: opts.Title, ColorMode: opts.ColorMode}
 
 	return output.RenderTable(data, format, renderOpts)
 }
