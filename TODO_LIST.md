@@ -50,19 +50,24 @@ Tranco top-1M covers the traffic-active subset (~63k of the ~30M registered
 domains across the three TLDs). Full zone coverage needs the registry data,
 which is paperwork only the account holder can sign:
 
-- [ ] .de (~17.5M registered): DENIC RDS (Registered Domain Data Service)
-      zone data — member/researcher agreement with DENIC.
+- [x] .de (~17.5M registered): DENIC RDS — RESOLVED-AS-IMPOSSIBLE: DENIC
+      refuses ALL third-party zone access (no program, no fee, no
+      contact; FAQ verbatim in docs/zone-data/denic-de.md). .de coverage
+      = Tranco + crt.sh fallback only.
 - [ ] .uk (~10.5M): Nominet Data Access Agreement (DAA), free but requires
       application + acceptance.
-- [ ] .ch (~2.4M): SWITCH zone file under their research/business terms.
+- [x] .ch (~2.4M): SWITCH zone file — ACTIONABLE NOW: public TSIG keys on
+      zonedata.switch.ch, `dig -k ch_zonedata.key @zonedata.switch.ch …
+      AXFR ch.` (once/24h; exact command in docs/zone-data/switch-ch.md);
+      no owner paperwork. Follow-up task below (harvested 07-46).
 - [ ] Pre-filter before scanning at that scale: a cheap single-A-record
       existence pass (or NXDOMAIN pre-sweep) would drop the parked share and
       cut scan volume several-fold.
-- [ ] Memory: input currently loads fully into RAM (~30M domains ≈ 1.5 GB) —
-      stream input in chunks before any whole-zone run. — UPDATE: input
-      streams in 4096-domain chunks since the streaming feeder landed
-      (internal/cli/domains.go); this row is about RENDERED OUTPUT of
-      buffered formats only. Downgrade to jsonl-for-bulk guidance.
+- [ ] Memory: buffered formats (table/json/csv) still materialize the full
+      report — fine at 100k domains, not at 30M. Bulk guidance: use
+      `--format jsonl` (streams per result; input already chunks at 4096;
+      50k-domain smoke = 40 MiB RSS flat). The original "input loads fully
+      into RAM" concern is landed-fixed via the streaming feeder.
 
 ## Operational
 
@@ -73,19 +78,24 @@ which is paperwork only the account holder can sign:
 
 ## Library audit follow-ups (2026-11-10, plan: docs/planning/2026-11-10_00-50_*)
 
-- [ ] Widen `--format` enum to +yaml,toml,jsonl (renderers already
-      registered via blank imports — one flag-tag string).
-- [ ] Adopt go-atomic-write `WriteWithPerm` in `ranges.writeCache` (never
-      `WriteIfChanged`: it would skip the mtime refresh the 24 h TTL needs).
+- [x] Widen `--format` enum to +yaml,toml,jsonl — done (plan v2 T2,
+      commit 4235e02; values tag on scan + replay, render/cli tests, live
+      smoke of all three formats).
+- [x] Adopt go-atomic-write `WriteWithPerm` in `ranges.writeCache` — done
+      (plan v2 T3, commit 417afc7; mtime-TTL trap pinned by test, never
+      `WriteIfChanged`).
 - [x] CLI hardening: `validate` tag on --workers, `ExitError(2)` for usage
       errors, `WithEnvPrefix("GDD_")`, RecoveryMiddleware — done (ScanFlags
       validate:"min=1,max=512", exitCodeUsage, env prefix + recovery wired
       in cliOptions).
-- [ ] `--color auto|always|never` via go-output ColorMode; SetFooter summary
-      row; AddRowChecked.
+- [x] `--color auto|always|never` via go-output ColorMode — done
+      (incl. `--no-color` + NO_COLOR env); SetFooter summary row; AddRowChecked
+      remaining gaps tracked as plan v3 E19 (sibling lane).
 - [ ] `WithDoctorCheck` preflight (resolver + ranges feed).
-- [ ] Decide `--format` vs cmdguard's `-o/--output` BEFORE the v0.1.0 tag
-      (breaking rename is cheap now, never later).
+- [x] Decide `--format` vs cmdguard's `-o/--output` BEFORE the v0.1.0 tag
+      — done: `--format` kept, `-o` rejected (global flag + CLI-object
+      resolution breaks per-command flag structs and the test seam; unix
+      `-o` reads as output file). STACK.md decision log, plan v2 T1.
 - [ ] cmdguard-lint as a CI step (expected zero findings).
 - [ ] Audit upkeep after the concurrent scanstore session lands: re-verify
       report citations vs new HEAD, re-shoot index render proof, re-audit
@@ -96,7 +106,7 @@ which is paperwork only the account holder can sign:
 
 - [ ] `AddRowChecked` for the 5-column invariant (S).
 - [ ] `RenderOptions.Title` for markdown/html output (S).
-- [ ] `WithExample`/`WithLong` on the scan command (S).
+- [x] `WithExample`/`WithLong` on the scan command (S) — done (plan v2 T4).
 - [ ] Add a "verified against commit X" line to every audit report header
       (point-in-time citation pinning).
 - [x] vendorHash in flake.nix is stale vs go.mod (nix-checker warning from
@@ -105,8 +115,9 @@ which is paperwork only the account holder can sign:
 - [ ] README lacks an installation section (go-structure-linter info).
 - [x] Harvest status-report section (f) items into TODO_LIST.md
       (docs-health HARVEST) — done in this commit.
-- [ ] Update STACK.md when opportunities 1-2 (format widening, atomic
-      write) are implemented.
+- [x] Update STACK.md when opportunities 1-2 (format widening, atomic
+      write) are implemented — done: crash-safe-writes row (T3) + format
+      enum row (T2); re-audit at plan v3 E21.
 - [x] AGENTS.md: add the "reports are point-in-time @ commit" caveat next
       to the audit section — done: added above the Library audit section
       (2026-11-10).
@@ -121,29 +132,61 @@ which is paperwork only the account holder can sign:
 - [x] Sink retry/backoff instead of drop-after-first-error in scanstore
       recording — done: Sink retries each observation 3× with backoff,
       counts and reports dropped observations on Close.
-- [ ] cmdguard extras: WithCLICommit in nix build; WithExample/WithLong on
-      scan.
+- [x] cmdguard extras: WithCLICommit in nix build; WithExample/WithLong on
+      scan — done (plan v2 T4, commit 6fc85ab).
 - [ ] RegisterUnknownRenderer(FormatJSON, dto) to dissolve the cli.go JSON
       special-case.
-- [ ] Lint-cleanup pass: ~29 pre-existing golangci warnings (err113,
-      wrapcheck, varnamelen, tagalign, cyclop) to zero.
+- [ ] Lint-cleanup pass: pre-existing golangci warnings (err113,
+      wrapcheck, varnamelen, tagalign, cyclop) to zero — plan v3 E24
+      (gate G5: after sibling cli/render lane lands).
 - [ ] docs/status index (README) so status reports are discoverable.
 - [ ] Version-freshness guard: CI/docs step flagging reports whose pinned
       lib released a newer tag.
-- [ ] TimeoutMiddleware whole-run budget for huge inputs.
+- [ ] TimeoutMiddleware whole-run budget for huge inputs — plan v3 E31.
 - [ ] Consider output.FormatsForShape to auto-generate the flag values
-      enum from registered formats.
+      enum from registered formats — plan v3 E27.
 
 ## Pareto plan execution (docs/planning/2026-11-10_00-50_*)
 
-- [ ] T4: CLI hardening bundle (validate tag, ExitError(2), WithEnvPrefix,
-      RecoveryMiddleware).
-- [ ] T5: real-world validation run (lead list / Tranco slice) before the tag.
-- [ ] T11: go-output polish (`--color`, SetFooter, Title, AddRowChecked).
-- [ ] T13: nom live progress during long scans (TTY-only).
-- [ ] T20: `-o` implementation if T1 says adopt.
-- [ ] T22: registry-derived format enum, drift-proof (FormatsForShape).
-- [ ] T25: error-family exit codes (75 fetch / 65 corrupt) in internal/ranges.
-- [ ] T27: ROADMAP parking of deferred tail items.
+- [x] T4: CLI hardening bundle (validate tag, ExitError(2), WithEnvPrefix,
+      RecoveryMiddleware) — done, commit 6fc85ab.
+- [x] T5: real-world validation run before the tag — done: G3 PASS
+      (report 07-46: 3645-domain .ch run, journal round-trip
+      byte-identical, 12 Quad9 dig cross-checks, 538-domain nxdomain
+      re-verification ~90% true, tail recovery sweep +17 verdicts).
+- [ ] T11: go-output polish (`--color`, SetFooter, Title, AddRowChecked)
+      — color landed; remaining gaps = plan v3 E19.
+- [ ] T13: nom live progress during long scans (TTY-only) — plan v3 E19.
+- [x] T20: `-o` implementation — resolved-as-decided-against (T1 kept
+      `--format`; STACK.md decision log).
+- [ ] T22: registry-derived format enum, drift-proof (FormatsForShape)
+      — plan v3 E27 (gate G5).
+- [ ] T25: error-family exit codes (75 fetch / 65 corrupt) in
+      internal/ranges — plan v3 E30.
+- [ ] T27: ROADMAP parking of deferred tail items — plan v3 E31.
 - [x] Mermaid compile-check of the plan graph; fix if broken — done: mmdc
       12.0.0 compiles the graph clean to SVG (2026-11-10).
+
+## Harvested from the 07-46 T5-validated report (docs-gates freshness)
+
+- [ ] Push ALL pending commits to origin + github before tagging (g1).
+- [ ] Watch the first real CI run on the pushed commits; fix findings.
+- [ ] Pull the .ch zone via the public SWITCH TSIG keys and build the .ch
+      census input (docs/zone-data/switch-ch.md has the exact AXFR
+      command; once/24h limit) — feeds the pre-filter (plan v3 E28).
+- [ ] cli coverage 69% → 90% (plan v3 E33).
+- [ ] Fuzz the input parser (CSV quoting/encoding edges) — plan v3 E33.
+- [ ] IPv6 resolver-address handling check (`--resolver` only IPv4-tested)
+      — plan v3 E31.
+- [ ] TXT truncation investigation (cloudflare "cannot unmarshal" class).
+- [ ] vendorHash.nix extraction — plan v3 E31.
+- [ ] GPG signing policy decision for agent commits (toolship §f44) —
+      owner decision.
+
+## Harvested from the 06-58 scale-tier report
+
+- [ ] Redo the old-vs-new streaming memory A/B (PID-safe; the first
+      attempt was killed by a pkill pattern match) and record the table
+      (plan v3 E6).
+- [ ] ErrNoRuns error should name the store path; eyeball the describe
+      battery output now that --resume/--wave exist (plan v3 E31).
