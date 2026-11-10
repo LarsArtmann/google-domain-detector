@@ -18,8 +18,8 @@ import (
 // ShowFlags is the show command's flag set.
 type ShowFlags struct {
 	EventStore string `env:"EVENT_STORE" flag:"event-store" help:"SQLite event store written by scan --event-store"`
-	Format     string `                 flag:"format"      help:"Output format"             default:"table" values:"table,json,csv,tsv,markdown,yaml,toml,jsonl"`
-	Color      string `flag:"color" help:"Terminal colors for table output" default:"auto" values:"auto,always,never"`
+	Format     string `                  flag:"format"      help:"Output format"                                    default:"table" values:"table,json,csv,tsv,markdown,yaml,toml,jsonl"`
+	Color      string `                  flag:"color"       help:"Terminal colors for table output"                 default:"auto"  values:"auto,always,never"`
 }
 
 var errShowNeedsOneDomain = errors.New("show needs exactly one domain: show example.com --event-store scans.db")
@@ -77,5 +77,11 @@ func runShow(ctx context.Context, f ShowFlags, args []string, stdout, stderr io.
 		ErrKind:   view.ErrKind,
 	}
 
-	return renderResults(stdout, []classify.Result{result}, render.FilterAll, format, render.TableOptions{ColorMode: colorMode})
+	return renderResults(
+		stdout,
+		[]classify.Result{result},
+		render.FilterAll,
+		format,
+		render.TableOptions{ColorMode: colorMode},
+	)
 }

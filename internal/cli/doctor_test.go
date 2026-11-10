@@ -15,6 +15,7 @@ func TestDoctorFailingDNSCheckFails(t *testing.T) {
 	origDNS, origRanges := probeDNS, probeRanges
 	probeDNS = func(_ context.Context) error { return errors.New("resolver down") }
 	probeRanges = func(_ context.Context) error { return nil }
+
 	t.Cleanup(func() { probeDNS, probeRanges = origDNS, origRanges })
 
 	if _, _, err := run(t, workspaceDomain(), "", "doctor"); err == nil {
@@ -28,6 +29,7 @@ func TestDoctorFailingRangesCheckFails(t *testing.T) {
 	probeRanges = func(_ context.Context) error {
 		return errors.New("feed unreachable")
 	}
+
 	t.Cleanup(func() { probeDNS, probeRanges = origDNS, origRanges })
 
 	if _, _, err := run(t, workspaceDomain(), "", "doctor"); err == nil {
@@ -39,6 +41,7 @@ func TestDoctorGreenWithPassingProbes(t *testing.T) {
 	origDNS, origRanges := probeDNS, probeRanges
 	probeDNS = func(_ context.Context) error { return nil }
 	probeRanges = func(_ context.Context) error { return nil }
+
 	t.Cleanup(func() { probeDNS, probeRanges = origDNS, origRanges })
 
 	if _, _, err := run(t, workspaceDomain(), "", "doctor"); err != nil {

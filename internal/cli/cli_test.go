@@ -255,6 +255,7 @@ func TestScanJSONLStreamsInCompletionOrder(t *testing.T) {
 // AfterFunc and a bare lookup-start trigger could.
 type hangRes struct {
 	*fakeRes
+
 	cancel context.CancelFunc
 	wait   *snapshotWriter
 }
@@ -319,7 +320,16 @@ func TestScanJSONLCancelMidStream(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	d, err := BuildCLI(stdout, &stderr, "test", "", &hangRes{fakeRes: &fakeRes{}, cancel: cancel, wait: stdout}, strings.NewReader(""), false, false)
+	d, err := BuildCLI(
+		stdout,
+		&stderr,
+		"test",
+		"",
+		&hangRes{fakeRes: &fakeRes{}, cancel: cancel, wait: stdout},
+		strings.NewReader(""),
+		false,
+		false,
+	)
 	if err != nil {
 		t.Fatalf("BuildCLI failed: %v", err)
 	}
@@ -966,12 +976,24 @@ func TestScanCancelMidRunDrainsEventStore(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	d, err := BuildCLI(stdout, &stderr, "test", "", &hangRes{fakeRes: &fakeRes{}, cancel: cancel, wait: stdout}, strings.NewReader(""), false, false)
+	d, err := BuildCLI(
+		stdout,
+		&stderr,
+		"test",
+		"",
+		&hangRes{fakeRes: &fakeRes{}, cancel: cancel, wait: stdout},
+		strings.NewReader(""),
+		false,
+		false,
+	)
 	if err != nil {
 		t.Fatalf("BuildCLI failed: %v", err)
 	}
 
-	if err := d.ExecuteWithArgs(ctx, []string{"scan", "--no-ranges", "--format", "jsonl", "--event-store", store, "fast1.com", "slow.com"}); err != nil {
+	if err := d.ExecuteWithArgs(
+		ctx,
+		[]string{"scan", "--no-ranges", "--format", "jsonl", "--event-store", store, "fast1.com", "slow.com"},
+	); err != nil {
 		t.Fatalf("canceled scan must still finish cleanly: %v", err)
 	}
 
@@ -992,7 +1014,11 @@ func TestScanCancelMidRunDrainsEventStore(t *testing.T) {
 	}
 
 	if len(replay.Results) != 2 {
-		t.Fatalf("partial run must journal both domains (completed + canceled), got %d: %+v", len(replay.Results), replay.Results)
+		t.Fatalf(
+			"partial run must journal both domains (completed + canceled), got %d: %+v",
+			len(replay.Results),
+			replay.Results,
+		)
 	}
 
 	for _, run := range replay.Runs {

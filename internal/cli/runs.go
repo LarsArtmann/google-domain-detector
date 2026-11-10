@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"strconv"
 	"time"
 
 	"github.com/larsartmann/go-output"
@@ -61,10 +62,10 @@ func runRuns(ctx context.Context, f RunsFlags, stdout, stderr io.Writer) error {
 			shortRunID(run.RunID),
 			started,
 			status,
-			fmt.Sprintf("%d", run.Counts.Scanned),
+			strconv.Itoa(run.Counts.Scanned),
 			fmt.Sprintf("%d/%d", run.Counts.WorkspaceCertain, run.Counts.WorkspaceLikely),
-			fmt.Sprintf("%d", run.Counts.GCPCertain),
-			fmt.Sprintf("%d", run.Counts.Errors),
+			strconv.Itoa(run.Counts.GCPCertain),
+			strconv.Itoa(run.Counts.Errors),
 			run.Wave,
 		}); err != nil {
 			return fmt.Errorf("add row for run %s: %w", run.RunID, err)

@@ -19,7 +19,7 @@ moment you say go** — every gate the go-release skill demands is green.
    completion order the assertion forbade. Root cause: cancel fired at
    slow.com's first lookup; emission order between workers is unordered.
 2. **Race flake fixed deterministically (d1a9b66).** `hangRes` now waits
-   for fast1.com's JSONL line to be *visible in stdout* before firing
+   for fast1.com's JSONL line to be _visible in stdout_ before firing
    cancel (sink chains before stream ⇒ result classified before its line
    appears). Poll is race-free via a new mutex-guarded `snapshotWriter`
    (a bare bytes.Buffer poll would itself be a data race). Both cancel
@@ -62,8 +62,8 @@ moment you say go** — every gate the go-release skill demands is green.
    - Same slice @ workers 8: 54 errors (38 TIMEOUT) — queue pressure.
    - Full 3645 @ workers 8: 3197 errors (3081 SERVFAIL!) — sustained
      load chokes unbound (4 threads, default outgoing limits).
-   ⇒ unbound-backed bulk runs need workers ≤~2, or unbound tuning; E9's
-   planned 8/16/32/64 ladder tests the wrong end of the range.
+     ⇒ unbound-backed bulk runs need workers ≤~2, or unbound tuning; E9's
+     planned 8/16/32/64 ladder tests the wrong end of the range.
 9. **E6 A/B round 1 (3645 domains, honest negative):** pre-T7 buffered
    json 28.0 MiB peak vs current jsonl 32.1 MiB — baseline-dominated at
    this size, proves nothing about streaming; 50k list generated
@@ -138,6 +138,7 @@ docs/status index · post-release README install/badge work.
 ## f) NEXT (priority order, ≤50)
 
 **Release lane (E2 completion):**
+
 1. Annotated tag v0.1.0 at green tip (message drafted from CHANGELOG)
 2. Push tag to origin AND github
 3. `gh release create v0.1.0 --prerelease --notes-file /tmp/v0.1.0-release-notes.md`
@@ -151,7 +152,7 @@ docs/status index · post-release README install/badge work.
 
 **Docs/truth lane:**
 10. TODO_LIST strikes: race flake, CI gofmt+soak fixes, E6 round 1,
-    E7 data (docs-gates freshness pre-flight first — candidate lines)
+E7 data (docs-gates freshness pre-flight first — candidate lines)
 11. Archive /tmp/e6-* + /tmp/e7-* into reports/ (tmp reaper risk)
 12. E7 NOTES.md in reports/census/unbound/ (worker-pressure table above)
 13. E7 unbound lifecycle script (start/stop/status/restart)
@@ -160,7 +161,7 @@ docs/status index · post-release README install/badge work.
 
 **E6 completion:**
 16. 50k A/B: pre-T7 buffered vs current jsonl through unbound w2,
-    VmHWM capture both
+VmHWM capture both
 17. Record the memory table (TODO strike + AGENTS row if numbers hold)
 
 **Census feasibility lane (plan v3):**
@@ -185,7 +186,7 @@ docs/status index · post-release README install/badge work.
 34. E27 output.FormatsForShape auto-enum + drop-blank-import contract test
 35. E30 ranges error-family exit codes (75 fetch / 65 corrupt)
 36. E31 TimeoutMiddleware whole-run budget; IPv6 --resolver check;
-    vendorHash.nix extraction; ErrNoRuns store-path naming
+vendorHash.nix extraction; ErrNoRuns store-path naming
 37. E33 cli coverage 69→90%; input-parser fuzz (CSV quoting edges)
 38. TXT truncation investigation (cloudflare unmarshal class)
 39. asciinema/GIF for README (E20)
@@ -194,15 +195,15 @@ docs/status index · post-release README install/badge work.
 
 **Meta:**
 42. Standing pre-tag ritual decision: full-suite `-race -count=1` ×3
-    (what I ran) vs `-count=5` (prior session's open question)
+(what I ran) vs `-count=5` (prior session's open question)
 43. Nightly soak CI job decision (see §g)
 44. GPG signing policy for agent commits (owner decision, parked)
 45. Consider pinning `GOTOOLCHAIN` in ci.yml if setup-go lags go.dev
 46. Add `gh run list` to session-start checklist (this session's lesson)
 47. Consider `-timeout 15m` in ci.yml as belt-and-braces even with soak
-    gated
+gated
 48. Harvest this report's §d lessons into TODO/report annotations per
-    docs-gates annotate flow
+docs-gates annotate flow
 
 ## g) QUESTIONS (cannot answer myself)
 
@@ -216,9 +217,10 @@ docs/status index · post-release README install/badge work.
    whether census waves can run at workers 4–8 with cleanup, or must
    stay ≤2 (≈4× slower).
 3. **Tag timing on a moving master:** siblings keep landing; CI is
-   green on 404dfed *right now*. Tag exactly 404dfed when you say go,
+   green on 404dfed _right now_. Tag exactly 404dfed when you say go,
    or always the tip at go-time (accepting a fresh CI wait)?
 
 ---
-*Point-in-time snapshot @ 404dfed. E6 50k staged in /tmp (reaper risk —
-item 11). All gates green; release ready on instruction.*
+
+_Point-in-time snapshot @ 404dfed. E6 50k staged in /tmp (reaper risk —
+item 11). All gates green; release ready on instruction._

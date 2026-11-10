@@ -7,9 +7,10 @@ package render
 import (
 	"encoding/json/jsontext"
 	"encoding/json/v2"
+	"errors"
 	"fmt"
 	"io"
-	"sort"
+	"slices"
 	"strings"
 	"sync"
 
@@ -32,6 +33,12 @@ const (
 	FilterGoogle    Filter = "google"
 )
 
+// ErrUnknownFilter rejects an unrecognized --only value.
+var ErrUnknownFilter = errors.New("unknown filter")
+
+// errNotResults guards the DTO unknown-renderers against shape drift.
+var errNotResults = errors.New("json/jsonl renderer wants []classify.Result")
+
 // ParseFilter validates a user-supplied filter name.
 func ParseFilter(s string) (Filter, error) {
 	switch Filter(s) {
@@ -39,12 +46,14 @@ func ParseFilter(s string) (Filter, error) {
 		return Filter(s), nil
 	}
 
-	return Filter(""), fmt.Errorf("unknown filter %q (want all, workspace, gcp, or google)", s)
+	return Filter(""), fmt.Errorf("%w %q (want all, workspace, gcp, or google)", ErrUnknownFilter, s)
 }
 
 // Matches reports whether the result passes the filter.
 func Matches(r classify.Result, f Filter) bool {
 	switch f {
+	case FilterAll:
+		return true
 	case FilterWorkspace:
 		return r.WorkspaceVerdict().Detected
 	case FilterGCP:
@@ -79,7 +88,7 @@ type TableOptions struct {
 // go-output's format enum by the caller). Human-oriented formats (table,
 // markdown) get a summary footer; delimited formats stay pure data so CSV
 // consumers never see a totals row.
-func Table(w io.Writer, results []classify.Result, format output.Format, opts TableOptions) error {
+func Table(dst io.Writer, results []classify.Result, format output.Format, opts TableOptions) error {
 	data := output.NewTable([]string{"Domain", "Workspace", "GCP", "Evidence", "Error"})
 	for _, r := range results {
 		if err := data.AddRowChecked([]string{
@@ -97,7 +106,7 @@ func Table(w io.Writer, results []classify.Result, format output.Format, opts Ta
 		data.SetFooter(summaryFooter(results))
 	}
 
-	renderOpts := output.RenderOptions{Writer: w, Title: opts.Title, ColorMode: opts.ColorMode}
+	renderOpts := output.RenderOptions{Writer: dst, Title: opts.Title, ColorMode: opts.ColorMode}
 
 	return output.RenderTable(data, format, renderOpts)
 }
@@ -106,6 +115,7 @@ func Table(w io.Writer, results []classify.Result, format output.Format, opts Ta
 // the table's leading columns.
 func summaryFooter(results []classify.Result) []string {
 	workspace, gcp := 0, 0
+
 	for _, r := range results {
 		if r.WorkspaceVerdict().Detected {
 			workspace++
@@ -129,7 +139,7 @@ func summaryFooter(results []classify.Result) []string {
 // the serialization sub-module's generic ones: this binary's JSON contract
 // is the DTO shape, not whatever reflection makes of the raw results. Init
 // order guarantees the overwrite (blank imports initialize first).
-func init() {
+func init() { //nolint:gochecknoinits // load-bearing: must overwrite serialization's renderers before any consumer renders
 	output.RegisterUnknownRenderer(output.FormatJSON, renderJSONUnknown)
 	output.RegisterUnknownRenderer(output.FormatJSONL, renderJSONLUnknown)
 }
@@ -137,7 +147,7 @@ func init() {
 func renderJSONUnknown(w io.Writer, data any, _ output.RenderOptions) error {
 	results, ok := data.([]classify.Result)
 	if !ok {
-		return fmt.Errorf("json renderer wants []classify.Result, got %T", data)
+		return fmt.Errorf("%w, got %T", errNotResults, data)
 	}
 
 	return JSON(w, results)
@@ -146,7 +156,7 @@ func renderJSONUnknown(w io.Writer, data any, _ output.RenderOptions) error {
 func renderJSONLUnknown(w io.Writer, data any, _ output.RenderOptions) error {
 	results, ok := data.([]classify.Result)
 	if !ok {
-		return fmt.Errorf("jsonl renderer wants []classify.Result, got %T", data)
+		return fmt.Errorf("%w, got %T", errNotResults, data)
 	}
 
 	return JSONL(w, results)
@@ -159,8 +169,10 @@ func renderJSONLUnknown(w io.Writer, data any, _ output.RenderOptions) error {
 // TestFormatEnumsMatchRegistry — dropping a blank import or adding a
 // renderer must update those tags or the build fails.
 func SupportedFormats() []output.Format {
-	seen := make(map[output.Format]bool, 8)
-	out := make([]output.Format, 0, 8)
+	const expectedFormatCount = 8
+
+	seen := make(map[output.Format]bool, expectedFormatCount)
+	out := make([]output.Format, 0, expectedFormatCount)
 
 	for _, f := range output.RegisteredTableMarshalFormats() {
 		if !seen[f] {
@@ -176,7 +188,7 @@ func SupportedFormats() []output.Format {
 		}
 	}
 
-	sort.Slice(out, func(i, j int) bool { return out[i] < out[j] })
+	slices.Sort(out)
 
 	return out
 }

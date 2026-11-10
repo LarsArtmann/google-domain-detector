@@ -38,15 +38,15 @@ type ScanFlags struct {
 	Workers    int           `flag:"workers"      help:"Parallel DNS lookups"                                                                                                               short:"j" default:"8"                                                                                                validate:"min=1,max=512"`
 	Timeout    time.Duration `flag:"timeout"      help:"Per-domain lookup budget"                                                                                                                     default:"5s"`
 	Only       string        `flag:"only"         help:"Report only matching domains"                                                                                                                 default:"all"                                         values:"all,workspace,gcp,google"`
-	RangesURL  string        `flag:"ranges-url"   help:"GCP IP-range feed"                                                                                                                            default:"https://www.gstatic.com/ipranges/cloud.json"                                                                                                                                                                                                                                                       env:"RANGES_URL"`
+	RangesURL  string        `flag:"ranges-url"   help:"GCP IP-range feed"                                                                                                                            default:"https://www.gstatic.com/ipranges/cloud.json"                                                                               env:"RANGES_URL"`
 	CachePath  string        `flag:"ranges-cache" help:"Range-feed cache file (default ~/.cache/google-domain-detector/cloud.json)"                                                                                                                                                                                                       env:"RANGES_CACHE"`
 	NoRanges   bool          `flag:"no-ranges"    help:"Skip GCP IP-range matching (CNAME/MX/NS evidence only)"`
 	NoDKIM     bool          `flag:"no-dkim"      help:"Skip the google._domainkey probe"`
 	Resolver   string        `flag:"resolver"     help:"Query this DNS server (host or host:port) instead of the system resolver"                                                                                                                                                                                                         env:"RESOLVER"`
-	EventStore string        `flag:"event-store"  help:"Persist the run as events in this SQLite file (go-cqrs-lite journal; replay with the replay command)"                                                                                                                                                                                                             env:"EVENT_STORE"`
+	EventStore string        `flag:"event-store"  help:"Persist the run as events in this SQLite file (go-cqrs-lite journal; replay with the replay command)"                                                                                                                                                                             env:"EVENT_STORE"`
 	Resume     string        `flag:"resume"       help:"Skip domains already observed in a recorded run (exact run ID, or 'latest'); starts a new run linked to it. Requires --event-store"`
 	Wave       string        `flag:"wave"         help:"Census wave ID stamped into the event journal (e.g. tranco1m-a); empty for ad-hoc runs. Requires --event-store"`
-	Color      string        `flag:"color" help:"Terminal colors for table output" default:"auto" values:"auto,always,never"`
+	Color      string        `flag:"color"        help:"Terminal colors for table output"                                                                                                             default:"auto"                                        values:"auto,always,never"`
 }
 
 // Run builds the CLI and executes args. Construction errors are printed to
@@ -451,7 +451,13 @@ func chainOnResult(opts *scan.Options, next func(classify.Result)) {
 // bypasses this for jsonl, streaming lines as results complete (see
 // render.JSONLStream); replay keeps the buffered path until journal walks
 // stream natively.
-func renderResults(w io.Writer, results []classify.Result, filter render.Filter, format output.Format, opts render.TableOptions) error {
+func renderResults(
+	w io.Writer,
+	results []classify.Result,
+	filter render.Filter,
+	format output.Format,
+	opts render.TableOptions,
+) error {
 	results = render.Filtered(results, filter)
 
 	switch format {

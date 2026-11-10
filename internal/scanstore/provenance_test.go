@@ -117,7 +117,11 @@ func TestProvenanceStamps(t *testing.T) {
 	}
 
 	if observedRuleset != classify.CurrentRuleset {
-		t.Errorf("scan.domain_observed ruleset = %q, want %q (observations must carry evidence provenance)", observedRuleset, classify.CurrentRuleset)
+		t.Errorf(
+			"scan.domain_observed ruleset = %q, want %q (observations must carry evidence provenance)",
+			observedRuleset,
+			classify.CurrentRuleset,
+		)
 	}
 
 	reader, err := scanstore.Boot(ctx, dsn)

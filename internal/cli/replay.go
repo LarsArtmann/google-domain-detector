@@ -20,7 +20,7 @@ type ReplayFlags struct {
 	Run        string `                  flag:"run"         help:"Rebuild this run ID (default: the most recent run)"`
 	Format     string `                  flag:"format"      help:"Output format"                                      default:"table" values:"table,json,csv,tsv,markdown,yaml,toml,jsonl"`
 	Only       string `                  flag:"only"        help:"Report only matching domains"                       default:"all"   values:"all,workspace,gcp,google"`
-	Color      string `                  flag:"color"       help:"Terminal colors for table output"                                    default:"auto" values:"auto,always,never"`
+	Color      string `                  flag:"color"       help:"Terminal colors for table output"                   default:"auto"  values:"auto,always,never"`
 }
 
 // runSummaryLine is the one-line run readout shared by scan and replay:

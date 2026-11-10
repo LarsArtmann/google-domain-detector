@@ -35,7 +35,10 @@ func TestFormatEnumsMatchRegistry(t *testing.T) {
 
 	for _, token := range formatContract {
 		if !registry[token] {
-			t.Errorf("format %q is in the --format contract but no renderer is registered — a blank import was likely dropped", token)
+			t.Errorf(
+				"format %q is in the --format contract but no renderer is registered — a blank import was likely dropped",
+				token,
+			)
 		}
 	}
 
@@ -55,7 +58,12 @@ func TestFormatEnumsMatchRegistry(t *testing.T) {
 		slices.Sort(got)
 
 		if joined := strings.Join(got, ","); joined != wantJoined {
-			t.Errorf("%s --format enum %q drifted from the contract %q — update the tag or the contract", tc.typeName, tc.tag, wantJoined)
+			t.Errorf(
+				"%s --format enum %q drifted from the contract %q — update the tag or the contract",
+				tc.typeName,
+				tc.tag,
+				wantJoined,
+			)
 		}
 	}
 }

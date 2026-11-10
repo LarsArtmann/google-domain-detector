@@ -11,11 +11,12 @@ GitHub Release + proxy check). HEAD `404dfed` (daemon-swept on
 GitHub Release live, module proxy serving v0.1.0 (hash-verified).
 
 **Scope line — verified with commands this session:**
+
 - Full `-race` suite ×5 runs (two consecutive greens on the release tree,
   scanstore ~500s each; gates #1/#2/#4/#5 green, #3 red — that red was a
   TEST bug it caught, see §d3).
 - Live 3645-domain scan + journal replay sorted content-diff (0 diffs)
-  + 10-verdict dig cross-check + 12-sample NX-bucket liveness check.
+  - 10-verdict dig cross-check + 12-sample NX-bucket liveness check.
 - Live smokes: `doctor` (4/4 checks), pty progress (script -qec), pipe
   byte-identity, `--color never`, exit 2 on bad `--color`, exit 75 path.
 - nix build green at the release commit (vendorHash repaired); docs-gates

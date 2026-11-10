@@ -127,6 +127,7 @@ func TestTableFooterOnlyInHumanFormats(t *testing.T) {
 	results := sampleResults()
 
 	workspace, gcp := 0, 0
+
 	for _, r := range results {
 		if r.WorkspaceVerdict().Detected {
 			workspace++
@@ -179,6 +180,7 @@ func TestTableTitleReachesMarkdown(t *testing.T) {
 	t.Parallel()
 
 	var buf bytes.Buffer
+
 	f, err := output.ParseFormat("markdown")
 	if err != nil {
 		t.Fatalf("markdown: %v", err)
@@ -197,11 +199,21 @@ func TestTableColorModeHonored(t *testing.T) {
 	t.Parallel()
 
 	var alwaysBuf, neverBuf bytes.Buffer
-	if err := Table(&alwaysBuf, sampleResults(), output.FormatTable, TableOptions{ColorMode: output.ColorModeAlways}); err != nil {
+	if err := Table(
+		&alwaysBuf,
+		sampleResults(),
+		output.FormatTable,
+		TableOptions{ColorMode: output.ColorModeAlways},
+	); err != nil {
 		t.Fatalf("Table(always) failed: %v", err)
 	}
 
-	if err := Table(&neverBuf, sampleResults(), output.FormatTable, TableOptions{ColorMode: output.ColorModeNever}); err != nil {
+	if err := Table(
+		&neverBuf,
+		sampleResults(),
+		output.FormatTable,
+		TableOptions{ColorMode: output.ColorModeNever},
+	); err != nil {
 		t.Fatalf("Table(never) failed: %v", err)
 	}
 

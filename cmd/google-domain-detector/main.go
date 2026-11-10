@@ -12,7 +12,7 @@ import (
 )
 
 // version and commit are overridden at link time (-X main.version=...).
-var ( //nolint:gochecknoglobals // ldflags version stamp, the standard Go idiom
+var (
 	version = "dev"
 	commit  = ""
 )

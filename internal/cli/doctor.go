@@ -30,6 +30,7 @@ func checkDNSResolver(ctx context.Context) error {
 	defer cancel()
 
 	res := resolve.New()
+
 	addr := os.Getenv("GDD_RESOLVER")
 	if addr != "" {
 		res = resolve.NewWithAddr(addr)
@@ -43,7 +44,7 @@ func checkDNSResolver(ctx context.Context) error {
 			hint = fmt.Sprintf("verify the GDD_RESOLVER address %s or unset it", addr)
 		}
 
-		return fmt.Errorf("resolver did not answer a lookup for %s: %v (hint: %s)", probe, err, hint)
+		return fmt.Errorf("resolver did not answer a lookup for %s: %w (hint: %s)", probe, err, hint)
 	}
 
 	return nil
@@ -71,13 +72,19 @@ func checkRangesFeed(ctx context.Context) error {
 	}
 
 	if _, _, err := ranges.Load(ctx, ranges.Options{URL: url, CachePath: cache, UserAgent: Name}); err != nil {
-		var feedErr *ranges.Error
-		if errors.As(err, &feedErr) {
+		if feedErr, ok := errors.AsType[*ranges.Error](err); ok {
 			switch feedErr.Kind {
 			case ranges.KindFetch:
-				return fmt.Errorf("GCP range feed unreachable: %w (scan would degrade to no IP evidence; check connectivity or --ranges-url)", err)
+				return fmt.Errorf(
+					"GCP range feed unreachable: %w (scan would degrade to no IP evidence; check connectivity or --ranges-url)",
+					err,
+				)
 			case ranges.KindCorrupt:
-				return fmt.Errorf("GCP range feed corrupt: %w (try a different --ranges-url or clear the cache file %s)", err, cache)
+				return fmt.Errorf(
+					"GCP range feed corrupt: %w (try a different --ranges-url or clear the cache file %s)",
+					err,
+					cache,
+				)
 			}
 		}
 
