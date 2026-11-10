@@ -36,10 +36,13 @@ type ObservationView struct {
 
 // RunView is the read model for one run stream.
 type RunView struct {
-	RunID     string          `json:"run_id"`
-	Started   bool            `json:"started"`
-	Completed bool            `json:"completed"`
-	Counts    classify.Counts `json:"counts"`
+	RunID       string          `json:"run_id"`
+	Started     bool            `json:"started"`
+	Completed   bool            `json:"completed"`
+	StartedAt   time.Time       `json:"started_at,omitempty"`
+	Wave        string          `json:"wave,omitempty"`
+	ResumedFrom string          `json:"resumed_from,omitempty"`
+	Counts      classify.Counts `json:"counts"`
 }
 
 func projections() (
@@ -71,7 +74,13 @@ func projections() (
 			string(evtScanStarted),
 			projectionadapter.EventWithID[ScanStartedPayload]{},
 			func(_ record.Record, e projectionadapter.EventWithID[ScanStartedPayload]) (string, RunView) {
-				return e.ID, RunView{RunID: e.ID, Started: true}
+				return e.ID, RunView{
+					RunID:       e.ID,
+					Started:     true,
+					StartedAt:   e.Payload.StartedAt.Time(),
+					Wave:        e.Payload.Wave,
+					ResumedFrom: e.Payload.ResumedFrom,
+				}
 			},
 		),
 		metaengine.OnRecordTyped(
@@ -101,6 +110,7 @@ func observationViewFrom(p DomainObservedPayload, observations int) ObservationV
 		LastRunID:    p.RunID,
 		Evidence:     p.Evidence,
 		Err:          p.Err,
+		ErrKind:      p.ErrKind,
 		ObservedAt:   p.ObservedAt.Time(),
 		Observations: observations,
 	}
