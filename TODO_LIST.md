@@ -156,8 +156,11 @@ which is paperwork only the account holder can sign:
       RecoveryMiddleware) — done, commit 6fc85ab.
 - [x] T5: real-world validation run before the tag — done: G3 PASS
       (report 07-46: 3645-domain .ch run, journal round-trip
-      byte-identical, 12 Quad9 dig cross-checks, 538-domain nxdomain
-      re-verification ~90% true, tail recovery sweep +17 verdicts).
+      byte-identical, 12 Quad9 dig cross-checks, tail recovery sweep +17
+      verdicts). NOTE (10:40 correction): the 07-46 "~90% of nxdomain
+      bucket genuinely dead" claim is RETRACTED — it measured stale
+      negative-cache state, not liveness (E1 replication sampled 11/12
+      alive); positive verdicts unaffected.
 - [x] T11: go-output polish (`--color`, SetFooter, Title, AddRowChecked)
       — done (2026-11-10: colors on scan+replay, footer table/markdown only,
       runs ledger title+footer, tests pinning all three; exit-2 for bad
@@ -180,6 +183,11 @@ which is paperwork only the account holder can sign:
 - [ ] Pull the .ch zone via the public SWITCH TSIG keys and build the .ch
       census input (docs/zone-data/switch-ch.md has the exact AXFR
       command; once/24h limit) — feeds the pre-filter (plan v3 E28).
+- [ ] Re-verify the nxdomain bucket via a FRESH-cache resolver (unbound,
+      census E7) before quoting any coverage number — the E1 replication
+      found stale negative-cache lies at ~92% of the sampled bucket; D3's
+      tail bar is only assessable on unbound-backed runs. (plan v3 E7/E10
+      feed this.)
 - [ ] cli coverage 69% → 90% (plan v3 E33).
 - [ ] Fuzz the input parser (CSV quoting/encoding edges) — plan v3 E33.
 - [ ] IPv6 resolver-address handling check (`--resolver` only IPv4-tested)

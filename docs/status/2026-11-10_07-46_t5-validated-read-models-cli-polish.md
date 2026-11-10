@@ -1,5 +1,16 @@
 # Status Report — google-domain-detector: T5 validated, read models consumed, CLI polish
 
+> **CORRECTION (2026-11-10 10:40, E1 replication):** this report's
+> "482/538 (89.6%) genuinely dead" nxdomain conclusion is RETRACTED. The
+> re-verification re-scanned the bucket through Quad9 minutes after the
+> poisoning window — it reproduced the same stale negative-cache answers
+> and measured cache state, not domain liveness. The 10:10 E1 replication
+> run sampled 11/12 "nxdomain" results ALIVE (own SOA + NS; authoritative,
+> Quad9, and the local resolver all answer positively minutes later).
+> Positive verdicts stand (14/14 dig-confirmed). See AGENTS.md gotcha
+> "A distressed local resolver can LIE NXDOMAIN" and the E1 artifacts
+> (reports/2026-11-10-e1-validation/, local copy).
+
 **2026-11-10 07:46 CET** — session scope: continuation of the "WHOLE TODO
 LIST" execution mandate (plan v2). Started from the 01:49 WAIT state;
 reconstructed after /tmp wipe; discovered and absorbed the concurrent v2

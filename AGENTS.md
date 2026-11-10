@@ -88,16 +88,31 @@ first-party lib is considered.
   125 MiB, heap 15 MiB (`TestJournalOneHundredThousandEvents`). Extrapolated
   to 2.5M domains: ~8 min append, ~3 GiB db, ~50s replay. Sink retries each
   observation 3× with backoff and reports the exact dropped count on Close;
-  Ctrl-C drains and still completes the run record (pinned by
-  `TestScanCancelMidRunDrainsEventStore`). Whole-TLD runs are unblocked.
-- **A distressed local resolver can LIE NXDOMAIN:** during the 2026-11-10
-  T5 validation, a system resolver (127.0.0.1) under concurrent bulk load
-  returned NXDOMAIN for live domains (14/14 sampled false). stdlib
-  `net.Resolver` cannot distinguish an authoritative NXDOMAIN from a lying
-  cache, and the tool deliberately never retries NXDOMAIN. For bulk runs,
-  use `--resolver` against a trustworthy server or the user-scoped unbound
-  (reports/census/unbound/; 127.0.0.1:5353) — do NOT bulk-scan through a
-  loaded shared cache.
+  Ctrl-C mid-domain drains and still completes the run record (pinned by
+  `TestScanCancelMidRunDrainsEventStore` with a deterministic cancel
+  trigger — never wall-clock `AfterFunc`, which raced suite load: a cancel
+  landing during event-store startup fails the run cleanly with exit 1,
+  nothing journaled, and that is correct behavior). Whole-TLD runs are
+  unblocked.
+- **A distressed local resolver can LIE NXDOMAIN — and the lies OUTLIVE
+  the distress:** during the 2026-11-10 T5 validation, a system resolver
+  (127.0.0.1) under concurrent bulk load returned NXDOMAIN for live
+  domains (14/14 sampled false). Worse: the negative-cache entries
+  PERSIST — the 10:10 E1 replication run (calm spot-checks beforehand,
+  8 workers) still recorded 597 NXDOMAINs of which 11/12 sampled were
+  ALIVE (own SOA + NS delegation; authoritative/Quad9/local all answered
+  positively 20 minutes later). The earlier "~90% genuinely dead"
+  conclusion came from re-scanning the bucket through Quad9 minutes after
+  poisoning — it reproduced the same stale negatives and understated the
+  false rate. Positive verdicts are NOT affected (a lying cache serves
+  false negatives, never fabricated positives; 14 dig cross-checks all
+  confirm). stdlib `net.Resolver` cannot distinguish an authoritative
+  NXDOMAIN from a lying cache, and the tool deliberately never retries
+  NXDOMAIN. Mitigation is operational: bulk runs MUST use `--resolver`
+  against a server with a fresh cache or the user-scoped unbound
+  (reports/census/unbound/; 127.0.0.1:5353) — and never a cache that
+  witnessed an earlier distressed run. The census plan's unbound-first
+  design is the root fix.
 - cmdguard's flag-binding layer returns `fmt.Errorf`-wrapped SENTINELS
   (`v5.ErrInvalidEnum`, `v5.ErrValueTooLarge`, …), not `*v5.EnumError`/
   `*ExitError` structs — `errors.As` for the struct types finds nothing.

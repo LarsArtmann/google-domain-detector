@@ -95,8 +95,13 @@ verdicts are always recomputed from it.
   by address. That is deliberate: the question is GCP, not Google-anywhere.
 - **Mail gateways fronting Workspace** (Mimecast, Proofpoint) hide the MX
   signal; the SPF include and the DKIM probe still catch most of them.
-- A local resolver hiccup surfaces as an `Error` cell on that domain —
-  rerun rather than trust a partially failed batch silently.
+- **Error tails are resolver-dependent, never ground truth.** A hiccup
+  surfaces as an `Error` cell; worse, a shared local cache that served a
+  previous distressed run can keep answering NXDOMAIN for LIVE domains
+  long after recovery (measured: 11/12 sampled "nxdomain" results were
+  alive). Positive verdicts are unaffected — cross-checked against
+  independent resolvers — but treat every `Error` cell as "unknown, ask
+  again via a fresh `--resolver`", not as a fact about the domain.
 
 ## Build & test
 
