@@ -124,6 +124,33 @@ func summaryFooter(results []classify.Result) []string {
 	}
 }
 
+// init registers the full-evidence DTO renderers for json and jsonl over
+// the serialization sub-module's generic ones: this binary's JSON contract
+// is the DTO shape, not whatever reflection makes of the raw results. Init
+// order guarantees the overwrite (blank imports initialize first).
+func init() {
+	output.RegisterUnknownRenderer(output.FormatJSON, renderJSONUnknown)
+	output.RegisterUnknownRenderer(output.FormatJSONL, renderJSONLUnknown)
+}
+
+func renderJSONUnknown(w io.Writer, data any, _ output.RenderOptions) error {
+	results, ok := data.([]classify.Result)
+	if !ok {
+		return fmt.Errorf("json renderer wants []classify.Result, got %T", data)
+	}
+
+	return JSON(w, results)
+}
+
+func renderJSONLUnknown(w io.Writer, data any, _ output.RenderOptions) error {
+	results, ok := data.([]classify.Result)
+	if !ok {
+		return fmt.Errorf("jsonl renderer wants []classify.Result, got %T", data)
+	}
+
+	return JSONL(w, results)
+}
+
 // JSON writes the full-fidelity results: verdicts expanded, every evidence
 // item with kind/platform/weight/host/record.
 func JSON(w io.Writer, results []classify.Result) error {

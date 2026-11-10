@@ -455,10 +455,11 @@ func renderResults(w io.Writer, results []classify.Result, filter render.Filter,
 	results = render.Filtered(results, filter)
 
 	switch format {
-	case output.FormatJSON:
-		return render.JSON(w, results)
-	case output.FormatJSONL:
-		return render.JSONL(w, results)
+	case output.FormatJSON, output.FormatJSONL:
+		// Both dispatch through go-output's unknown-data registry; render's
+		// init replaced the generic serialization renderers with the
+		// full-evidence DTO ones.
+		return output.RenderUnknown(results, format, output.RenderOptions{Writer: w})
 	default:
 		return render.Table(w, results, format, opts)
 	}

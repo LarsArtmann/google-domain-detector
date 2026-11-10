@@ -92,6 +92,11 @@ proxy is immutable, re-tagging is never the answer.
   `GDD_RESOLVER`) and a `ranges-feed` check (the feed loads within 10s from
   network or cache, naming the exit-75/65 failure family) — so a broken
   environment is found before a bulk run wastes minutes on it.
+- Live progress on interactive terminals: `scan` renders an in-place
+  activity tree (one line per domain, ✓ done / ✗ failed, running count at
+  a glance) via go-output's `nom` inline renderer while the scan runs —
+  then clears it and prints the report. Pipes and `--format jsonl` keep
+  byte-identical output to before; progress is TTY-only by construction.
 
 - `scan` command: batch DNS probe of apex + www per domain (MX, TXT/SPF,
   google-site-verification, CNAME, A/AAAA, NS, conditional DKIM) behind a

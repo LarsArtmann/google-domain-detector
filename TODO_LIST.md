@@ -92,7 +92,7 @@ which is paperwork only the account holder can sign:
       (incl. `--no-color` + NO_COLOR env); SetFooter summary row
       (table/markdown only — csv/tsv verified pure data), Title, AddRowChecked
       everywhere; flag-value rejections now re-tag as usage errors so bad
-      `--color` exits 2 (E19 complete except doctor/nom = rows below).
+      `--color` exits 2 (E19 complete: doctor + nom landed 2026-11-10).
 - [x] `WithDoctorCheck` preflight (resolver + ranges feed) — done:
       `doctor` carries dns-resolver (5s real lookup, GDD_RESOLVER-aware)
       and ranges-feed (10s load, exit-75/65 families named) checks; failure
@@ -168,7 +168,10 @@ which is paperwork only the account holder can sign:
       — done (2026-11-10: colors on scan+replay, footer table/markdown only,
       runs ledger title+footer, tests pinning all three; exit-2 for bad
       flag values via the cmdguard sentinel mapping).
-- [ ] T13: nom live progress during long scans (TTY-only) — plan v3 E19.
+- [x] T13: nom live progress during long scans (TTY-only) — done:
+      go-output/nom InlineRenderer activity tree (✓/✗ per domain, 250ms
+      redraw), gated on TTY stdout and never on jsonl; pipes byte-identical;
+      scan.Options.OnDomainStart hook (nil-safe) drives the running set.
 - [x] T20: `-o` implementation — resolved-as-decided-against (T1 kept
       `--format`; STACK.md decision log).
 - [ ] T22: registry-derived format enum, drift-proof (FormatsForShape)
