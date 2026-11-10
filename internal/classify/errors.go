@@ -55,6 +55,8 @@ func IsTransient(err error) bool {
 	switch ErrorKindOf(err) {
 	case ErrorTimeout, ErrorServFail:
 		return true
+	case ErrorNone, ErrorNXDomain, ErrorCanceled:
+		return false
 	default:
 		return false
 	}

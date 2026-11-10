@@ -23,10 +23,10 @@ type ErrorKinds struct {
 }
 
 // Tally folds one result into the counts.
-func (c *Counts) Tally(r Result) {
+func (c *Counts) Tally(res Result) {
 	c.Scanned++
 
-	if w := r.WorkspaceVerdict(); w.Detected {
+	if w := res.WorkspaceVerdict(); w.Detected {
 		if w.Confidence == ConfidenceCertain {
 			c.WorkspaceCertain++
 		} else {
@@ -34,17 +34,17 @@ func (c *Counts) Tally(r Result) {
 		}
 	}
 
-	if r.GCPVerdict().Detected {
+	if res.GCPVerdict().Detected {
 		c.GCPCertain++
 	}
 
-	if r.GenericGoogle() {
+	if res.GenericGoogle() {
 		c.GenericGoogle++
 	}
 
-	if r.Err != "" {
+	if res.Err != "" {
 		c.Errors++
-		c.ErrorKinds.tally(r.ErrKind)
+		c.ErrorKinds.tally(res.ErrKind)
 	}
 }
 
@@ -58,6 +58,10 @@ func (k *ErrorKinds) tally(kind ErrorKind) {
 		k.ServFail++
 	case ErrorCanceled:
 		k.Canceled++
+	case ErrorNone:
+		// An error string without a classified kind is unexplained by
+		// definition.
+		fallthrough
 	default:
 		k.Other++
 	}

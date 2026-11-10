@@ -18,47 +18,57 @@ type Domain struct {
 	name string
 }
 
+// Parse-failure cores. Callers match with errors.Is; contextual detail
+// (the raw input, the offending label) is wrapped around them.
+var (
+	ErrEmptyDomain   = errors.New("empty domain")
+	ErrNotADomain    = errors.New("not a domain (no dot)")
+	ErrEmptyLabel    = errors.New("empty label")
+	ErrLabelTooLong  = errors.New("label longer than the maximum")
+	ErrBadLabelChars = errors.New("label contains illegal characters (allowed: a-z, 0-9, hyphen)")
+)
+
 // Parse normalizes raw input — "https://Shop.Example.com/pricing",
 // "shop.example.com:443", "WWW.EXAMPLE.COM.", "example.com" — into the apex
 // Domain "example.com". It rejects empty input, single-label hosts, illegal
 // label characters, and non-ASCII (IDNA encoding is out of scope; pass
 // punycode input instead).
 func Parse(raw string) (Domain, error) {
-	s := strings.TrimSpace(strings.ToLower(raw))
-	s = strings.TrimSuffix(s, ".")
+	normalized := strings.TrimSpace(strings.ToLower(raw))
+	normalized = strings.TrimSuffix(normalized, ".")
 
-	if s == "" {
-		return Domain{}, errors.New("empty domain")
+	if normalized == "" {
+		return Domain{}, ErrEmptyDomain
 	}
 
-	if strings.Contains(s, "://") || strings.ContainsAny(s, "/@") {
-		parsed, err := url.Parse(ensureScheme(s))
+	if strings.Contains(normalized, "://") || strings.ContainsAny(normalized, "/@") {
+		parsed, err := url.Parse(ensureScheme(normalized))
 		if err != nil {
 			return Domain{}, fmt.Errorf("parse %q as URL: %w", raw, err)
 		}
 
-		s = parsed.Hostname()
+		normalized = parsed.Hostname()
 	}
 
-	if host, _, err := net.SplitHostPort(s); err == nil {
-		s = host
+	if host, _, err := net.SplitHostPort(normalized); err == nil {
+		normalized = host
 	}
 
-	s = strings.TrimPrefix(s, "www.")
+	normalized = strings.TrimPrefix(normalized, "www.")
 
-	if s == "" {
-		return Domain{}, fmt.Errorf("empty domain after normalizing %q", raw)
+	if normalized == "" {
+		return Domain{}, fmt.Errorf("%q: %w", raw, ErrEmptyDomain)
 	}
 
-	if !strings.Contains(s, ".") {
-		return Domain{}, fmt.Errorf("%q is not a domain (no dot)", raw)
+	if !strings.Contains(normalized, ".") {
+		return Domain{}, fmt.Errorf("%q: %w", raw, ErrNotADomain)
 	}
 
-	if err := validateLabels(s); err != nil {
+	if err := validateLabels(normalized); err != nil {
 		return Domain{}, fmt.Errorf("invalid domain %q: %w", raw, err)
 	}
 
-	return Domain{name: s}, nil
+	return Domain{name: normalized}, nil
 }
 
 // String returns the canonical apex name.
@@ -82,11 +92,11 @@ func validateLabels(name string) error {
 	for label := range strings.SplitSeq(name, ".") {
 		switch {
 		case label == "":
-			return errors.New("empty label")
+			return ErrEmptyLabel
 		case len(label) > maxLabelLength:
-			return fmt.Errorf("label %q longer than %d characters", label, maxLabelLength)
+			return fmt.Errorf("label %q longer than %d characters: %w", label, maxLabelLength, ErrLabelTooLong)
 		case !validLabel(label):
-			return fmt.Errorf("label %q contains illegal characters (allowed: a-z, 0-9, hyphen)", label)
+			return fmt.Errorf("label %q: %w", label, ErrBadLabelChars)
 		}
 	}
 

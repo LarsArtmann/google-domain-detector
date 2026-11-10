@@ -21,7 +21,7 @@ import (
 
 // headerKeywords names (lowercase, quotes/spaces stripped) that mark a CSV
 // column as the domain source. The first matching column, left to right, wins.
-var headerKeywords = map[string]bool{
+var headerKeywords = map[string]bool{ //nolint:gochecknoglobals // read-only package-level lookup table
 	"domain":         true,
 	"domains":        true,
 	"website":        true,
@@ -50,6 +50,9 @@ type Result struct {
 
 // ErrNoInput reports an input source that held nothing readable at all.
 var ErrNoInput = errors.New("no input: pass domains as arguments, via --input FILE, or on stdin")
+
+// ErrNoValidDomains reports input that parsed but contained no usable domain.
+var ErrNoValidDomains = errors.New("no valid domains in input")
 
 // Streamer parses one input source incrementally. Mode detection (plain list
 // vs header-bearing CSV) reads only the first non-empty line, so both modes
@@ -207,7 +210,7 @@ func (s *Streamer) skip(raw string) {
 
 // Skipped reports the exact number of unparseable entries and the first few
 // verbatim examples.
-func (s *Streamer) Skipped() (total int, kept []string) {
+func (s *Streamer) Skipped() (int, []string) {
 	return s.skippedTotal, s.skippedKept
 }
 
@@ -222,14 +225,14 @@ func (s *Streamer) Err() error {
 // inputs, which is every Parse caller, keep the full list). This is the
 // convenience API; product paths stream.
 func Parse(r io.Reader) (Result, error) {
-	s := NewStreamer(r)
+	stream := NewStreamer(r)
 
 	var res Result
 
 	seen := map[string]bool{}
 
 	for {
-		d, ok := s.Next()
+		d, ok := stream.Next()
 		if !ok {
 			break
 		}
@@ -240,14 +243,14 @@ func Parse(r io.Reader) (Result, error) {
 		}
 	}
 
-	total, kept := s.Skipped()
+	total, kept := stream.Skipped()
 	res.Skipped = kept
 
-	if s.Err() != nil {
-		return res, s.Err()
+	if stream.Err() != nil {
+		return res, stream.Err()
 	}
 
-	if !s.sawInput {
+	if !stream.sawInput {
 		return res, ErrNoInput
 	}
 
@@ -257,7 +260,7 @@ func Parse(r io.Reader) (Result, error) {
 			hint = fmt.Sprintf(" (first skipped entry: %q)", kept[0])
 		}
 
-		return res, fmt.Errorf("no valid domains in input%s", hint)
+		return res, fmt.Errorf("%w%s", ErrNoValidDomains, hint)
 	}
 
 	return res, nil

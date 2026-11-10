@@ -78,6 +78,20 @@ const (
 	ExitCorrupt = 65
 )
 
+// Failure cores for the two feed-failure families. Load wraps them in
+// Error carrying the Kind and exit code; tests and callers match with
+// errors.Is.
+var (
+	ErrNoPrefixes = errors.New("range feed contains no prefixes")
+	ErrBadStatus  = errors.New("range feed returned an unexpected HTTP status")
+)
+
+const (
+	defaultFetchTimeout = 10 * time.Second
+	cacheDirPerm        = 0o700
+	cacheFilePerm       = 0o600
+)
+
 // Error is a range-feed failure carrying its exit-code family. It satisfies
 // cmdguard's ExitCoder structurally, so a scan whose feed dies exits 75/65
 // instead of the generic 1.
@@ -127,7 +141,7 @@ func Parse(data []byte) (*Set, error) {
 	}
 
 	if set.Len() == 0 {
-		return nil, errors.New("range feed contains no prefixes")
+		return nil, ErrNoPrefixes
 	}
 
 	return set, nil
@@ -202,7 +216,7 @@ func Load(ctx context.Context, opts Options) (*Set, Source, error) {
 
 	client := opts.Client
 	if client == nil {
-		client = &http.Client{Timeout: 10 * time.Second}
+		client = &http.Client{Timeout: defaultFetchTimeout}
 	}
 
 	userAgent := opts.UserAgent
@@ -266,13 +280,13 @@ func writeCache(path string, data []byte) {
 		return
 	}
 
-	if err := os.MkdirAll(filepath.Dir(path), 0o700); err != nil {
+	if err := os.MkdirAll(filepath.Dir(path), cacheDirPerm); err != nil {
 		return
 	}
 
 	// WriteWithPerm, never WriteIfChanged: a feed whose bytes did not change
 	// must still refresh the mtime the TTL freshness check reads.
-	_ = atomicwrite.WriteWithPerm(path, data, 0o600)
+	_ = atomicwrite.WriteWithPerm(path, data, cacheFilePerm)
 }
 
 func fetch(ctx context.Context, client *http.Client, url, userAgent string) ([]byte, error) {
@@ -291,7 +305,7 @@ func fetch(ctx context.Context, client *http.Client, url, userAgent string) ([]b
 	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("unexpected status %s", resp.Status)
+		return nil, fmt.Errorf("%s: %w", resp.Status, ErrBadStatus)
 	}
 
 	body, err := io.ReadAll(io.LimitReader(resp.Body, maxFeedBytes))
