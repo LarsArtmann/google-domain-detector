@@ -1,5 +1,19 @@
 # Session status — E6 A/B executed, release verifications closed, E24 lint sweep 192→~30, mid-refactor
 
+> **ADDENDUM (19:15, post-write):** the census sibling's 19-04 report
+> landed while this one was being written — it supersedes several §c/§f
+> entries here: **E25 CI hardening is DONE by them** (`-timeout 20m` in
+> ci.yml + nightly `soak.yml`, dispatch-verified green), as are E7
+> finish, E8/E9/E10/E12, E18 delta query, E23 crt.sh extractor, E33
+> input fuzz (FuzzParse 30s campaign), tap, E22 headers, and the TODO
+> truth pass. They also observed this session's `domains.go` break
+> ("tree red under sibling edit", §d1 here) — fixed 19:07, committed
+> green at 03e0682. The daemon swept the E24 batch into junk-message
+> commits (`e4ba575`, `03e0682`) — content verified intact via
+> `git show --stat`; the batch landed mixed with sibling files
+> (`fuzz_test.go`, their report). Read their 19-04 report BEFORE acting
+> on §f below — items 14-18, 20-24, 28, 31 are done or moot.
+
 **2026-11-10 19:08 CET · @ local tree (E6 commit `64c6b80` pushed; E24 batch uncommitted, build/vet/full-test suite GREEN) · plan v3 lanes 🅐+🅑**
 
 Resumed from the 13-27/13-28 handoff pair. This session: reconciled the
