@@ -60,7 +60,9 @@ budget `--timeout` (default 5s). Colors: `--color auto|always|never`
 scans: `--resolver host[:port]`
 queries one DNS server directly instead of the system resolver (env
 `GDD_RESOLVER`). `scan --help` lists everything, `describe`
-prints the machine-readable CLI contract.
+prints the machine-readable CLI contract, and `doctor` preflights the two
+external dependencies — that your resolver answers and the GCP range feed
+loads — before a bulk run wastes minutes discovering it the hard way.
 
 Proven at bulk scale: the Tranco top-1M filtered to `.de`/`.ch`/`.uk`
 (~63k domains) scans in ~20 minutes at `--workers 24`.

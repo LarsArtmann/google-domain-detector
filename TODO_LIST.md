@@ -93,7 +93,10 @@ which is paperwork only the account holder can sign:
       (table/markdown only — csv/tsv verified pure data), Title, AddRowChecked
       everywhere; flag-value rejections now re-tag as usage errors so bad
       `--color` exits 2 (E19 complete except doctor/nom = rows below).
-- [ ] `WithDoctorCheck` preflight (resolver + ranges feed).
+- [x] `WithDoctorCheck` preflight (resolver + ranges feed) — done:
+      `doctor` carries dns-resolver (5s real lookup, GDD_RESOLVER-aware)
+      and ranges-feed (10s load, exit-75/65 families named) checks; failure
+      paths pinned offline via swappable probes (internal/cli/doctor.go).
 - [x] Decide `--format` vs cmdguard's `-o/--output` BEFORE the v0.1.0 tag
       — done: `--format` kept, `-o` rejected (global flag + CLI-object
       resolution breaks per-command flag structs and the test seam; unix

@@ -87,6 +87,11 @@ proxy is immutable, re-tagging is never the answer.
   output (`auto` respects `NO_COLOR`; `--no-color` is the never shorthand).
   Table and markdown gain a totals footer (`N domains / M workspace / K gcp`);
   csv and tsv stay pure data so downstream tools never see a totals row.
+- `doctor` preflights the two external dependencies a scan needs — a
+  `dns-resolver` check (a real lookup inside a 5s budget, honoring
+  `GDD_RESOLVER`) and a `ranges-feed` check (the feed loads within 10s from
+  network or cache, naming the exit-75/65 failure family) — so a broken
+  environment is found before a bulk run wastes minutes on it.
 
 - `scan` command: batch DNS probe of apex + www per domain (MX, TXT/SPF,
   google-site-verification, CNAME, A/AAAA, NS, conditional DKIM) behind a
