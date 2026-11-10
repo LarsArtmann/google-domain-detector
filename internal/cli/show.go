@@ -18,8 +18,8 @@ import (
 // ShowFlags is the show command's flag set.
 type ShowFlags struct {
 	EventStore string `env:"EVENT_STORE" flag:"event-store" help:"SQLite event store written by scan --event-store"`
-	Format     string `default:"table" flag:"format" help:"Output format" values:"table,json,csv,tsv,markdown,yaml,toml,jsonl"`
-	Color      string `default:"auto" flag:"color" help:"Terminal colors for table output" values:"auto,always,never"`
+	Format     string `default:"table"   flag:"format"      help:"Output format"                    values:"table,json,csv,tsv,markdown,yaml,toml,jsonl"`
+	Color      string `default:"auto"    flag:"color"       help:"Terminal colors for table output" values:"auto,always,never"`
 }
 
 var errShowNeedsOneDomain = errors.New("show needs exactly one domain: show example.com --event-store scans.db")
