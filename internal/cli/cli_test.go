@@ -3,7 +3,7 @@ package cli
 import (
 	"bytes"
 	"context"
-	"encoding/json"
+	"encoding/json/v2"
 	"fmt"
 	"net"
 	"os"
@@ -194,6 +194,7 @@ func TestScanJSONLOutputsOneObjectPerLine(t *testing.T) {
 // domains can complete first.
 type delayedRes struct {
 	*fakeRes
+
 	delays map[string]time.Duration
 }
 
@@ -210,6 +211,7 @@ func TestScanJSONLStreamsInCompletionOrder(t *testing.T) {
 	t.Parallel()
 
 	res := &delayedRes{fakeRes: &fakeRes{}, delays: map[string]time.Duration{"slow.com": 150 * time.Millisecond}}
+
 	stdout, _, err := runRes(t, res, "", "scan", "--no-ranges", "--format", "jsonl",
 		"--workers", "3", "slow.com", "fast1.com", "fast2.com")
 	if err != nil {
@@ -337,6 +339,7 @@ func TestScanFailureExitsOne(t *testing.T) {
 	t.Parallel()
 
 	broken := filepath.Join(t.TempDir(), "no-such-dir", "store.db")
+
 	_, _, err := run(t, workspaceDomain(), "", "scan", "--no-ranges", "--event-store", broken, "acme.com")
 	if err == nil {
 		t.Fatal("scan against an unopenable event store must fail")
@@ -588,6 +591,7 @@ func TestScanMultiChunkRunRecordsAndReplays(t *testing.T) {
 
 	prev := scanChunkSize
 	scanChunkSize = 4
+
 	t.Cleanup(func() { scanChunkSize = prev })
 
 	store := filepath.Join(t.TempDir(), "scans.db")
@@ -597,7 +601,11 @@ func TestScanMultiChunkRunRecordsAndReplays(t *testing.T) {
 		domains[i] = fmt.Sprintf("d%d.example", i)
 	}
 
-	stdout, _, err := run(t, &fakeRes{}, "", append([]string{"scan", "--no-ranges", "--format", "jsonl", "--event-store", store}, domains...)...)
+	stdout, _, err := run(
+		t,
+		&fakeRes{},
+		"",
+		append([]string{"scan", "--no-ranges", "--format", "jsonl", "--event-store", store}, domains...)...)
 	if err != nil {
 		t.Fatalf("scan failed: %v", err)
 	}
@@ -654,6 +662,7 @@ func TestScanResumeSkipsObservedDomains(t *testing.T) {
 	}
 
 	ctx := context.Background()
+
 	sys, err := scanstore.Boot(ctx, store)
 	if err != nil {
 		t.Fatalf("boot store: %v", err)
@@ -717,7 +726,11 @@ func TestScanResumeOfInterruptedRun(t *testing.T) {
 		t.Fatalf("resume of interrupted run failed: %v", err)
 	}
 
-	if lines := strings.Split(strings.TrimRight(stdout, "\n"), "\n"); len(lines) != 1 || !strings.Contains(lines[0], "c.example") {
+	if lines := strings.Split(
+		strings.TrimRight(stdout, "\n"),
+		"\n",
+	); len(lines) != 1 ||
+		!strings.Contains(lines[0], "c.example") {
 		t.Errorf("interrupted resume must scan only c.example, got:\n%s", stdout)
 	}
 }

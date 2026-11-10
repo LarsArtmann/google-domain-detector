@@ -13,7 +13,7 @@ markers: `[ ]` open, `[~]` in progress, `[x]` done.
       public resolvers throttle bulk scanners; results stay ~11 % unknown
       otherwise (see reports/2026-11-09-tranco-de-ch-uk).
 - [ ] `--jsonl` streaming output for very large batches (render results as
-           they complete instead of after the whole run).
+      they complete instead of after the whole run).
 - [ ] Resume/checkpointing for multi-hour runs (`--resume results.jsonl`:
       skip domains already in the output file) — required before any
       whole-zone scan.

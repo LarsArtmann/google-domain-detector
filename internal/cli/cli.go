@@ -34,17 +34,17 @@ type RootConfig struct{}
 
 // ScanFlags is the scan command's own flag set.
 type ScanFlags struct {
-	Input      string        `flag:"input"        help:"Read domains from FILE ('-' reads stdin). Plain lists and CSV with a domain/website/url column both work" short:"i"`
-	Format     string        `flag:"format"       help:"Output format"                                                                                            short:"f" default:"table"                                       values:"table,json,csv,tsv,markdown,yaml,toml,jsonl"`
-	Workers    int           `flag:"workers"      help:"Parallel DNS lookups"                                                                                     short:"j" default:"8"   validate:"min=1,max=512"`
-	Timeout    time.Duration `flag:"timeout"      help:"Per-domain lookup budget"                                                                                           default:"5s"`
-	Only       string        `flag:"only"         help:"Report only matching domains"                                                                                       default:"all"                                         values:"all,workspace,gcp,google"`
-	RangesURL  string        `flag:"ranges-url"   help:"GCP IP-range feed"                                                                                                  default:"https://www.gstatic.com/ipranges/cloud.json"`
-	CachePath  string        `flag:"ranges-cache" help:"Range-feed cache file (default ~/.cache/google-domain-detector/cloud.json)"                                                                                                                                    env:"RANGES_CACHE"`
+	Input      string        `flag:"input"        help:"Read domains from FILE ('-' reads stdin). Plain lists and CSV with a domain/website/url column both work"                           short:"i"`
+	Format     string        `flag:"format"       help:"Output format"                                                                                                                      short:"f" default:"table"                                       values:"table,json,csv,tsv,markdown,yaml,toml,jsonl"`
+	Workers    int           `flag:"workers"      help:"Parallel DNS lookups"                                                                                                               short:"j" default:"8"                                                                                                validate:"min=1,max=512"`
+	Timeout    time.Duration `flag:"timeout"      help:"Per-domain lookup budget"                                                                                                                     default:"5s"`
+	Only       string        `flag:"only"         help:"Report only matching domains"                                                                                                                 default:"all"                                         values:"all,workspace,gcp,google"`
+	RangesURL  string        `flag:"ranges-url"   help:"GCP IP-range feed"                                                                                                                            default:"https://www.gstatic.com/ipranges/cloud.json"`
+	CachePath  string        `flag:"ranges-cache" help:"Range-feed cache file (default ~/.cache/google-domain-detector/cloud.json)"                                                                                                                                                                                                       env:"RANGES_CACHE"`
 	NoRanges   bool          `flag:"no-ranges"    help:"Skip GCP IP-range matching (CNAME/MX/NS evidence only)"`
 	NoDKIM     bool          `flag:"no-dkim"      help:"Skip the google._domainkey probe"`
-	Resolver   string        `flag:"resolver"     help:"Query this DNS server (host or host:port) instead of the system resolver"                                                                                                                                      env:"RESOLVER"`
-	EventStore string        `flag:"event-store"  help:"Persist the run as events in this SQLite file (go-cqrs-lite journal; replay with the replay command)"                                                                                                          env:"EVENT_STORE"`
+	Resolver   string        `flag:"resolver"     help:"Query this DNS server (host or host:port) instead of the system resolver"                                                                                                                                                                                                         env:"RESOLVER"`
+	EventStore string        `flag:"event-store"  help:"Persist the run as events in this SQLite file (go-cqrs-lite journal; replay with the replay command)"                                                                                                                                                                             env:"EVENT_STORE"`
 	Resume     string        `flag:"resume"       help:"Skip domains already observed in a recorded run (exact run ID, or 'latest'); starts a new run linked to it. Requires --event-store"`
 }
 
@@ -97,12 +97,16 @@ func BuildCLI(
 		return nil, err
 	}
 
-	scanCmd, cmdErr := v5.NewCommand("scan", ScanFlags{},
+	scanCmd, cmdErr := v5.NewCommand(
+		"scan",
+		ScanFlags{},
 		func(ctx context.Context, _ *RootConfig, f ScanFlags) error {
 			return runScan(ctx, f, v5.ArgsFromContext(ctx), stdout, stderr, res, stdin, stdinTTY, version)
 		},
 		v5.WithShort("Scan domains for Google Workspace and Google Cloud evidence"),
-		v5.WithExample("  # Scan domains passed as arguments\n  google-domain-detector scan --format json example.com\n\n  # Scan a list on stdin, keep only Workspace hits\n  cat domains.txt | google-domain-detector scan --only workspace --format csv"),
+		v5.WithExample(
+			"  # Scan domains passed as arguments\n  google-domain-detector scan --format json example.com\n\n  # Scan a list on stdin, keep only Workspace hits\n  cat domains.txt | google-domain-detector scan --only workspace --format csv",
+		),
 	)
 
 	replayCmd, replayErr := v5.NewCommand("replay", ReplayFlags{},
@@ -208,6 +212,7 @@ func runScan(
 	// case); a streamed multi-chunk run journals 0 = unknown, and the
 	// scan.completed tally stays the authoritative count.
 	inputDomains, skipped := 0, 0
+
 	if last {
 		skippedTotal, _ := feeder.skippedEntries()
 		inputDomains, skipped = len(first), skippedTotal
@@ -228,6 +233,7 @@ func runScan(
 	var stream *render.JSONLStream
 	if format == output.FormatJSONL {
 		stream = render.NewJSONLStream(stdout)
+
 		chainOnResult(&scanOpts, func(r classify.Result) {
 			if render.Matches(r, filter) {
 				stream.Write(r)
@@ -266,6 +272,7 @@ func runScan(
 		}
 
 		last = isLast
+
 		scanChunk(chunk)
 	}
 
@@ -309,6 +316,7 @@ func errorKindsSuffix(c classify.Counts) string {
 func chainOnResult(opts *scan.Options, next func(classify.Result)) {
 	if prev := opts.OnResult; prev != nil {
 		opts.OnResult = func(r classify.Result) { prev(r); next(r) }
+
 		return
 	}
 
@@ -391,8 +399,12 @@ const sinkDepth = 64
 const exitCodeUsage = 2
 
 var (
-	errNoDomainsGiven = errors.New("no domains given: pass domains as arguments, via --input FILE, or pipe a list on stdin")
-	errNoValidDomains = errors.New("no valid domains given: pass domains as arguments, via --input FILE, or pipe a list on stdin")
+	errNoDomainsGiven = errors.New(
+		"no domains given: pass domains as arguments, via --input FILE, or pipe a list on stdin",
+	)
+	errNoValidDomains = errors.New(
+		"no valid domains given: pass domains as arguments, via --input FILE, or pipe a list on stdin",
+	)
 )
 
 // usageError wraps err so the process exits 2 instead of the default 1.

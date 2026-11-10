@@ -20,7 +20,7 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/larsartmann/go-atomic-write"
+	atomicwrite "github.com/larsartmann/go-atomic-write"
 )
 
 // DefaultURL is Google's official machine-readable GCP range feed.

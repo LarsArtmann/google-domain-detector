@@ -260,7 +260,11 @@ func TestStreamObservationsMatchesReplay(t *testing.T) {
 	recorder := scanstore.NewRecorder(writer)
 
 	firstRun := scanstore.NewRunID()
-	seedResults := []classify.Result{workspaceResult("acme.com"), failedResult("gone.example"), workspaceResult("beta.io")}
+	seedResults := []classify.Result{
+		workspaceResult("acme.com"),
+		failedResult("gone.example"),
+		workspaceResult("beta.io"),
+	}
 
 	if err := recorder.StartScan(ctx, firstRun, "", len(seedResults), 0, 4); err != nil {
 		t.Fatalf("start run: %v", err)
@@ -329,7 +333,15 @@ func TestStreamObservationsEmptyStore(t *testing.T) {
 
 	defer func() { _ = reader.Close() }()
 
-	if _, err := scanstore.StreamObservations(ctx, reader, "", func(classify.Result) error { return nil }); !errors.Is(err, scanstore.ErrNoRuns) {
+	if _, err := scanstore.StreamObservations(
+		ctx,
+		reader,
+		"",
+		func(classify.Result) error { return nil },
+	); !errors.Is(
+		err,
+		scanstore.ErrNoRuns,
+	) {
 		t.Errorf("empty store error = %v, want ErrNoRuns", err)
 	}
 }

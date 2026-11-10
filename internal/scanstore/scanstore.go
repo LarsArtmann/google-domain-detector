@@ -140,7 +140,7 @@ func Open(ctx context.Context, dsn string) (*system.System, error) {
 
 	if err := sys.Start(ctx); err != nil {
 		if closeErr := sys.Close(); closeErr != nil {
-			return nil, fmt.Errorf("start event-sourced scan store: %w (close: %v)", err, closeErr)
+			return nil, fmt.Errorf("start event-sourced scan store: %w (close: %w)", err, closeErr)
 		}
 
 		return nil, fmt.Errorf("start event-sourced scan store: %w", err)
@@ -180,13 +180,24 @@ func NewRunID() id.StreamID {
 
 // StartScan opens the run. resumedFrom names the run this run resumes
 // (empty for a fresh scan).
-func (rec *Recorder) StartScan(ctx context.Context, runID id.StreamID, resumedFrom string, inputDomain, skipped, workers int) error {
+func (rec *Recorder) StartScan(
+	ctx context.Context,
+	runID id.StreamID,
+	resumedFrom string,
+	inputDomain, skipped, workers int,
+) error {
 	basic, err := command.New(CmdStartScan, runID)
 	if err != nil {
 		return fmt.Errorf("build %s command: %w", CmdStartScan, err)
 	}
 
-	cmd := StartScanCmd{BasicCommand: basic, InputDomain: inputDomain, Skipped: skipped, Workers: workers, ResumedFrom: resumedFrom}
+	cmd := StartScanCmd{
+		BasicCommand: basic,
+		InputDomain:  inputDomain,
+		Skipped:      skipped,
+		Workers:      workers,
+		ResumedFrom:  resumedFrom,
+	}
 
 	return rec.sys.CommandDispatcher().Dispatch(ctx, cmd)
 }

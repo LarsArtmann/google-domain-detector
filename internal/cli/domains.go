@@ -39,7 +39,13 @@ type domainFeeder struct {
 // --resume run must not re-scan (already observed in its source run). It
 // fails before reading anything when no source exists at all (no arguments,
 // no --input, and a terminal stdin nobody will pipe into).
-func newDomainFeeder(args []string, inputPath string, stdin io.Reader, stdinTTY bool, skip map[string]struct{}) (*domainFeeder, error) {
+func newDomainFeeder(
+	args []string,
+	inputPath string,
+	stdin io.Reader,
+	stdinTTY bool,
+	skip map[string]struct{},
+) (*domainFeeder, error) {
 	if inputPath == "" && len(args) == 0 && stdinTTY {
 		return nil, usageError(errNoDomainsGiven)
 	}
@@ -88,6 +94,7 @@ func (f *domainFeeder) next() (chunk []domain.Domain, last bool, err error) {
 				}
 
 				total, kept := s.Skipped()
+
 				f.skippedTotal += total
 				if f.skippedFirst == "" && len(kept) > 0 {
 					f.skippedFirst = kept[0]

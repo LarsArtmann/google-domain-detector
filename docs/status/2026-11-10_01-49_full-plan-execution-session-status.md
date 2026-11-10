@@ -8,6 +8,7 @@ owner's "GET SHIT DONE — the WHOLE TODO LIST" directive.
 ## Scope line — verified vs not verified
 
 **Verified, with commands:**
+
 - G1 lifted: the scanstore session's closing report (01:12) documents
   buildflow exit 0, docs-gates 5/5 PASS, nix build green; tree quiet since.
 - PD28 root cause: `buildflow history --step samber-linter --last-error` +
@@ -22,10 +23,11 @@ owner's "GET SHIT DONE — the WHOLE TODO LIST" directive.
   `nix-hash-fix`; `stack-drift-check.sh` PASS; `docs-gates freshness` green
   after the 9-item harvest.
 - Zone data: Nominet program facts fetched from official registrars.nominet.uk
-  + nominet.uk pages; SWITCH facts from switch.ch contact page (both
-  2026-11-10, captured in `docs/zone-data/`).
+  - nominet.uk pages; SWITCH facts from switch.ch contact page (both
+    2026-11-10, captured in `docs/zone-data/`).
 
 **NOT verified / not done:**
+
 - The full `buildflow` gate could NOT run for Go analysis steps (BuildFlow#56
   embedded-analyzer skew — the OTHER session rebuilt buildflow from HEAD and
   the embedded go1.27.0 persists). Direct gates used instead, per the policy
@@ -216,5 +218,5 @@ TimeoutMiddleware, FormatsForShape (=T23), error taxonomy (DONE via T10).
 
 ---
 
-*Point-in-time snapshot. WAITING FOR INSTRUCTIONS (T5 scan still running
-in background — its result lands in /tmp/t5-scan.json + /tmp/t5.db).*
+_Point-in-time snapshot. WAITING FOR INSTRUCTIONS (T5 scan still running
+in background — its result lands in /tmp/t5-scan.json + /tmp/t5.db)._

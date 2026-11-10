@@ -37,8 +37,7 @@ func ErrorKindOf(err error) ErrorKind {
 		return ErrorTimeout
 	}
 
-	var dnsErr *net.DNSError
-	if errors.As(err, &dnsErr) {
+	if dnsErr, ok := errors.AsType[*net.DNSError](err); ok {
 		switch {
 		case dnsErr.IsNotFound:
 			return ErrorNXDomain

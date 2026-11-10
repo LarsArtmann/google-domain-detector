@@ -95,7 +95,11 @@ func Run(ctx context.Context, res resolve.Resolver, domains []domain.Domain, opt
 	for i := range results {
 		if results[i].Domain == "" {
 			err := ctx.Err()
-			results[i] = classify.Result{Domain: domains[i].String(), Err: err.Error(), ErrKind: classify.ErrorKindOf(err)}
+			results[i] = classify.Result{
+				Domain:  domains[i].String(),
+				Err:     err.Error(),
+				ErrKind: classify.ErrorKindOf(err),
+			}
 		}
 	}
 

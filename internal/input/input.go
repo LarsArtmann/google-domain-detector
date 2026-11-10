@@ -162,6 +162,7 @@ func (s *Streamer) readMore() bool {
 func (s *Streamer) detectMode() {
 	for {
 		line, err := s.reader.ReadString('\n')
+
 		trimmed := strings.TrimRight(line, "\r\n")
 		if strings.TrimSpace(trimmed) == "" {
 			if err != nil {

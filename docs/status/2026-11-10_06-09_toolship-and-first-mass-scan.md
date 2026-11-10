@@ -201,8 +201,9 @@ google-domain-detector (2026-11-09 evening) and the first bulk run
 ## f) Next — up to 50, impact-ordered
 
 **Close the mass-scan holes (highest value):**
+
 1. Local recursive resolver (unbind bind9? unbound in nix shell/container)
-   + `--resolver` doc section; rerun the 7,204 unknowns → full coverage.
+   - `--resolver` doc section; rerun the 7,204 unknowns → full coverage.
 2. In-tool single retry on transient lookup failures (kills the manual
    multi-pass workflow; lesson already in TODO_LIST).
 3. Verify the concurrent session's `--resume` (journal-based) covers the
@@ -219,28 +220,28 @@ google-domain-detector (2026-11-09 evening) and the first bulk run
 8. Lead scoring: rank × workspace-certain × gcp + company-size proxies.
 9. SQLite sink for scans (query, dedup, time-diff).
 10. Delta detection between runs — "domains that ADDED Google since last
-    week" is the killer prospecting signal.
+week" is the killer prospecting signal.
 11. HTML report (go-output) per run for non-terminal consumers.
 12. Enrichment join: imprint/contact crawl for the top-N matches (legal
-    care: robots/ToS) or company-master-data cross-ref.
+care: robots/ToS) or company-master-data cross-ref.
 13. Dedup by registrant/organization for portfolio-owned domain clusters.
 
 **Detection depth:**
 14. M365/Exchange fingerprints (outlook MX/SPF includes) — one scanner,
-    full email-stack picture.
+full email-stack picture.
 15. AWS/Azure/Cloudflare range feeds + CNAME families (amazonaws.com,
-    azurewebsites.net, cloudfront) — "who is NOT on Google" as intel.
+azurewebsites.net, cloudfront) — "who is NOT on Google" as intel.
 16. Follow CNAME chains manually (stdlib stops at the terminal; an
-    intermediate googlehosted hop can hide behind a non-Google terminal).
+intermediate googlehosted hop can hide behind a non-Google terminal).
 17. DKIM selector variants (google2._domainkey, s1/s2 with google records).
 18. Cloudflare-fronted flag: detect CF IPs and report "GCP invisible" as
-    a distinct unknown-grade instead of clean.
+a distinct unknown-grade instead of clean.
 19. IPv6-only host handling audit.
 20. IDNA/punycode input support (currently rejected — fine, but document
-    or implement).
+or implement).
 21. TXT oversized-packet handling (the cloudflare.com "cannot unmarshal"
-    class may be truncation; investigate once rather than forever blame
-    blocky).
+class may be truncation; investigate once rather than forever blame
+blocky).
 
 **Scale to whole TLDs:**
 22. DENIC RDS application (.de zone data).
@@ -249,40 +250,40 @@ google-domain-detector (2026-11-09 evening) and the first bulk run
 25. Parked-domain pre-filter pass (A-existence sweep) before deep scan.
 26. Streaming/chunked input for 30M domains.
 27. Throughput benchmark harness + a measured qps budget document
-    (politeness engineering).
+(politeness engineering).
 
 **Quality/productization:**
 28. Review + docs for the concurrent session's scanstore (AGENTS.md
-    architecture map, STACK.md row, my invariants section extended).
+architecture map, STACK.md row, my invariants section extended).
 29. golangci-lint + govulncheck CI steps.
 30. Watch the first real GitHub Actions run; fix whatever it finds.
 31. cli package coverage 69% → 90+.
 32. Fuzz the input parser (CSV/quoting/encoding edge cases).
 33. Rebuild + reinstall buildflow binary; push `06d333cfa`; reinstall
-    hooks across affected repos.
+hooks across affected repos.
 34. v0.1.0 tag via go-release skill; CHANGELOG cut.
 35. Homebrew tap entry.
 36. goreleaser or `nix run .#release` verification.
 37. FEATURES.md + ROADMAP.md (docs-health BUILD).
 38. docs-health HARVEST of this report's (f) into TODO_LIST/ROADMAP —
-    pending until the other session settles.
+pending until the other session settles.
 39. asciinema/GIF for the README.
 40. Example report directory with a sanitized sample output.
 41. `describe` output test (contract pin) once version stabilizes.
 42. `-race` in CI (currently plain `go test -race` — keep, but pin Go
-    version in CI to nix's to avoid drift).
+version in CI to nix's to avoid drift).
 43. Investigate `--resolver` with IPv6 addresses and hostnames (only
-    IPv4 tested).
+IPv4 tested).
 44. Decide GPG signing policy for agent commits (currently inconsistent).
 45. Verify the 8.8.8.8 trickle results aren't Google-DNS-specific
-    (resolver-dependency bias check).
+(resolver-dependency bias check).
 
 **Coordination:**
 46. Session handoff protocol with the concurrent agent (who owns what
-    plan numbers; TODO_LIST merge).
+plan numbers; TODO_LIST merge).
 47. Decide whether reports/ stays gitignored or gets a README pointer.
 48. Mirror-push policy: auto-push both remotes from the daemon, or a
-    pre-push gate like the website repo's.
+pre-push gate like the website repo's.
 
 ## g) Questions I cannot answer myself
 
@@ -301,6 +302,7 @@ google-domain-detector (2026-11-09 evening) and the first bulk run
    should treat its plans as canonical and merge mine under them?
 
 ---
-*Point-in-time snapshot; annotate, never rewrite. Written 2026-11-10 06:09
+
+_Point-in-time snapshot; annotate, never rewrite. Written 2026-11-10 06:09
 after `go build ./...` green + `git status` clean on master (3 ahead of
-origin).*
+origin)._

@@ -15,10 +15,10 @@ import (
 
 // ReplayFlags is the replay command's flag set.
 type ReplayFlags struct {
-	EventStore string `flag:"event-store" help:"SQLite event store written by scan --event-store" env:"EVENT_STORE"`
-	Run        string `flag:"run"          help:"Rebuild this run ID (default: the most recent run)"`
-	Format     string `flag:"format"       help:"Output format"  default:"table" values:"table,json,csv,tsv,markdown,yaml,toml,jsonl"`
-	Only       string `flag:"only"         help:"Report only matching domains" default:"all" values:"all,workspace,gcp,google"`
+	EventStore string `env:"EVENT_STORE" flag:"event-store" help:"SQLite event store written by scan --event-store"`
+	Run        string `                  flag:"run"         help:"Rebuild this run ID (default: the most recent run)"`
+	Format     string `                  flag:"format"      help:"Output format"                                      default:"table" values:"table,json,csv,tsv,markdown,yaml,toml,jsonl"`
+	Only       string `                  flag:"only"        help:"Report only matching domains"                       default:"all"   values:"all,workspace,gcp,google"`
 }
 
 // runReplay rebuilds a scan report from the event journal alone: no DNS.

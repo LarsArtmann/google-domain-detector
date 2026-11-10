@@ -62,7 +62,10 @@ func TestCacheWriteIsAtomicTightPermAndMtimeRefreshing(t *testing.T) {
 	}
 
 	if age := time.Since(info.ModTime()); age > time.Minute {
-		t.Errorf("identical-content rewrite did not refresh mtime (age %s) — WriteIfChanged semantics would break the TTL", age)
+		t.Errorf(
+			"identical-content rewrite did not refresh mtime (age %s) — WriteIfChanged semantics would break the TTL",
+			age,
+		)
 	}
 }
 
@@ -70,6 +73,7 @@ func TestFetchSendsUserAgent(t *testing.T) {
 	t.Parallel()
 
 	var got string
+
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		got = r.UserAgent()
 		_, _ = w.Write([]byte(fixtureFeed))
@@ -114,21 +118,21 @@ func TestConcurrentLoadSharesCacheSafely(t *testing.T) {
 	const loadCount = 16
 
 	var wg sync.WaitGroup
+
 	errs := make(chan error, loadCount)
 
 	for range loadCount {
-		wg.Add(1)
-
-		go func() {
-			defer wg.Done()
-
-			set, _, err := Load(context.Background(), Options{URL: server.URL, CachePath: cache, TTL: time.Nanosecond, Now: time.Now})
+		wg.Go(func() {
+			set, _, err := Load(
+				context.Background(),
+				Options{URL: server.URL, CachePath: cache, TTL: time.Nanosecond, Now: time.Now},
+			)
 			if err == nil && set.Len() == 0 {
 				err = os.ErrInvalid
 			}
 
 			errs <- err
-		}()
+		})
 	}
 
 	wg.Wait()
