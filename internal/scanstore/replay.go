@@ -20,6 +20,8 @@ type RunSummary struct {
 	StartedAt   time.Time
 	Completed   bool
 	ResumedFrom string
+	Wave        string
+	Ruleset     classify.Ruleset
 	Counts      classify.Counts
 }
 
@@ -159,7 +161,13 @@ func walkRuns(ctx context.Context, store event.Store, runFilter string) (Replay,
 			}
 
 			if _, seen := runs[p.RunID]; !seen {
-				runs[p.RunID] = &RunSummary{RunID: p.RunID, StartedAt: p.StartedAt.Time(), ResumedFrom: p.ResumedFrom}
+				runs[p.RunID] = &RunSummary{
+					RunID:       p.RunID,
+					StartedAt:   p.StartedAt.Time(),
+					ResumedFrom: p.ResumedFrom,
+					Wave:        p.Wave,
+					Ruleset:     p.Ruleset,
+				}
 				runOrder = append(runOrder, p.RunID)
 			}
 

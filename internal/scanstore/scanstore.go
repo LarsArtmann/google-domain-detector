@@ -54,6 +54,7 @@ func Domain() system.DomainConfig {
 									Evidence:   cmd.Result.Evidences,
 									Err:        cmd.Result.Err,
 									ErrKind:    cmd.Result.ErrKind,
+									Ruleset:    classify.CurrentRuleset,
 									ObservedAt: event.NewInstantNow(),
 								}, event.WithSchemaVersion(1))
 							if err != nil {
@@ -80,6 +81,8 @@ func Domain() system.DomainConfig {
 									Skipped:     cmd.Skipped,
 									Workers:     cmd.Workers,
 									ResumedFrom: cmd.ResumedFrom,
+									Wave:        cmd.Wave,
+									Ruleset:     classify.CurrentRuleset,
 								}, event.WithSchemaVersion(1))
 							if err != nil {
 								return nil, err
@@ -179,11 +182,13 @@ func NewRunID() id.StreamID {
 }
 
 // StartScan opens the run. resumedFrom names the run this run resumes
-// (empty for a fresh scan).
+// (empty for a fresh scan); wave names the census wave manifest the run
+// belongs to (empty for ad-hoc runs).
 func (rec *Recorder) StartScan(
 	ctx context.Context,
 	runID id.StreamID,
 	resumedFrom string,
+	wave string,
 	inputDomain, skipped, workers int,
 ) error {
 	basic, err := command.New(CmdStartScan, runID)
@@ -197,6 +202,7 @@ func (rec *Recorder) StartScan(
 		Skipped:      skipped,
 		Workers:      workers,
 		ResumedFrom:  resumedFrom,
+		Wave:         wave,
 	}
 
 	return rec.sys.CommandDispatcher().Dispatch(ctx, cmd)

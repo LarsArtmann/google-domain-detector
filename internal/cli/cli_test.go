@@ -704,7 +704,7 @@ func TestScanResumeOfInterruptedRun(t *testing.T) {
 
 	interrupted := scanstore.NewRunID()
 
-	if err := recorder.StartScan(ctx, interrupted, "", 3, 0, 8); err != nil {
+	if err := recorder.StartScan(ctx, interrupted, "", "", 3, 0, 8); err != nil {
 		t.Fatalf("start interrupted run: %v", err)
 	}
 

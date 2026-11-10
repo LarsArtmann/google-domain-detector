@@ -123,7 +123,7 @@ func TestReplayRoundTrip(t *testing.T) {
 	firstRun := scanstore.NewRunID()
 	firstResults := []classify.Result{workspaceResult("acme.com"), failedResult("gone.example")}
 
-	if err := recorder.StartScan(ctx, firstRun, "", len(firstResults), 0, 4); err != nil {
+	if err := recorder.StartScan(ctx, firstRun, "", "", len(firstResults), 0, 4); err != nil {
 		t.Fatalf("start first run: %v", err)
 	}
 
@@ -148,7 +148,7 @@ func TestReplayRoundTrip(t *testing.T) {
 	})
 	secondResults := []classify.Result{changed}
 
-	if err := recorder.StartScan(ctx, secondRun, "", len(secondResults), 0, 4); err != nil {
+	if err := recorder.StartScan(ctx, secondRun, "", "", len(secondResults), 0, 4); err != nil {
 		t.Fatalf("start second run: %v", err)
 	}
 
@@ -266,7 +266,7 @@ func TestStreamObservationsMatchesReplay(t *testing.T) {
 		workspaceResult("beta.io"),
 	}
 
-	if err := recorder.StartScan(ctx, firstRun, "", len(seedResults), 0, 4); err != nil {
+	if err := recorder.StartScan(ctx, firstRun, "", "", len(seedResults), 0, 4); err != nil {
 		t.Fatalf("start run: %v", err)
 	}
 
@@ -370,7 +370,7 @@ func TestStreamObservationsTenThousandEvents(t *testing.T) {
 
 	const total = 10000
 
-	if err := recorder.StartScan(ctx, runID, "", total, 0, 8); err != nil {
+	if err := recorder.StartScan(ctx, runID, "", "", total, 0, 8); err != nil {
 		t.Fatalf("start run: %v", err)
 	}
 
@@ -522,7 +522,7 @@ func TestJournalOneHundredThousandEvents(t *testing.T) {
 
 	appendStart := time.Now()
 
-	if err := recorder.StartScan(ctx, runID, "", total, 0, 8); err != nil {
+	if err := recorder.StartScan(ctx, runID, "", "", total, 0, 8); err != nil {
 		t.Fatalf("start run: %v", err)
 	}
 

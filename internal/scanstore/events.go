@@ -31,7 +31,9 @@ const (
 )
 
 // ScanStartedPayload opens a run. ResumedFrom names the run whose
-// observations a --resume run deliberately skips (empty otherwise).
+// observations a --resume run deliberately skips (empty otherwise). Wave
+// names the census wave manifest a run belongs to (empty for ad-hoc runs);
+// Ruleset pins the detection-rule set the run's evidence is produced under.
 type ScanStartedPayload struct {
 	RunID       string        `json:"run_id"`
 	StartedAt   event.Instant `json:"started_at"`
@@ -39,18 +41,22 @@ type ScanStartedPayload struct {
 	Skipped     int           `json:"skipped"`
 	Workers     int           `json:"workers"`
 	ResumedFrom string        `json:"resumed_from,omitempty"`
+	Wave        string        `json:"wave,omitempty"`
+	Ruleset     classify.Ruleset `json:"ruleset,omitempty"`
 }
 
 // DomainObservedPayload records everything one scan learned about one
 // domain. Verdicts are deliberately absent: they are derived from evidence
 // (classify.Result methods), and storing derived state next to the facts it
-// comes from would be a split brain.
+// comes from would be a split brain. Ruleset is evidence provenance (which
+// frozen rule set produced it), never a verdict.
 type DomainObservedPayload struct {
 	Domain     string              `json:"domain"`
 	RunID      string              `json:"run_id"`
 	Evidence   []classify.Evidence `json:"evidence"`
 	Err        string              `json:"error,omitempty"`
 	ErrKind    classify.ErrorKind  `json:"error_kind,omitempty"`
+	Ruleset    classify.Ruleset    `json:"ruleset,omitempty"`
 	ObservedAt event.Instant       `json:"observed_at"`
 }
 
@@ -70,6 +76,7 @@ type StartScanCmd struct {
 	Skipped     int
 	Workers     int
 	ResumedFrom string
+	Wave        string
 }
 
 // RecordObservationCmd appends one observation to the domain's stream.

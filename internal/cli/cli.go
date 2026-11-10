@@ -46,6 +46,7 @@ type ScanFlags struct {
 	Resolver   string        `flag:"resolver"     help:"Query this DNS server (host or host:port) instead of the system resolver"                                                                                                                                                                                                         env:"RESOLVER"`
 	EventStore string        `flag:"event-store"  help:"Persist the run as events in this SQLite file (go-cqrs-lite journal; replay with the replay command)"                                                                                                                                                                             env:"EVENT_STORE"`
 	Resume     string        `flag:"resume"       help:"Skip domains already observed in a recorded run (exact run ID, or 'latest'); starts a new run linked to it. Requires --event-store"`
+	Wave       string        `flag:"wave"         help:"Census wave ID stamped into the event journal (e.g. tranco1m-a); empty for ad-hoc runs. Requires --event-store"`
 }
 
 // Run builds the CLI and executes args. Construction errors are printed to
@@ -223,6 +224,10 @@ func runScan(
 		resumedFrom = resume.RunID
 	}
 
+	if f.Wave != "" && f.EventStore == "" {
+		return usageError(errors.New("--wave requires --event-store (waves live in the journal)"))
+	}
+
 	finish, err := attachEventStore(ctx, f, resumedFrom, inputDomains, skipped, stderr, &scanOpts)
 	if err != nil {
 		return err
@@ -366,7 +371,7 @@ func attachEventStore(
 	runID := scanstore.NewRunID()
 
 	recorder := scanstore.NewRecorder(sys)
-	if err := recorder.StartScan(ctx, runID, resumedFrom, inputDomain, skipped, opts.Workers); err != nil {
+	if err := recorder.StartScan(ctx, runID, resumedFrom, f.Wave, inputDomain, skipped, opts.Workers); err != nil {
 		_ = sys.GracefulClose(context.WithoutCancel(ctx))
 
 		return nil, fmt.Errorf("start run in event store: %w", err)

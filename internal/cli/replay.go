@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"strings"
 
 	"github.com/larsartmann/go-output"
 
@@ -19,6 +20,37 @@ type ReplayFlags struct {
 	Run        string `                  flag:"run"         help:"Rebuild this run ID (default: the most recent run)"`
 	Format     string `                  flag:"format"      help:"Output format"                                      default:"table" values:"table,json,csv,tsv,markdown,yaml,toml,jsonl"`
 	Only       string `                  flag:"only"        help:"Report only matching domains"                       default:"all"   values:"all,workspace,gcp,google"`
+}
+
+// runSummaryLine is the one-line run readout shared by scan and replay:
+// verdict totals plus the error-kind breakdown, with wave/ruleset provenance
+// when the journal carries it.
+func runSummaryLine(prefix string, c classify.Counts) string {
+	var b strings.Builder
+
+	fmt.Fprintf(&b, "%s workspace certain %d / likely %d, gcp %d, errors %d%s",
+		prefix, c.WorkspaceCertain, c.WorkspaceLikely, c.GCPCertain, c.Errors, errorKindsSuffix(c))
+
+	return b.String()
+}
+
+// provenanceSuffix renders the wave/ruleset journal stamps, empty when the
+// run predates them (pre-census journals decode with zero values).
+func provenanceSuffix(wave string, ruleset classify.Ruleset) string {
+	parts := make([]string, 0, 2)
+	if wave != "" {
+		parts = append(parts, "wave "+wave)
+	}
+
+	if ruleset != "" {
+		parts = append(parts, "ruleset "+string(ruleset))
+	}
+
+	if len(parts) == 0 {
+		return ""
+	}
+
+	return " [" + strings.Join(parts, ", ") + "]"
 }
 
 // runReplay rebuilds a scan report from the event journal alone: no DNS.
@@ -64,10 +96,10 @@ func runReplay(ctx context.Context, f ReplayFlags, stdout, stderr io.Writer) err
 			return err
 		}
 
-		fmt.Fprintf(stderr, "run %s: %d domains, workspace certain %d / likely %d, gcp %d, errors %d%s\n",
+		fmt.Fprintf(stderr, "run %s: %d domains, %s%s\n",
 			summary.RunID, summary.Counts.Scanned,
-			summary.Counts.WorkspaceCertain, summary.Counts.WorkspaceLikely,
-			summary.Counts.GCPCertain, summary.Counts.Errors, errorKindsSuffix(summary.Counts))
+			runSummaryLine("", summary.Counts),
+			provenanceSuffix(summary.Wave, summary.Ruleset))
 
 		return stream.Err()
 	}
@@ -92,10 +124,10 @@ func runReplay(ctx context.Context, f ReplayFlags, stdout, stderr io.Writer) err
 	}
 
 	if summary != nil {
-		fmt.Fprintf(stderr, "run %s: %d domains, workspace certain %d / likely %d, gcp %d, errors %d%s\n",
+		fmt.Fprintf(stderr, "run %s: %d domains, %s%s\n",
 			summary.RunID, summary.Counts.Scanned,
-			summary.Counts.WorkspaceCertain, summary.Counts.WorkspaceLikely,
-			summary.Counts.GCPCertain, summary.Counts.Errors, errorKindsSuffix(summary.Counts))
+			runSummaryLine("", summary.Counts),
+			provenanceSuffix(summary.Wave, summary.Ruleset))
 	}
 
 	return renderResults(stdout, replay.Results, filter, format)
