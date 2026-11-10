@@ -278,7 +278,9 @@ type Sink struct {
 }
 
 // NewSink starts recording observations for runID. depth bounds the buffer
-// between the DNS pool and the store.
+// between the DNS pool and the store. Observations deliberately record on a
+// detached context: a canceled scan must still journal every completed
+// observation and close its run — the journal is the --resume checkpoint.
 func NewSink(recorder runRecorder, runID id.StreamID, depth int) *Sink {
 	sink := &Sink{
 		recorder: recorder,

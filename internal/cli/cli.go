@@ -226,45 +226,17 @@ func runScan(
 	version string,
 	chunkSize int,
 ) error {
-	filter, err := render.ParseFilter(f.Only)
+	filter, format, tableOpts, err := scanOutputOpts(f)
 	if err != nil {
 		return err
 	}
 
-	format, err := output.ParseFormat(f.Format)
-	if err != nil {
-		return usageError(err)
-	}
-
-	color, err := parseColorMode(f.Color)
+	resume, err := resolveResume(ctx, f)
 	if err != nil {
 		return err
 	}
 
-	tableOpts := render.TableOptions{ColorMode: color}
-
-	// A --resume run first learns what its source run already observed,
-	// then skips those domains; the new run links back via scan.started.
-	var (
-		resume      *scanstore.ResumeSource
-		skipDomains map[string]struct{}
-	)
-
-	if f.Resume != "" {
-		if f.EventStore == "" {
-			return usageError(errResumeNeedsStore)
-		}
-
-		source, err := scanstore.LoadResumeSource(ctx, f.EventStore, f.Resume)
-		if err != nil {
-			return err
-		}
-
-		resume = &source
-		skipDomains = source.Observed
-	}
-
-	feeder, err := newDomainFeeder(args, f.Input, stdin, stdinTTY, skipDomains, chunkSize)
+	feeder, err := newDomainFeeder(args, f.Input, stdin, stdinTTY, resumeSkipSet(resume), chunkSize)
 	if err != nil {
 		return err
 	}
@@ -301,9 +273,10 @@ func runScan(
 		ProbeDKIM: !f.NoDKIM,
 	}
 
-	// Input totals are exact when everything fit in one chunk (the common
-	// case); a streamed multi-chunk run journals 0 = unknown, and the
-	// scan.completed tally stays the authoritative count.
+	if f.Wave != "" && f.EventStore == "" {
+		return usageError(errWaveNeedsStore)
+	}
+
 	inputDomains, skipped := 0, 0
 
 	if last {
@@ -311,45 +284,147 @@ func runScan(
 		inputDomains, skipped = len(first), skippedTotal
 	}
 
-	resumedFrom := ""
-	if resume != nil {
-		resumedFrom = resume.RunID
-	}
-
-	if f.Wave != "" && f.EventStore == "" {
-		return usageError(errWaveNeedsStore)
-	}
-
-	finish, err := attachEventStore(ctx, f, resumedFrom, inputDomains, skipped, stderr, &scanOpts)
+	finish, err := attachEventStore(ctx, f, resumeRunID(resume), inputDomains, skipped, stderr, &scanOpts)
 	if err != nil {
 		return err
 	}
 
-	// jsonl renders as results complete instead of after the whole run;
-	// every other format needs the full result set and stays buffered.
-	var stream *render.JSONLStream
-	if format == output.FormatJSONL {
-		stream = render.NewJSONLStream(stdout)
+	stream, finishProgress := newScanStream(ctx, format, stdoutTTY, stdout, filter, &scanOpts)
+	defer finishProgress()
 
-		chainOnResult(&scanOpts, func(r classify.Result) {
+	started := time.Now()
+	results, counts, scanErr := scanAllChunks(ctx, feeder, first, last, scanOpts, activeRes, stream)
+
+	if scanErr != nil {
+		return scanErr
+	}
+
+	if skippedTotal, firstSkipped := feeder.skippedEntries(); skippedTotal > 0 {
+		_, _ = fmt.Fprintf(stderr, "skipped %d unparseable input entries (first: %q)\n", skippedTotal, firstSkipped)
+	}
+
+	rendered := renderOutput(stdout, results, filter, format, tableOpts, stream)
+
+	_, _ = fmt.Fprintf(stderr, "%d domains: workspace certain %d / likely %d, gcp %d, errors %d%s\n",
+		counts.Scanned, counts.WorkspaceCertain, counts.WorkspaceLikely,
+		counts.GCPCertain, counts.Errors, errorKindsSuffix(counts))
+
+	if err := finish(ctx, time.Since(started), counts); err != nil {
+		return err
+	}
+
+	return rendered
+}
+
+// scanOutputOpts parses the --only/--format/--color trio into the render
+// inputs every output path shares.
+func scanOutputOpts(f ScanFlags) (render.Filter, output.Format, render.TableOptions, error) {
+	filter, err := render.ParseFilter(f.Only)
+	if err != nil {
+		return "", "", render.TableOptions{}, err
+	}
+
+	format, err := output.ParseFormat(f.Format)
+	if err != nil {
+		return "", "", render.TableOptions{}, usageError(err)
+	}
+
+	color, err := parseColorMode(f.Color)
+	if err != nil {
+		return "", "", render.TableOptions{}, err
+	}
+
+	return filter, format, render.TableOptions{ColorMode: color}, nil
+}
+
+// resolveResume loads the skip-set a --resume run starts from (nil = fresh
+// run). A --resume without --event-store is a usage error, not a scan one.
+func resolveResume(ctx context.Context, f ScanFlags) (*scanstore.ResumeSource, error) {
+	if f.Resume == "" {
+		return nil, nil //nolint:nilnil // nil resume means fresh run; the caller branches on resume != nil
+	}
+
+	if f.EventStore == "" {
+		return nil, usageError(errResumeNeedsStore)
+	}
+
+	source, err := scanstore.LoadResumeSource(ctx, f.EventStore, f.Resume)
+	if err != nil {
+		return nil, err
+	}
+
+	return &source, nil
+}
+
+func resumeSkipSet(resume *scanstore.ResumeSource) map[string]struct{} {
+	if resume == nil {
+		return nil
+	}
+
+	return resume.Observed
+}
+
+func resumeRunID(resume *scanstore.ResumeSource) string {
+	if resume == nil {
+		return ""
+	}
+
+	return resume.RunID
+}
+
+// newScanStream wires the output mode onto the scan options: streaming jsonl
+// (returns the stream), live progress on an interactive terminal (returns its
+// finish func for the caller to defer), or neither (both no-ops/nil) for
+// buffered formats on pipes.
+func newScanStream(
+	ctx context.Context,
+	format output.Format,
+	stdoutTTY bool,
+	stdout io.Writer,
+	filter render.Filter,
+	opts *scan.Options,
+) (*render.JSONLStream, func()) {
+	if format == output.FormatJSONL {
+		stream := render.NewJSONLStream(stdout)
+
+		chainOnResult(opts, func(r classify.Result) {
 			if render.Matches(r, filter) {
 				stream.Write(r)
 			}
 		})
-	} else if stdoutTTY {
+
+		return stream, func() {}
+	}
+
+	if stdoutTTY {
 		// Live progress on an interactive terminal: pipes and jsonl streams
 		// keep byte-identical output (the stream owns stdout; in-place
 		// redraws would corrupt its lines). finish runs before the report
 		// renders, so the final frame never fights the table for the screen.
 		progress := newNomProgress(ctx, stdout)
-		scanOpts.OnDomainStart = progress.domainStarted
-		chainOnResult(&scanOpts, progress.domainDone)
+		opts.OnDomainStart = progress.domainStarted
+		chainOnResult(opts, progress.domainDone)
 
-		defer progress.finish()
+		return nil, func() { progress.finish(ctx) }
 	}
 
-	started := time.Now()
+	return nil, func() {}
+}
 
+// scanAllChunks scans the first chunk and every following feeder chunk,
+// accumulating results (buffered formats only; jsonl discards per chunk) and
+// the verdict tally. Input totals are exact when everything fit in one chunk
+// (the common case); a streamed multi-chunk run journals 0 = unknown, and
+// the scan.completed tally stays the authoritative count.
+func scanAllChunks(
+	ctx context.Context,
+	feeder *domainFeeder,
+	first []domain.Domain,
+	last bool,
+	scanOpts scan.Options,
+	activeRes resolve.Resolver,
+	stream *render.JSONLStream,
+) ([]classify.Result, classify.Counts, error) {
 	var (
 		counts  classify.Counts
 		results []classify.Result // buffered formats only; jsonl discards per chunk
@@ -371,7 +446,7 @@ func runScan(
 	for !last {
 		chunk, isLast, err := feeder.next()
 		if err != nil {
-			return err
+			return nil, classify.Counts{}, err
 		}
 
 		if len(chunk) == 0 {
@@ -383,26 +458,24 @@ func runScan(
 		scanChunk(chunk)
 	}
 
-	if skippedTotal, firstSkipped := feeder.skippedEntries(); skippedTotal > 0 {
-		_, _ = fmt.Fprintf(stderr, "skipped %d unparseable input entries (first: %q)\n", skippedTotal, firstSkipped)
-	}
+	return results, counts, nil
+}
 
-	var rendered error
+// renderOutput writes the report: jsonl lines were already streamed as
+// results completed, so only its stream error is left to collect.
+func renderOutput(
+	stdout io.Writer,
+	results []classify.Result,
+	filter render.Filter,
+	format output.Format,
+	tableOpts render.TableOptions,
+	stream *render.JSONLStream,
+) error {
 	if stream != nil {
-		rendered = stream.Err() // lines were already written as they completed
-	} else {
-		rendered = renderResults(stdout, results, filter, format, tableOpts)
+		return stream.Err()
 	}
 
-	_, _ = fmt.Fprintf(stderr, "%d domains: workspace certain %d / likely %d, gcp %d, errors %d%s\n",
-		counts.Scanned, counts.WorkspaceCertain, counts.WorkspaceLikely,
-		counts.GCPCertain, counts.Errors, errorKindsSuffix(counts))
-
-	if err := finish(ctx, time.Since(started), counts); err != nil {
-		return err
-	}
-
-	return rendered
+	return renderResults(stdout, results, filter, format, tableOpts)
 }
 
 // parseColorMode resolves the --color flag, treating the zero value as auto
@@ -501,7 +574,7 @@ func attachEventStore(
 		return nil, fmt.Errorf("start run in event store: %w", err)
 	}
 
-	sink := scanstore.NewSink(recorder, runID, sinkDepth)
+	sink := scanstore.NewSink(ctx, recorder, runID, sinkDepth)
 	opts.OnResult = sink.OnResult
 
 	return func(closeCtx context.Context, duration time.Duration, counts classify.Counts) error {

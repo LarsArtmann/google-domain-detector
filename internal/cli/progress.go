@@ -76,7 +76,9 @@ func (p *nomProgress) domainDone(r classify.Result) {
 
 // finish closes the workflow and the redraw loop; the report renders after
 // this returns, so the final frame never fights the table for the screen.
-func (p *nomProgress) finish() {
-	_ = p.sub.OnEvent(context.Background(), nom.WorkflowCompleted{ID: nom.NewWorkflowID("scan")})
+// The completion event publishes WithoutCancel so Ctrl-C still tears the
+// workflow down cleanly.
+func (p *nomProgress) finish(ctx context.Context) {
+	_ = p.sub.OnEvent(context.WithoutCancel(ctx), nom.WorkflowCompleted{ID: nom.NewWorkflowID("scan")})
 	p.renderer.Finish()
 }
