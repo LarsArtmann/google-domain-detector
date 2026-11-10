@@ -127,6 +127,16 @@ first-party lib is considered.
   cache keys are per matched-file set). Diagnose red-hook/green-direct with a
   direct `docs-gates freshness` run before suspecting the gate itself.
 
+- `go.mod` floor is `go 1.27.2` and tidy ENFORCES it (go-cqrs-lite v4 tags
+  require >= 1.27.2). Known tool bug (BuildFlow#56): buildflow binaries
+  built with go1.27.0 run embedded analyzers (test-compile, samber-linter,
+  go-generate) that cannot load a module with this floor - the pre-commit
+  hook blocks until BuildFlow is rebuilt with a newer toolchain. Until then:
+  verify via direct gate runs (docs-gates, go build/test, nix build) and use
+  `--no-verify` for docs-only commits. Do NOT follow
+  go-version-auto-configure's "major.minor only" advice here - `go mod
+  tidy` reverts it; it cannot stick while the cqrs pins are current.
+
 ## Git remotes
 
 - `origin` → Forgejo `forgejo@evo-x2.home.lan:lars/google-domain-detector.git`
