@@ -33,7 +33,9 @@ proxy is immutable, re-tagging is never the answer.
   ("N domains: workspace certain X / likely Y, gcp Z, errors E (nxdomain a,
   timeout b, ...)") so bulk-run health is readable without post-processing.
 - Scriptable exit codes: bad invocations (no domains given, replay without
-  an event store) exit 2, scan failures exit 1. `--workers` is validated at
+  an event store, a flag value outside its allowed set — bad `--color`,
+  `--workers 513`, malformed `--timeout`) exit 2, scan failures exit 1.
+  `--workers` is validated at
   parse time (1–512); env vars resolve under a single `GDD_` prefix
   (`GDD_RESOLVER`, `GDD_EVENT_STORE`, `GDD_RANGES_CACHE`); panics surface as
   printed errors instead of crashes (RecoveryMiddleware); version output can
@@ -80,7 +82,11 @@ proxy is immutable, re-tagging is never the answer.
 - `show <domain>` and `runs` commands: query the event store's read models —
   full observation history per domain and the run ledger (started, counts,
   resumed-from links). The CQRS loop is closed: journal in, read models out.
-- `--color auto|always|never` on `scan` for table output.
+  The runs ledger table carries a title and an `N run(s)` totals footer.
+- `--color auto|always|never` on `scan` and `replay` for table and markdown
+  output (`auto` respects `NO_COLOR`; `--no-color` is the never shorthand).
+  Table and markdown gain a totals footer (`N domains / M workspace / K gcp`);
+  csv and tsv stay pure data so downstream tools never see a totals row.
 
 - `scan` command: batch DNS probe of apex + www per domain (MX, TXT/SPF,
   google-site-verification, CNAME, A/AAAA, NS, conditional DKIM) behind a

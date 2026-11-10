@@ -98,6 +98,12 @@ first-party lib is considered.
   use `--resolver` against a trustworthy server or the user-scoped unbound
   (reports/census/unbound/; 127.0.0.1:5353) — do NOT bulk-scan through a
   loaded shared cache.
+- cmdguard's flag-binding layer returns `fmt.Errorf`-wrapped SENTINELS
+  (`v5.ErrInvalidEnum`, `v5.ErrValueTooLarge`, …), not `*v5.EnumError`/
+  `*ExitError` structs — `errors.As` for the struct types finds nothing.
+  `internal/cli.Run` maps that sentinel family to `usageError` so bad flag
+  values exit 2 (see `isFlagValueError`); new flag-level usage classes must
+  join that list.
 - `net.ParseIP` returns 16-byte v4-in-6 form; `ranges.Set.Contains` unmaps
   (`addr.Is4In6() → Unmap()`) or v4 lookups silently check the v6 list.
 - cmdguard battery commands (`version`, `doctor`, `describe`) print to the

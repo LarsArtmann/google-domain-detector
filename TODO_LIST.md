@@ -89,8 +89,10 @@ which is paperwork only the account holder can sign:
       validate:"min=1,max=512", exitCodeUsage, env prefix + recovery wired
       in cliOptions).
 - [x] `--color auto|always|never` via go-output ColorMode — done
-      (incl. `--no-color` + NO_COLOR env); SetFooter summary row; AddRowChecked
-      remaining gaps tracked as plan v3 E19 (sibling lane).
+      (incl. `--no-color` + NO_COLOR env); SetFooter summary row
+      (table/markdown only — csv/tsv verified pure data), Title, AddRowChecked
+      everywhere; flag-value rejections now re-tag as usage errors so bad
+      `--color` exits 2 (E19 complete except doctor/nom = rows below).
 - [ ] `WithDoctorCheck` preflight (resolver + ranges feed).
 - [x] Decide `--format` vs cmdguard's `-o/--output` BEFORE the v0.1.0 tag
       — done: `--format` kept, `-o` rejected (global flag + CLI-object
@@ -104,8 +106,10 @@ which is paperwork only the account holder can sign:
 
 ## Harvested from the 2026-11-10 status report (docs-gates routing)
 
-- [ ] `AddRowChecked` for the 5-column invariant (S).
-- [ ] `RenderOptions.Title` for markdown/html output (S).
+- [x] `AddRowChecked` for the 5-column invariant (S) — done (render.Table +
+      runs ledger rows propagate add errors).
+- [x] `RenderOptions.Title` for markdown/html output (S) — done (markdown
+      pinned by test; html not registered in this binary).
 - [x] `WithExample`/`WithLong` on the scan command (S) — done (plan v2 T4).
 - [ ] Add a "verified against commit X" line to every audit report header
       (point-in-time citation pinning).
@@ -154,8 +158,10 @@ which is paperwork only the account holder can sign:
       (report 07-46: 3645-domain .ch run, journal round-trip
       byte-identical, 12 Quad9 dig cross-checks, 538-domain nxdomain
       re-verification ~90% true, tail recovery sweep +17 verdicts).
-- [ ] T11: go-output polish (`--color`, SetFooter, Title, AddRowChecked)
-      — color landed; remaining gaps = plan v3 E19.
+- [x] T11: go-output polish (`--color`, SetFooter, Title, AddRowChecked)
+      — done (2026-11-10: colors on scan+replay, footer table/markdown only,
+      runs ledger title+footer, tests pinning all three; exit-2 for bad
+      flag values via the cmdguard sentinel mapping).
 - [ ] T13: nom live progress during long scans (TTY-only) — plan v3 E19.
 - [x] T20: `-o` implementation — resolved-as-decided-against (T1 kept
       `--format`; STACK.md decision log).
