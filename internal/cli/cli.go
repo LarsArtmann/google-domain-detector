@@ -117,9 +117,25 @@ func BuildCLI(
 		v5.WithShort("Rebuild a scan report from the event store, no DNS"),
 	)
 
+	showCmd, showErr := v5.NewCommand("show", ShowFlags{},
+		func(ctx context.Context, _ *RootConfig, f ShowFlags) error {
+			return runShow(ctx, f, v5.ArgsFromContext(ctx), stdout, stderr)
+		},
+		v5.WithShort("Show one domain's latest observation and verdict history from the event store"),
+	)
+
+	runsCmd, runsErr := v5.NewCommand("runs", RunsFlags{},
+		func(ctx context.Context, _ *RootConfig, f RunsFlags) error {
+			return runRuns(ctx, f, stdout, stderr)
+		},
+		v5.WithShort("List recorded scan runs from the event store"),
+	)
+
 	b := v5.NewBuilder(cli)
 	v5.Try(b, scanCmd, cmdErr)
 	v5.Try(b, replayCmd, replayErr)
+	v5.Try(b, showCmd, showErr)
+	v5.Try(b, runsCmd, runsErr)
 
 	if err := b.Build(); err != nil {
 		return nil, err
