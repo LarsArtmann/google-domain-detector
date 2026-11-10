@@ -102,7 +102,7 @@ func BuildCLI(
 		"scan",
 		ScanFlags{},
 		func(ctx context.Context, _ *RootConfig, f ScanFlags) error {
-			return runScan(ctx, f, v5.ArgsFromContext(ctx), stdout, stderr, res, stdin, stdinTTY, version)
+			return runScan(ctx, f, v5.ArgsFromContext(ctx), stdout, stderr, res, stdin, stdinTTY, version, 0)
 		},
 		v5.WithShort("Scan domains for Google Workspace and Google Cloud evidence"),
 		v5.WithExample(
@@ -147,6 +147,9 @@ func BuildCLI(
 // runScan is the command body: stream domains in chunks, load GCP ranges,
 // scan, filter, render. Buffered formats (table/json/csv/...) materialize
 // the full report; jsonl streams each line as its domain completes.
+// chunkSize <= 0 means defaultScanChunkSize; it exists so tests can exercise
+// chunk boundaries without a package-global variable parallel tests could
+// race on.
 func runScan(
 	ctx context.Context,
 	f ScanFlags,
@@ -156,6 +159,7 @@ func runScan(
 	stdin io.Reader,
 	stdinTTY bool,
 	version string,
+	chunkSize int,
 ) error {
 	filter, err := render.ParseFilter(f.Only)
 	if err != nil {
@@ -188,7 +192,7 @@ func runScan(
 		skipDomains = source.Observed
 	}
 
-	feeder, err := newDomainFeeder(args, f.Input, stdin, stdinTTY, skipDomains)
+	feeder, err := newDomainFeeder(args, f.Input, stdin, stdinTTY, skipDomains, chunkSize)
 	if err != nil {
 		return err
 	}

@@ -15,11 +15,12 @@ import (
 	"github.com/larsartmann/google-domain-detector/internal/input"
 )
 
-// scanChunkSize bounds how many domains (and, for buffered formats, their
-// results) sit in memory at once. Every chunk is full except the last one —
-// a short chunk marks the end of the input. A var so tests can exercise
-// chunk boundaries without 4096-domain fixtures.
-var scanChunkSize = 4096
+// defaultScanChunkSize bounds how many domains (and, for buffered formats,
+// their results) sit in memory at once. Every chunk is full except the last
+// one — a short chunk marks the end of the input. Tests shrink it through
+// runScan's chunkSize parameter instead of a package global, so parallel
+// tests cannot race on it.
+const defaultScanChunkSize = 4096
 
 // domainFeeder yields deduplicated domain chunks across all input sources in
 // first-seen order: positional arguments first, then the --input file or
@@ -30,27 +31,34 @@ type domainFeeder struct {
 	current   int
 	seen      map[string]bool
 	skip      map[string]struct{}
+	chunkSize int
 
 	skippedTotal int
 	skippedFirst string
 }
 
 // newDomainFeeder wires up the input sources. skip names domains a
-// --resume run must not re-scan (already observed in its source run). It
-// fails before reading anything when no source exists at all (no arguments,
-// no --input, and a terminal stdin nobody will pipe into).
+// --resume run must not re-scan (already observed in its source run);
+// chunkSize <= 0 means defaultScanChunkSize. It fails before reading
+// anything when no source exists at all (no arguments, no --input, and a
+// terminal stdin nobody will pipe into).
 func newDomainFeeder(
 	args []string,
 	inputPath string,
 	stdin io.Reader,
 	stdinTTY bool,
 	skip map[string]struct{},
+	chunkSize int,
 ) (*domainFeeder, error) {
 	if inputPath == "" && len(args) == 0 && stdinTTY {
 		return nil, usageError(errNoDomainsGiven)
 	}
 
-	f := &domainFeeder{seen: map[string]bool{}, skip: skip}
+	if chunkSize <= 0 {
+		chunkSize = defaultScanChunkSize
+	}
+
+	f := &domainFeeder{seen: map[string]bool{}, skip: skip, chunkSize: chunkSize}
 
 	for _, raw := range args {
 		f.streamers = append(f.streamers, input.NewStreamer(strings.NewReader(raw)))
@@ -81,12 +89,12 @@ func newDomainFeeder(
 // next yields the next chunk. last reports that the input is drained after
 // this chunk, so callers can pin exact input totals up front.
 func (f *domainFeeder) next() (chunk []domain.Domain, last bool, err error) {
-	chunk = make([]domain.Domain, 0, scanChunkSize)
+	chunk = make([]domain.Domain, 0, f.chunkSize)
 
-	for f.current < len(f.streamers) && len(chunk) < scanChunkSize {
+	for f.current < len(f.streamers) && len(chunk) < f.chunkSize {
 		s := f.streamers[f.current]
 
-		for len(chunk) < scanChunkSize {
+		for len(chunk) < f.chunkSize {
 			d, ok := s.Next()
 			if !ok {
 				if streamErr := s.Err(); streamErr != nil {

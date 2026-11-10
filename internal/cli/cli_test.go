@@ -585,14 +585,10 @@ func TestScanInputParityAcrossSources(t *testing.T) {
 // TestScanMultiChunkRunRecordsAndReplays shrinks the chunk size and proves
 // chunked scanning is invisible to the product contract: every domain is
 // scanned exactly once, the event store records all of them, and replay
-// rebuilds the full set.
+// rebuilds the full set. It calls runScan directly so the shrunken chunk
+// size never touches shared state parallel tests could race on.
 func TestScanMultiChunkRunRecordsAndReplays(t *testing.T) {
 	t.Parallel()
-
-	prev := scanChunkSize
-	scanChunkSize = 4
-
-	t.Cleanup(func() { scanChunkSize = prev })
 
 	store := filepath.Join(t.TempDir(), "scans.db")
 
@@ -601,16 +597,25 @@ func TestScanMultiChunkRunRecordsAndReplays(t *testing.T) {
 		domains[i] = fmt.Sprintf("d%d.example", i)
 	}
 
-	stdout, _, err := run(
-		t,
-		&fakeRes{},
-		"",
-		append([]string{"scan", "--no-ranges", "--format", "jsonl", "--event-store", store}, domains...)...)
-	if err != nil {
+	var stdout, stderr bytes.Buffer
+
+	flags := ScanFlags{
+		Format:     "jsonl",
+		Workers:    4,
+		Timeout:    time.Second,
+		Only:       "all",
+		NoRanges:   true,
+		EventStore: store,
+	}
+
+	if err := runScan(context.Background(), flags, domains, &stdout, &stderr,
+		&fakeRes{}, strings.NewReader(""), false, "test", 4); err != nil {
 		t.Fatalf("scan failed: %v", err)
 	}
 
-	lines := strings.Split(strings.TrimRight(stdout, "\n"), "\n")
+	scanOut := stdout.String()
+
+	lines := strings.Split(strings.TrimRight(scanOut, "\n"), "\n")
 	if len(lines) != len(domains) {
 		t.Fatalf("want %d jsonl lines, got %d", len(domains), len(lines))
 	}
