@@ -40,7 +40,7 @@
         ];
         src = packageSrc;
         subPackages = [ "cmd/google-domain-detector" ];
-        vendorHash = "sha256-KmUd9ZQzr7aoYuP1ctJchhVHd2YCaetF+nEGSyLKbug=";
+        vendorHash = "sha256-H8J+/16InmRsskmdEXnDnAa7Hy2eezYptExsnYMVZr8=";
       };
     };
 }
