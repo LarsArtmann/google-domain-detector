@@ -94,12 +94,14 @@ func TestNomProgressLifecycle(t *testing.T) {
 	progress.domainDone(classify.Result{Domain: "slow.com", Err: "timeout", ErrKind: classify.ErrorTimeout})
 	progress.finish(ctx)
 
-	if !strings.Contains(buf.String(), "Scan") {
-		t.Errorf("progress output must name the app workflow, got %q", buf.String())
+	if !strings.Contains(buf.String(), "acme.com") || !strings.Contains(buf.String(), "\u2714") {
+		t.Errorf("progress must render the completed activity, got %q", buf.String())
 	}
 }
 
 func TestRunRejectsBadFlagsAsUsageErrors(t *testing.T) {
+	t.Parallel()
+
 	var stdout, stderr bytes.Buffer
 
 	err := Run(context.Background(), []string{"scan", "--workers", "0"}, &stdout, &stderr, "test", "abc123")
@@ -111,6 +113,8 @@ func TestRunRejectsBadFlagsAsUsageErrors(t *testing.T) {
 }
 
 func TestRunRejectsUnknownCommand(t *testing.T) {
+	t.Parallel()
+
 	var stdout, stderr bytes.Buffer
 
 	if err := Run(context.Background(), []string{"definitely-not-a-command"}, &stdout, &stderr, "test", ""); err == nil {
@@ -220,6 +224,8 @@ func TestNewScanStreamModes(t *testing.T) {
 }
 
 func TestDoctorCheckRangesFeedFromCache(t *testing.T) {
+	//nolint:paralleltest // t.Setenv mutates process env: must not race other tests
+
 	cache := filepath.Join(t.TempDir(), "cloud.json")
 
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
@@ -233,13 +239,14 @@ func TestDoctorCheckRangesFeedFromCache(t *testing.T) {
 
 	t.Setenv("GDD_RANGES_URL", "http://127.0.0.1:1/unreachable")
 	t.Setenv("GDD_RANGES_CACHE", cache)
-
 	if err := checkRangesFeed(context.Background()); err != nil {
 		t.Errorf("readable cache must pass the feed probe: %v", err)
 	}
 }
 
 func TestDoctorCheckRangesFeedReportsFailure(t *testing.T) {
+	//nolint:paralleltest // t.Setenv mutates process env: must not race other tests
+
 	t.Setenv("GDD_RANGES_URL", "http://127.0.0.1:1/unreachable")
 	t.Setenv("GDD_RANGES_CACHE", filepath.Join(t.TempDir(), "absent", "cloud.json"))
 
@@ -249,6 +256,8 @@ func TestDoctorCheckRangesFeedReportsFailure(t *testing.T) {
 }
 
 func TestDefaultRangesCacheIsUnderUserCacheDir(t *testing.T) {
+	t.Parallel()
+
 	cache, err := defaultRangesCache()
 	if err != nil {
 		t.Fatalf("default cache path: %v", err)
