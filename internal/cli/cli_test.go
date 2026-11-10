@@ -74,7 +74,7 @@ func runRes(t *testing.T, res resolve.Resolver, stdin string, args ...string) (s
 		t.Fatalf("BuildCLI failed: %v", err)
 	}
 
-	err = d.ExecuteWithArgs(context.Background(), args)
+	err = executeWithUsageContract(d, context.Background(), args)
 
 	return stdout.String(), stderr.String(), err
 }

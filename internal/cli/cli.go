@@ -63,7 +63,16 @@ func Run(ctx context.Context, args []string, stdout, stderr io.Writer, version, 
 		return err
 	}
 
-	err = d.ExecuteWithArgs(ctx, args)
+	err = executeWithUsageContract(d, ctx, args)
+
+	return err
+}
+
+// executeWithUsageContract runs the built CLI through cmdguard and re-tags
+// flag-value rejections as usage errors (exit 2). Shared by Run and the test
+// seam so both entry points honor the same contract.
+func executeWithUsageContract(d *v5.CLI[RootConfig], ctx context.Context, args []string) error {
+	err := d.ExecuteWithArgs(ctx, args)
 	if isFlagValueError(err) {
 		return usageError(err)
 	}
@@ -72,14 +81,26 @@ func Run(ctx context.Context, args []string, stdout, stderr io.Writer, version, 
 }
 
 // isFlagValueError reports whether err comes from cmdguard's flag-binding
-// validation: ConfigError (wraps enum/validate rejections), EnumError, or
-// DurationError.
+// validation: the value-rejection sentinel family (bad enum, duration bounds,
+// validate-tag min/max/pattern). These are usage errors by definition, so Run
+// re-tags them with the exit-2 contract.
 func isFlagValueError(err error) bool {
-	var configErr *v5.ConfigError
-	var enumErr *v5.EnumError
-	var durationErr *v5.DurationError
+	for _, sentinel := range []error{
+		v5.ErrInvalidEnum,
+		v5.ErrValueOutOfRange,
+		v5.ErrValueTooShort,
+		v5.ErrValueTooLong,
+		v5.ErrValueTooSmall,
+		v5.ErrValueTooLarge,
+		v5.ErrValuePatternMismatch,
+		v5.ErrValueEmpty,
+	} {
+		if errors.Is(err, sentinel) {
+			return true
+		}
+	}
 
-	return errors.As(err, &configErr) || errors.As(err, &enumErr) || errors.As(err, &durationErr)
+	return false
 }
 
 // cliOptions is the root option set: version/commit stamps, the GDD_ env
