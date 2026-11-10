@@ -9,23 +9,35 @@ import (
 	"github.com/larsartmann/google-domain-detector/internal/render"
 )
 
-// TestFormatEnumsMatchRegistry pins every --format flag's values tag to
-// render.SupportedFormats(), which is derived from go-output's renderer
-// registries at runtime. Drift in either direction fails the build: a
-// blank import dropped (a format silently disappears) or a renderer added
-// (a flag rejects a working format) must be reconciled with the tags.
+// formatContract is the product decision for which formats --format offers:
+// table-shaped reports via render.Table (table, csv, tsv, markdown, yaml,
+// toml) plus the full-evidence DTO renderers (json, jsonl).
+var formatContract = []string{"csv", "json", "jsonl", "markdown", "table", "toml", "tsv", "yaml"}
+
+// TestFormatEnumsMatchRegistry guards the --format enum in both directions:
+// every contract format must exist in go-output's renderer registries (a
+// dropped blank import would silently remove a format — fail the build),
+// and every flag's values tag must carry exactly the contract (product
+// drift is caught, not absorbed). Formats registered by other in-process
+// consumers of go-output (cmdguard's tree/markup batteries) are bystanders:
+// their presence in the registry neither requires nor forbids a flag entry.
 func TestFormatEnumsMatchRegistry(t *testing.T) {
 	t.Parallel()
 
-	want := render.SupportedFormats()
-	wantTokens := make([]string, len(want))
-	for i, f := range want {
-		wantTokens[i] = string(f)
+	registry := map[string]bool{}
+	for _, f := range render.SupportedFormats() {
+		registry[string(f)] = true
 	}
 
-	slices.Sort(wantTokens)
+	want := slices.Clone(formatContract)
+	slices.Sort(want)
+	wantJoined := strings.Join(want, ",")
 
-	wantJoined := strings.Join(wantTokens, ",")
+	for _, token := range formatContract {
+		if !registry[token] {
+			t.Errorf("format %q is in the --format contract but no renderer is registered — a blank import was likely dropped", token)
+		}
+	}
 
 	for _, tc := range []struct {
 		typeName string
@@ -39,11 +51,11 @@ func TestFormatEnumsMatchRegistry(t *testing.T) {
 			t.Fatalf("%s has no --format values tag", tc.typeName)
 		}
 
-		gotTokens := strings.Split(tc.tag, ",")
-		slices.Sort(gotTokens)
+		got := slices.Clone(strings.Split(tc.tag, ","))
+		slices.Sort(got)
 
-		if got := strings.Join(gotTokens, ","); got != wantJoined {
-			t.Errorf("%s --format enum %q drifted from the registry %q — update the tag or the renderer set", tc.typeName, tc.tag, wantJoined)
+		if joined := strings.Join(got, ","); joined != wantJoined {
+			t.Errorf("%s --format enum %q drifted from the contract %q — update the tag or the contract", tc.typeName, tc.tag, wantJoined)
 		}
 	}
 }

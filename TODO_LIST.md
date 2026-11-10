@@ -141,8 +141,10 @@ which is paperwork only the account holder can sign:
       counts and reports dropped observations on Close.
 - [x] cmdguard extras: WithCLICommit in nix build; WithExample/WithLong on
       scan — done (plan v2 T4, commit 6fc85ab).
-- [ ] RegisterUnknownRenderer(FormatJSON, dto) to dissolve the cli.go JSON
-      special-case.
+- [x] RegisterUnknownRenderer(FormatJSON, dto) to dissolve the cli.go JSON
+      special-case — done: render's init installs DTO renderers for json +
+      jsonl over serialization's generic ones; renderResults dispatches via
+      output.RenderUnknown (E26).
 - [ ] Lint-cleanup pass: pre-existing golangci warnings (err113,
       wrapcheck, varnamelen, tagalign, cyclop) to zero — plan v3 E24
       (gate G5: after sibling cli/render lane lands).
@@ -174,8 +176,10 @@ which is paperwork only the account holder can sign:
       scan.Options.OnDomainStart hook (nil-safe) drives the running set.
 - [x] T20: `-o` implementation — resolved-as-decided-against (T1 kept
       `--format`; STACK.md decision log).
-- [ ] T22: registry-derived format enum, drift-proof (FormatsForShape)
-      — plan v3 E27 (gate G5).
+- [x] T22: registry-derived format enum, drift-proof — done (2026-11-10):
+      render.SupportedFormats() derives from the go-output registries;
+      TestFormatEnumsMatchRegistry pins all three --format tags to the
+      contract and fails on a dropped blank import (E27).
 - [ ] T25: error-family exit codes (75 fetch / 65 corrupt) in
       internal/ranges — plan v3 E30.
 - [ ] T27: ROADMAP parking of deferred tail items — plan v3 E31.
