@@ -57,7 +57,7 @@ func runRuns(ctx context.Context, f RunsFlags, stdout, stderr io.Writer) error {
 			status += " (resumed)"
 		}
 
-		table.AddRow([]string{
+		if err := table.AddRowChecked([]string{
 			shortRunID(run.RunID),
 			started,
 			status,
@@ -66,13 +66,19 @@ func runRuns(ctx context.Context, f RunsFlags, stdout, stderr io.Writer) error {
 			fmt.Sprintf("%d", run.Counts.GCPCertain),
 			fmt.Sprintf("%d", run.Counts.Errors),
 			run.Wave,
-		})
+		}); err != nil {
+			return fmt.Errorf("add row for run %s: %w", run.RunID, err)
+		}
 	}
+
+	table.SetFooter([]string{fmt.Sprintf("%d run(s)", len(runs)), "", "", "", "", "", "", ""})
 
 	fmt.Fprintf(stderr, "%d run(s); rebuild one with: %s replay --event-store %s --run <id>\n",
 		len(runs), Name, f.EventStore)
 
-	return output.RenderTable(table, output.FormatTable, output.RenderOptions{Writer: stdout})
+	renderOpts := output.RenderOptions{Writer: stdout, Title: "Scan Runs"}
+
+	return output.RenderTable(table, output.FormatTable, renderOpts)
 }
 
 // shortRunID keeps the table readable: a run ID's first label pair is unique
