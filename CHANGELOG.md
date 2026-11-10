@@ -42,6 +42,28 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - Library audit docs: `docs/review/libs/` — one utilization report per
   LarsArtmann library (22 audited) with adopt/skip verdicts and scored
   opportunities.
+- Streaming output: `--format jsonl` on `scan` now writes each result the
+  moment its domain completes (completion order) instead of after the whole
+  run — a canceled run keeps every line already written; domains never
+  started emit nothing. A 50k-domain smoke run holds ~40 MiB RSS flat.
+- Streaming input: input parsing is chunked (4096 domains at a time, plain
+  lists and CSV alike), so million-row inputs never sit fully in memory and
+  jsonl runs are bounded end to end. `replay --format jsonl` streams
+  straight out of the journal walk — a whole-TLD store never materializes.
+- Journal-based resume: `scan --resume <runID>|latest --event-store FILE`
+  skips every domain that run already observed (interrupted runs included)
+  and starts a new run linked back via `resumed_from` in `scan.started`.
+  The journal IS the checkpoint — no half-written output files.
+- Trustworthy recording: the event-store sink retries each observation
+  (3 attempts, backoff) and, if the store stays broken, fails loudly naming
+  the exact count of dropped observations — never a silent journal gap.
+  Ctrl-C mid-scan drains and still completes the run record. The journal is
+  benchmark-trusted to 100k events (append ~5.3k/s, replay ~51k/s, 125 MiB
+  db) — extrapolated ~8 min append / ~3 GiB for a 2.5M-domain zone.
+- `show <domain>` and `runs` commands: query the event store's read models —
+  full observation history per domain and the run ledger (started, counts,
+  resumed-from links). The CQRS loop is closed: journal in, read models out.
+- `--color auto|always|never` on `scan` for table output.
 
 - `scan` command: batch DNS probe of apex + www per domain (MX, TXT/SPF,
   google-site-verification, CNAME, A/AAAA, NS, conditional DKIM) behind a
