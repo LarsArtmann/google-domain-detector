@@ -11,7 +11,7 @@ project.
 | --- | -------- | ------------------------------------------ | ----- | --------------- | ------------------ |
 | .uk | Nominet  | .UK Zone Files Access Licence              | free  | `nominet-uk.md` | draft ready        |
 | .de | DENIC    | (research pending)                         | (tbd) | `denic-de.md`   | researching        |
-| .ch | SWITCH   | none — open data via AXFR + free TSIG keys | free  | `switch-ch.md`  | instructions ready |
+| .ch | SWITCH   | none — open data: public TSIG keys + AXFR   | free  | `switch-ch.md`  | ready — no owner action |
 
 ## Constraint review (what the licences permit)
 
@@ -29,5 +29,9 @@ analysis, not the zone file — keep it that way in any published results.
 1. .uk: send the email in `nominet-uk.md` to registrars@nominet.uk, then
    complete MiTek ID verification when invited; account details arrive via
    Files.com.
-2. .de / .ch: follow the steps in their draft once research lands.
-3. Track follow-ups in TODO_LIST.md ("Whole-TLD coverage" section).
+2. .ch: NO owner action needed — public TSIG keys and the exact dig
+   command are in `switch-ch.md` (verified against zonedata.switch.ch);
+   the only decision is whether the research-purpose clause covers the
+   intended use.
+3. .de: follow the steps in `denic-de.md` once research lands.
+4. Track follow-ups in TODO_LIST.md ("Whole-TLD coverage" section).
