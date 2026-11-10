@@ -174,6 +174,8 @@ first-party lib is considered.
   `--no-verify` for docs-only commits. Do NOT follow
   go-version-auto-configure's "major.minor only" advice here - `go mod
   tidy` reverts it; it cannot stick while the cqrs pins are current.
+- Session start: run `gh run list --limit 3` before acting — the v0.1.0
+  tag sat on a commit whose CI was red (soak timeout) for hours unnoticed.
 
 ## Git remotes
 

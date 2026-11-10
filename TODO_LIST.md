@@ -217,9 +217,13 @@ which is paperwork only the account holder can sign:
 
 ## Harvested from the 06-58 scale-tier report
 
-- [ ] Redo the old-vs-new streaming memory A/B (PID-safe; the first
+- [x] Redo the old-vs-new streaming memory A/B (PID-safe; the first
       attempt was killed by a pkill pattern match) and record the table
-      (plan v3 E6).
+      (plan v3 E6) — done 2026-11-10: VmHWM A/B in
+      reports/2026-11-10-e6-memory-ab/README.md; current jsonl flat
+      (32 136 → 32 064 KB at 3 645 → 50 000), buffered json linear
+      (28 080 → 41 624 KB, ~290 B/domain → ~700 MiB at 2.5M scale).
+      Worktree removed, artifacts archived from /tmp.
 - [ ] ErrNoRuns error should name the store path; eyeball the describe
       battery output now that --resume/--wave exist (plan v3 E31).
 
@@ -233,20 +237,24 @@ which is paperwork only the account holder can sign:
 
 ## Harvested from the 13-27 v0.1.0-release report (both sessions)
 
-- [ ] Scratch-dir `go get github.com/larsartmann/google-domain-detector@v0.1.0`
-      pull-check once DNS recovers (proxy `.info` already verified).
-- [ ] pkg.go.dev propagation spot-check (fetch the pkg page) once DNS
-      is stable.
+- [x] Scratch-dir `go get github.com/larsartmann/google-domain-detector@v0.1.0`
+      pull-check once DNS recovers (proxy `.info` already verified) —
+      done: `go get` + `go run ...@v0.1.0 version` compile and run from
+      the proxy copy.
+- [x] pkg.go.dev propagation spot-check (fetch the pkg page) once DNS
+      is stable — done: page live at v0.1.0 with full README, MIT
+      license, directories rendered.
 - [ ] Consumer propagation sweep for v0.1.0 (go-ecosystem-upgrade skill;
       only relevant if external consumers exist — likely none yet).
-- [ ] `git worktree remove /tmp/gdd-pret7` after the E6 memory A/B
-      finishes (sibling session's pre-T7 worktree).
+- [x] `git worktree remove /tmp/gdd-pret7` after the E6 memory A/B
+      finishes (sibling session's pre-T7 worktree) — done 2026-11-10.
 - [ ] Unbound tuning experiment (threads/outgoing-range) before the E9
       throughput bench (census lane).
 - [ ] Nightly soak CI job decision (runs the race suite with a generous
       timeout on a schedule instead of gating every push) — owner call.
-- [ ] Add `gh run list` to the session-start checklist so CI status on
-      recent pushes is seen immediately (the red-on-tag lesson).
+- [x] Add `gh run list` to the session-start checklist so CI status on
+      recent pushes is seen immediately (the red-on-tag lesson) —
+      adopted in project AGENTS.md (Gotchas).
 
 ## Harvested from the 01-12 and 06-09 reports (docs-gates audit-all)
 
