@@ -17,10 +17,10 @@ import (
 type RunSummary struct {
 	//cqrs-lint:ignore(A032) journal-derived summaries are a serialized data surface; branded IDs stop at the command/stream boundary (goal-shaped-app precedent)
 	RunID       string
-	StartedAt  time.Time
+	StartedAt   time.Time
 	Completed   bool
 	ResumedFrom string
-	Counts     classify.Counts
+	Counts      classify.Counts
 }
 
 // Replay is the rebuild-from-events result: the per-domain observations of
@@ -199,7 +199,7 @@ func walkRuns(ctx context.Context, store event.Store, runFilter string) (Replay,
 // set holds only domain-name keys, so memory stays proportional to the
 // run's domains, not its evidence.
 type ResumeSource struct {
-	RunID string
+	RunID    string
 	Observed map[string]struct{}
 }
 

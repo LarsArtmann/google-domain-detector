@@ -15,7 +15,9 @@ import (
 
 	v5 "github.com/larsartmann/cmdguard/v5/pkg/cmdguard/v5"
 
+	"github.com/larsartmann/google-domain-detector/internal/classify"
 	"github.com/larsartmann/google-domain-detector/internal/resolve"
+	"github.com/larsartmann/google-domain-detector/internal/scanstore"
 )
 
 // fakeRes is the same scripted resolver shape as scan's, reduced to what the
@@ -617,4 +619,119 @@ func TestScanMultiChunkRunRecordsAndReplays(t *testing.T) {
 	if !strings.Contains(replayStderr, fmt.Sprintf("%d domains", len(domains))) {
 		t.Errorf("replay summary missing the total:\n%s", replayStderr)
 	}
+}
+
+// TestScanResumeSkipsObservedDomains pins 9.5: a --resume run scans only
+// domains its source run never observed, journals exactly those, and links
+// back to the source run in scan.started.
+func TestScanResumeSkipsObservedDomains(t *testing.T) {
+	t.Parallel()
+
+	store := filepath.Join(t.TempDir(), "scans.db")
+
+	_, firstStderr, err := run(t, &fakeRes{}, "", "scan", "--no-ranges", "--event-store", store,
+		"--format", "jsonl", "a.example", "b.example", "c.example")
+	if err != nil {
+		t.Fatalf("first scan failed: %v", err)
+	}
+
+	firstRun := stderrRunID(t, firstStderr)
+
+	stdout, resumeStderr, err := run(t, &fakeRes{}, "", "scan", "--no-ranges", "--event-store", store,
+		"--resume", firstRun, "--format", "jsonl", "a.example", "b.example", "c.example", "d.example")
+	if err != nil {
+		t.Fatalf("resume scan failed: %v", err)
+	}
+
+	lines := strings.Split(strings.TrimRight(stdout, "\n"), "\n")
+	if len(lines) != 1 || !strings.Contains(lines[0], "d.example") {
+		t.Fatalf("resume must scan only the unobserved domain, got:\n%s", stdout)
+	}
+
+	secondRun := stderrRunID(t, resumeStderr)
+	if secondRun == firstRun {
+		t.Fatal("resume must start a NEW run, not append to the source")
+	}
+
+	ctx := context.Background()
+	sys, err := scanstore.Boot(ctx, store)
+	if err != nil {
+		t.Fatalf("boot store: %v", err)
+	}
+
+	defer func() { _ = sys.Close() }()
+
+	replay, err := scanstore.ReplayJournal(ctx, sys, secondRun)
+	if err != nil {
+		t.Fatalf("replay resumed run: %v", err)
+	}
+
+	if len(replay.Results) != 1 || replay.Results[0].Domain != "d.example" {
+		t.Errorf("resumed run journal = %v, want only d.example", replay.Results)
+	}
+
+	for _, r := range replay.Runs {
+		if r.RunID == secondRun && r.ResumedFrom != firstRun {
+			t.Errorf("resumed run links to %q, want %q", r.ResumedFrom, firstRun)
+		}
+	}
+}
+
+// TestScanResumeOfInterruptedRun pins 9.6: a run that started and recorded
+// observations but never completed is a valid resume source — its observed
+// domains are skipped, the rest are scanned.
+func TestScanResumeOfInterruptedRun(t *testing.T) {
+	t.Parallel()
+
+	ctx := context.Background()
+	store := filepath.Join(t.TempDir(), "scans.db")
+
+	writer, err := scanstore.Open(ctx, store)
+	if err != nil {
+		t.Fatalf("open store: %v", err)
+	}
+
+	recorder := scanstore.NewRecorder(writer)
+
+	interrupted := scanstore.NewRunID()
+
+	if err := recorder.StartScan(ctx, interrupted, "", 3, 0, 8); err != nil {
+		t.Fatalf("start interrupted run: %v", err)
+	}
+
+	for _, name := range []string{"a.example", "b.example"} {
+		if err := recorder.Observe(ctx, interrupted, classify.Result{Domain: name}); err != nil {
+			t.Fatalf("observe %s: %v", name, err)
+		}
+	}
+
+	// No CompleteScan: the run stays interrupted.
+
+	if err := writer.GracefulClose(ctx); err != nil {
+		t.Fatalf("close writer: %v", err)
+	}
+
+	stdout, _, err := run(t, &fakeRes{}, "", "scan", "--no-ranges", "--event-store", store,
+		"--resume", interrupted.Get(), "--format", "jsonl", "a.example", "b.example", "c.example")
+	if err != nil {
+		t.Fatalf("resume of interrupted run failed: %v", err)
+	}
+
+	if lines := strings.Split(strings.TrimRight(stdout, "\n"), "\n"); len(lines) != 1 || !strings.Contains(lines[0], "c.example") {
+		t.Errorf("interrupted resume must scan only c.example, got:\n%s", stdout)
+	}
+}
+
+// stderrRunID extracts the run ID from the scan command's stderr hint.
+func stderrRunID(t *testing.T, stderr string) string {
+	t.Helper()
+
+	const marker = "run "
+
+	fields := strings.Fields(strings.Split(stderr, " recorded")[0])
+	if len(fields) == 0 {
+		t.Fatalf("no run hint in stderr:\n%s", stderr)
+	}
+
+	return fields[len(fields)-1]
 }

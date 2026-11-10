@@ -79,6 +79,7 @@ func Domain() system.DomainConfig {
 									InputDomain: cmd.InputDomain,
 									Skipped:     cmd.Skipped,
 									Workers:     cmd.Workers,
+									ResumedFrom: cmd.ResumedFrom,
 								}, event.WithSchemaVersion(1))
 							if err != nil {
 								return nil, err
