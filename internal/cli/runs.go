@@ -2,7 +2,6 @@ package cli
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"io"
 	"strconv"
@@ -22,7 +21,7 @@ type RunsFlags struct {
 // with its status and verdict tally. No DNS, no journal walk.
 func runRuns(ctx context.Context, f RunsFlags, stdout, stderr io.Writer) error {
 	if f.EventStore == "" {
-		return usageError(errors.New("--event-store is required (or set GDD_EVENT_STORE)"))
+		return usageError(errEventStoreRequired)
 	}
 
 	sys, err := scanstore.Open(ctx, f.EventStore)
@@ -38,7 +37,7 @@ func runRuns(ctx context.Context, f RunsFlags, stdout, stderr io.Writer) error {
 	}
 
 	if len(runs) == 0 {
-		return fmt.Errorf("no scan runs found in %s", f.EventStore)
+		return fmt.Errorf("%s: %w", f.EventStore, errNoRuns)
 	}
 
 	table := output.NewTable([]string{"Run", "Started", "Status", "Domains", "Workspace", "GCP", "Errors", "Wave"})
@@ -46,7 +45,9 @@ func runRuns(ctx context.Context, f RunsFlags, stdout, stderr io.Writer) error {
 	for _, run := range runs {
 		started := "unknown"
 		if !run.StartedAt.IsZero() {
-			started = run.StartedAt.Local().Format(time.DateTime)
+			// The operator's wall clock, not a fixed zone: the ledger is
+			// read by humans sitting at this machine.
+			started = run.StartedAt.Local().Format(time.DateTime) //nolint:gosmopolitan // deliberate local-time rendering
 		}
 
 		status := "started"
@@ -63,7 +64,7 @@ func runRuns(ctx context.Context, f RunsFlags, stdout, stderr io.Writer) error {
 			started,
 			status,
 			strconv.Itoa(run.Counts.Scanned),
-			fmt.Sprintf("%d/%d", run.Counts.WorkspaceCertain, run.Counts.WorkspaceLikely),
+			strconv.Itoa(run.Counts.WorkspaceCertain) + "/" + strconv.Itoa(run.Counts.WorkspaceLikely),
 			strconv.Itoa(run.Counts.GCPCertain),
 			strconv.Itoa(run.Counts.Errors),
 			run.Wave,
@@ -74,7 +75,7 @@ func runRuns(ctx context.Context, f RunsFlags, stdout, stderr io.Writer) error {
 
 	table.SetFooter([]string{fmt.Sprintf("%d run(s)", len(runs)), "", "", "", "", "", "", ""})
 
-	fmt.Fprintf(stderr, "%d run(s); rebuild one with: %s replay --event-store %s --run <id>\n",
+	_, _ = fmt.Fprintf(stderr, "%d run(s); rebuild one with: %s replay --event-store %s --run <id>\n",
 		len(runs), Name, f.EventStore)
 
 	renderOpts := output.RenderOptions{Writer: stdout, Title: "Scan Runs"}
@@ -85,8 +86,10 @@ func runRuns(ctx context.Context, f RunsFlags, stdout, stderr io.Writer) error {
 // shortRunID keeps the table readable: a run ID's first label pair is unique
 // enough for a list, the full ID stays one --run flag away.
 func shortRunID(runID string) string {
-	if len(runID) > 12 {
-		return runID[:12] + "…"
+	const shortRunIDLength = 12
+
+	if len(runID) > shortRunIDLength {
+		return runID[:shortRunIDLength] + "…"
 	}
 
 	return runID
