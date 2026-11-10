@@ -206,7 +206,7 @@ which is paperwork only the account holder can sign:
       found stale negative-cache lies at ~92% of the sampled bucket; D3's
       tail bar is only assessable on unbound-backed runs. (plan v3 E7/E10
       feed this.)
-- [ ] cli coverage 69% → 90% (plan v3 E33).
+- [ ] Plan E33 cli coverage 69% → 90%.
 - [ ] Fuzz the input parser (CSV quoting/encoding edges) — plan v3 E33.
 - [ ] IPv6 resolver-address handling check (`--resolver` only IPv4-tested)
       — plan v3 E31.
