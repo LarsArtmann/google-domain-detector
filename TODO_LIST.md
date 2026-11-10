@@ -185,9 +185,12 @@ which is paperwork only the account holder can sign:
       render.SupportedFormats() derives from the go-output registries;
       TestFormatEnumsMatchRegistry pins all three --format tags to the
       contract and fails on a dropped blank import (E27).
-- [ ] T25: error-family exit codes (75 fetch / 65 corrupt) in
-      internal/ranges — plan v3 E30.
-- [ ] T27: ROADMAP parking of deferred tail items — plan v3 E31.
+- [x] T25: error-family exit codes (75 fetch / 65 corrupt) in
+      internal/ranges — done: ranges.Error carries the kind and satisfies
+      cmdguard's ExitCoder structurally; doctor names the family (E30).
+- [x] T27: ROADMAP parking of deferred tail items — done: ROADMAP.md
+      created (direction + parked ideas incl. CAA watch, compaction,
+      lead scoring, DNSSEC-aware NXDOMAIN).
 - [x] Mermaid compile-check of the plan graph; fix if broken — done: mmdc
       12.0.0 compiles the graph clean to SVG (2026-11-10).
 
