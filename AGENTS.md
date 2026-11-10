@@ -83,6 +83,21 @@ first-party lib is considered.
 
 ## Gotchas
 
+- **G4 verdict (2026-11-10, plan v3):** the journal is trustworthy to at
+  least 100k events — append 18.7s (5 345/s), replay 2.0s (51 035/s), db
+  125 MiB, heap 15 MiB (`TestJournalOneHundredThousandEvents`). Extrapolated
+  to 2.5M domains: ~8 min append, ~3 GiB db, ~50s replay. Sink retries each
+  observation 3× with backoff and reports the exact dropped count on Close;
+  Ctrl-C drains and still completes the run record (pinned by
+  `TestScanCancelMidRunDrainsEventStore`). Whole-TLD runs are unblocked.
+- **A distressed local resolver can LIE NXDOMAIN:** during the 2026-11-10
+  T5 validation, a system resolver (127.0.0.1) under concurrent bulk load
+  returned NXDOMAIN for live domains (14/14 sampled false). stdlib
+  `net.Resolver` cannot distinguish an authoritative NXDOMAIN from a lying
+  cache, and the tool deliberately never retries NXDOMAIN. For bulk runs,
+  use `--resolver` against a trustworthy server or the user-scoped unbound
+  (reports/census/unbound/; 127.0.0.1:5353) — do NOT bulk-scan through a
+  loaded shared cache.
 - `net.ParseIP` returns 16-byte v4-in-6 form; `ranges.Set.Contains` unmaps
   (`addr.Is4In6() → Unmap()`) or v4 lookups silently check the v6 list.
 - cmdguard battery commands (`version`, `doctor`, `describe`) print to the

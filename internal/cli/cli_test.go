@@ -860,3 +860,59 @@ func TestRunsEmptyStoreFails(t *testing.T) {
 		t.Fatal("runs on a store without runs must fail")
 	}
 }
+
+// TestScanCancelMidRunDrainsEventStore pins the G4 formality: Ctrl-C
+// mid-scan still records every completed observation, CLOSES the run
+// (CompleteScan survives the canceled context), and the partial run
+// replays — the journal is a valid checkpoint to --resume from.
+func TestScanCancelMidRunDrainsEventStore(t *testing.T) {
+	t.Parallel()
+
+	store := filepath.Join(t.TempDir(), "scans.db")
+
+	var stdout, stderr bytes.Buffer
+
+	d, err := BuildCLI(&stdout, &stderr, "test", "", &hangRes{&fakeRes{}}, strings.NewReader(""), false)
+	if err != nil {
+		t.Fatalf("BuildCLI failed: %v", err)
+	}
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	time.AfterFunc(100*time.Millisecond, cancel)
+
+	if err := d.ExecuteWithArgs(ctx, []string{"scan", "--no-ranges", "--format", "jsonl", "--event-store", store, "fast1.com", "slow.com"}); err != nil {
+		t.Fatalf("canceled scan must still finish cleanly: %v", err)
+	}
+
+	if !strings.Contains(stderr.String(), "run ") || !strings.Contains(stderr.String(), "recorded") {
+		t.Fatalf("event store hint missing from stderr:\n%s", stderr.String())
+	}
+
+	reader, err := scanstore.Boot(context.Background(), store)
+	if err != nil {
+		t.Fatalf("boot store: %v", err)
+	}
+
+	defer func() { _ = reader.Close() }()
+
+	replay, err := scanstore.ReplayJournal(context.Background(), reader, "")
+	if err != nil {
+		t.Fatalf("replay partial run: %v", err)
+	}
+
+	if len(replay.Results) != 2 {
+		t.Fatalf("partial run must journal both domains (completed + canceled), got %d: %+v", len(replay.Results), replay.Results)
+	}
+
+	for _, run := range replay.Runs {
+		if !run.Completed {
+			t.Errorf("run must be completed despite cancellation: %+v", run)
+		}
+
+		if run.Counts.Scanned != 2 || run.Counts.Errors != 1 {
+			t.Errorf("run counts = %+v, want 2 scanned / 1 error (canceled slow)", run.Counts)
+		}
+	}
+}
