@@ -251,6 +251,8 @@ github.com/larsartmann/go-output/markdown v0.38.7 h1:lQfKxQv4OPpz16I0xdnRFi52vA7
 github.com/larsartmann/go-output/markdown v0.38.7/go.mod h1:VAYtBOPszDV7clj9Utr3TrhCL+vKc/iDeYdJ0lL4JV8=
 github.com/larsartmann/go-output/markup v0.38.7 h1:/oxltYE2WZYb+GGMvmACeLPmFED8rZ/QhPmx8XevXAE=
 github.com/larsartmann/go-output/markup v0.38.7/go.mod h1:fVhwgIHJ5vODp+qxd/zqxP3gc0bETlcAUrwhHB3/73Q=
+github.com/larsartmann/go-output/nom v0.38.7 h1:W+DKENu4QTe/I88EO/X3GA33xH1ksoBu3UM0DNrAPEY=
+github.com/larsartmann/go-output/nom v0.38.7/go.mod h1:UXAfHqRKT3bQ1RMyk4dnnQyIFSM+pfT9/s1gAa+3Y8c=
 github.com/larsartmann/go-output/plantuml v0.38.7 h1:OLHA9IcafVYQEFYt0i2N8IkvmY9zQvL2yEdrk1z8YYw=
 github.com/larsartmann/go-output/plantuml v0.38.7/go.mod h1:DRK7Wdx+7Y9YIHVqfLPbIln5rb6jGAgKaKw2pSG/Qok=
 github.com/larsartmann/go-output/serialization v0.38.7 h1:InVlTyowEo24lT8nk2m2Y90Qc19ZAOuJSsKznqqJZ8c=

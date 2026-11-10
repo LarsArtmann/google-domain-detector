@@ -85,6 +85,7 @@ require (
 	github.com/larsartmann/go-output/escape v0.38.7 // indirect
 	github.com/larsartmann/go-output/graph v0.38.7 // indirect
 	github.com/larsartmann/go-output/markup v0.38.7 // indirect
+	github.com/larsartmann/go-output/nom v0.38.7 // indirect
 	github.com/larsartmann/go-output/plantuml v0.38.7 // indirect
 	github.com/larsartmann/go-output/tree v0.38.7 // indirect
 	github.com/larsartmann/go-sse v0.6.2 // indirect

@@ -33,6 +33,11 @@ type Options struct {
 	// concurrently from worker goroutines. It must not block unduly: slow
 	// sinks stall the whole pool.
 	OnResult func(classify.Result)
+	// OnDomainStart, when set, is invoked once per domain as its lookup
+	// begins (before the result lands), possibly concurrently. It must not
+	// block unduly: slow callbacks stall the whole pool. Progress UIs use
+	// it to show domains as running before they finish.
+	OnDomainStart func(domain string)
 }
 
 // Run scans every domain with a bounded worker pool and returns results in
@@ -63,6 +68,10 @@ func Run(ctx context.Context, res resolve.Resolver, domains []domain.Domain, opt
 	for range workers {
 		wg.Go(func() {
 			for i := range queue {
+				if opts.OnDomainStart != nil {
+					opts.OnDomainStart(domains[i].String())
+				}
+
 				dctx, cancel := context.WithTimeout(ctx, opts.Timeout)
 				results[i] = ScanDomain(dctx, res, domains[i], opts)
 
