@@ -232,6 +232,6 @@ is designed but untested); SQLite journal behavior at whole-TLD scale
 
 ---
 
-*Point-in-time snapshot at commit `408cf57` (auto-commit daemon; source tree
+_Point-in-time snapshot at commit `408cf57` (auto-commit daemon; source tree
 clean). Artifacts: journal `/tmp/ch-scans.db`, scan `/tmp/ch-scan.json`,
-replay `/tmp/ch-replay.json`, buildflow log `/tmp/bf-final2.log`.*
+replay `/tmp/ch-replay.json`, buildflow log `/tmp/bf-final2.log`._

@@ -8,6 +8,7 @@ push). The prior audit run is covered by
 ## Scope line — verified vs not verified
 
 **Verified, with commands:**
+
 - Backlog freshness BEFORE planning: `--format` enum still 5 values
   (cli.go:40), no `validate:` tags, go-atomic-write still `// indirect`
   (go.mod), no resume/streaming in `internal/cli`, CHANGELOG `[Unreleased]`
@@ -19,6 +20,7 @@ push). The prior audit run is covered by
   A daemon commit `408cf57` landed after; tree clean at report time.
 
 **NOT verified / not done:**
+
 - The 2 failing pre-commit steps in commit attempt #2 were never identified
   (output truncated; the daemon had already committed the content, so I
   moved on after the direct docs-gates pass).
@@ -119,9 +121,10 @@ push). The prior audit run is covered by
 
 ## f) Up to 50 things to get done next
 
-*The plan file owns the detailed list; this is the ranked digest.*
+_The plan file owns the detailed list; this is the ranked digest._
 
 **The spine (start here, G1 permitting):**
+
 1. T1: `--format` vs `-o` decision + STACK.md record (30m)
 2. T2: widen `--format` enum +yaml,toml,jsonl (45m)
 3. T3: go-atomic-write `WriteWithPerm` + UA header (45m)
@@ -154,22 +157,22 @@ push). The prior audit run is covered by
 24. T24: CSV enrichment (60m)
 25. T25: error-family exit codes (30m)
 26. T26: infra bundle (vendorHash.nix, describe test, freshness guard,
-   docs-gates cache key) (90m)
+docs-gates cache key) (90m)
 27. T27: ROADMAP parking (30m)
 
 **Process debt from this run:**
 28. Diagnose the 2 unidentified failing pre-commit steps from attempt #2
-    (one command; do it before the next commit)
+(one command; do it before the next commit)
 29. Mermaid compile-check of the plan graph; fix if broken
 30. Investigate docs-gates verdict flip-flops (red in hook → green direct →
-    red → green) — cache keying or file-set sensitivity
+red → green) — cache keying or file-set sensitivity
 31. Decide a policy for daemon-swept mixed commits (split vs amend) and
-    record it in AGENTS.md
+record it in AGENTS.md
 32. `go mod tidy` + `nix-hash-fix` once the concurrent session stabilizes
-    (already in TODO_LIST)
+(already in TODO_LIST)
 33. If the public push of in-flight scanstore code was unwanted: decide
-    whether to force-with-lease revert the github mirror (needs your call;
-    history rewrite — I will not do it unasked)
+whether to force-with-lease revert the github mirror (needs your call;
+history rewrite — I will not do it unasked)
 
 ## g) Questions I cannot answer myself
 
@@ -188,4 +191,4 @@ push). The prior audit run is covered by
 
 ---
 
-*Point-in-time snapshot. WAITING FOR INSTRUCTIONS.*
+_Point-in-time snapshot. WAITING FOR INSTRUCTIONS._

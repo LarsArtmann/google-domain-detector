@@ -15,6 +15,7 @@ yaml` (correctly rejected), buildflow full gate **exit 0** at 00:35 CET,
 headless Chromium render (palette/structure verified programmatically).
 
 **NOT verified / could not verify:**
+
 - Project-side `file:line` citations were pinned against the tree
   **before** a concurrent session landed `internal/scanstore` +
   `internal/cli/replay.go`; later lint output shows cli.go line numbers
@@ -116,13 +117,13 @@ headless Chromium render (palette/structure verified programmatically).
    - `go-retry.md`: wrong predicate API (claimed `ShouldRetry`; real:
      `Config.IsRetryable`/`WithIsRetryable`, default
      `errorfamily.IsRetryable`). Rewritten.
-   **Root cause:** writing ahead of confirmed research — content produced
-   from plausible recall, which is hallucination with citations. **Caught
-   by:** my own post-hoc claim-verification pass (this is why it shipped
-   correct), but the correct order is verify-then-write, never
-   write-then-hope. Notably the verdicts survived (all six were
-   do-not-adopt for fit reasons that held); the capability descriptions were
-   what lied.
+     **Root cause:** writing ahead of confirmed research — content produced
+     from plausible recall, which is hallucination with citations. **Caught
+     by:** my own post-hoc claim-verification pass (this is why it shipped
+     correct), but the correct order is verify-then-write, never
+     write-then-hope. Notably the verdicts survived (all six were
+     do-not-adopt for fit reasons that held); the capability descriptions were
+     what lied.
 2. **Two subagents abandoned**: akiko (httputil) and celeste
    (codec/sse/datastar) were never stopped or status-checked; if their
    reports arrived after my rewrites, they were never cross-consulted.
@@ -156,6 +157,7 @@ headless Chromium render (palette/structure verified programmatically).
 ## f) Up to 50 things to get done next
 
 **Implement audit opportunities (the Pareto set):**
+
 1. Widen `--format` enum to `table,json,csv,tsv,markdown,yaml,toml,jsonl` (S) — internal/cli/cli.go flag tag.
 2. Promote go-atomic-write to direct dep; replace `writeCache` body with `WriteWithPerm(path, data, 0o600)` (S) — NOT `WriteIfChanged` (mtime-TTL trap).
 3. `validate:"min=1,max=512"` on `Workers` flag (S).
@@ -224,4 +226,4 @@ headless Chromium render (palette/structure verified programmatically).
 
 ---
 
-*Point-in-time snapshot. WAITING FOR INSTRUCTIONS.*
+_Point-in-time snapshot. WAITING FOR INSTRUCTIONS._
