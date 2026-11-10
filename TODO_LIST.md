@@ -231,6 +231,23 @@ which is paperwork only the account holder can sign:
       run-start); wall-clock AfterFunc removed; full -race gates green
       twice consecutively (2026-11-10).
 
+## Harvested from the 13-27 v0.1.0-release report (both sessions)
+
+- [ ] Scratch-dir `go get github.com/larsartmann/google-domain-detector@v0.1.0`
+      pull-check once DNS recovers (proxy `.info` already verified).
+- [ ] pkg.go.dev propagation spot-check (fetch the pkg page) once DNS
+      is stable.
+- [ ] Consumer propagation sweep for v0.1.0 (go-ecosystem-upgrade skill;
+      only relevant if external consumers exist — likely none yet).
+- [ ] `git worktree remove /tmp/gdd-pret7` after the E6 memory A/B
+      finishes (sibling session's pre-T7 worktree).
+- [ ] Unbound tuning experiment (threads/outgoing-range) before the E9
+      throughput bench (census lane).
+- [ ] Nightly soak CI job decision (runs the race suite with a generous
+      timeout on a schedule instead of gating every push) — owner call.
+- [ ] Add `gh run list` to the session-start checklist so CI status on
+      recent pushes is seen immediately (the red-on-tag lesson).
+
 ## Harvested from the 01-12 and 06-09 reports (docs-gates audit-all)
 
 - [x] Streaming/chunked input loader (30M-domain scale) — done: chunked
