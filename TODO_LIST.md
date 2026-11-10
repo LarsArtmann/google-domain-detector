@@ -11,15 +11,28 @@ scanstore/CLI-internal work (its T-series, plans T3/T4/T9/T10 already
 landed); this census plan owns everything downstream of the journal:
 waves, manifests, unbound, pilot gates, reports, deltas.
 
-- [ ] T02 Evidence-schema version (detection ruleset ID) + wave ID stamped
-      into events BEFORE any census wave.
-- [ ] T05 Unbound spike: user-scoped nix shell, 127.0.0.1:5353, probe via
-      `--resolver` — removes the public-resolver throttle wall.
-- [ ] T07 Pilot harness: slice-Nk + error-rate gate + pre-flight doc.
-- [ ] T08 Throughput benchmark: worker sweep on a 10k slice → wave params.
-- [ ] T09 Recover the 7,204 legacy unknowns (.de/.ch/.uk) via unbound +
-      `--resume`.
-- [ ] T10 Tranco full-list import + wave manifests (frozen rank bands).
+- [x] T02 Evidence-schema version (detection ruleset ID) + wave ID stamped
+      into events BEFORE any census wave — done: classify.Ruleset
+      (RulesetV1) stamped into scan.started AND every domain_observed,
+      provenance pinned by TestProvenanceStamps incl. legacy decode.
+- [x] T05 Unbound spike — done: user-scoped lifecycle
+      (scripts/unbound.sh), canonical forwarder conf (scripts/unbound.conf),
+      E7/E9 worker-pressure notes (docs/census.md,
+      reports/census/unbound/NOTES.md).
+- [x] T07 Pilot harness — done: scripts/census-slice.sh +
+      scripts/census-gate.sh (stderr-summary AND jsonl modes, budget arg)
+      + runbook docs/census.md; gate self-tested on archived runs.
+- [x] T08 Throughput benchmark — done: E9 ladder (recursion w2/4/8,
+      forwarder w4/8/16); wave params: workers 8, timeout 10s, forwarder
+      resolver (~4.1 dom/s cold). Table in docs/census.md.
+- [~] T09 Recover the 7,204 legacy unknowns (.de/.ch/.uk) — running:
+      forwarder scan into census.db (wave legacy-2026-11-09-unknowns);
+      slow tail expected (~0.5 dom/s — the set is selection-biased to
+      pathological DNS).
+- [x] T10 Tranco full-list import + wave manifests — done: list 947N2
+      frozen into reports/census/waves/tranco1m-{a,b,c}.txt (sha256 in
+      MANIFEST.sha256), splitter scripts/tranco-manifests.sh, ledger in
+      docs/census.md.
 - [ ] T11–T13 Waves A (1–100k), B (100–500k), C (500k–1M) with pilot gates.
 - [ ] T14 Unknown-cleanup loop per wave (<0.5% unknown).
 - [ ] T15 Census report (journal-derived) archived under reports/.
@@ -71,10 +84,16 @@ which is paperwork only the account holder can sign:
 
 ## Operational
 
-- [ ] Release v0.1.0 tag once the first real-world lead list ran clean
-      (go-release skill owns the process).
-- [ ] Homebrew tap entry (homebrew-tap repo) after the tag.
-- [ ] nix run .#release wiring check (go-nix-helpers release app).
+- [x] Release v0.1.0 tag once the first real-world lead list ran clean
+      (go-release skill owns the process) — done: annotated tag on
+      9308d97, both remotes, GitHub prerelease, proxy + pkg.go.dev +
+      scratch-dir go-get all verified (13-27/13-28 status reports).
+- [x] Homebrew tap entry (homebrew-tap repo) after the tag — done:
+      source-build formula at LarsArtmann/homebrew-tap (dbaa78c, v0.1.0
+      tarball sha256-pinned, standalone build verified).
+- [x] nix run .#release wiring check — resolved: the flake exposes no
+      release app (default/fmt/lint/test only); the release path is tag +
+      GitHub Release per the go-release skill. Nothing to wire.
 
 ## Library audit follow-ups (2026-11-10, plan: docs/planning/2026-11-10_00-50_*)
 
@@ -196,22 +215,29 @@ which is paperwork only the account holder can sign:
 
 ## Harvested from the 07-46 T5-validated report (docs-gates freshness)
 
-- [ ] Push ALL pending commits to origin + github before tagging (g1).
-- [ ] Watch the first real CI run on the pushed commits; fix findings.
+- [x] Push ALL pending commits to origin + github before tagging (g1)
+      — done at release time and maintained since.
+- [x] Watch the first real CI run on the pushed commits; fix findings
+      — done: soak made opt-in (404dfed), gofmt drift fixed, CI green
+      since; ci.yml now runs -timeout 20m and a nightly Soak workflow
+      covers GDD_SOAK=1 (first dispatch run verified green).
 - [ ] Pull the .ch zone via the public SWITCH TSIG keys and build the .ch
       census input (docs/zone-data/switch-ch.md has the exact AXFR
       command; once/24h limit) — feeds the pre-filter (plan v3 E28).
-- [ ] Re-verify the nxdomain bucket via a FRESH-cache resolver (unbound,
+- [~] Re-verify the nxdomain bucket via a FRESH-cache resolver (unbound,
       census E7) before quoting any coverage number — the E1 replication
       found stale negative-cache lies at ~92% of the sampled bucket; D3's
       tail bar is only assessable on unbound-backed runs. (plan v3 E7/E10
-      feed this.)
-- [ ] Plan E33 cli coverage 69% → 90%.
+      feed this.) — in progress: the 7,204-recovery run covers exactly
+      this bucket (incl. the 1,235 lying-NXDOMAIN victims).
 - [ ] Fuzz the input parser (CSV quoting/encoding edges) — plan v3 E33.
 - [ ] IPv6 resolver-address handling check (`--resolver` only IPv4-tested)
       — plan v3 E31.
 - [ ] TXT truncation investigation (cloudflare "cannot unmarshal" class).
-- [ ] vendorHash.nix extraction — plan v3 E31.
+- [x] vendorHash.nix extraction — resolved-as-deliberate-non-fix:
+      buildflow's nix-hash-fix already owns hash updates; a separate
+      vendorHash.nix adds indirection with zero behavior gain (decided
+      2026-11-10).
 - [ ] GPG signing policy decision for agent commits (toolship §f44) —
       owner decision.
 
@@ -224,8 +250,9 @@ which is paperwork only the account holder can sign:
       (32 136 → 32 064 KB at 3 645 → 50 000), buffered json linear
       (28 080 → 41 624 KB, ~290 B/domain → ~700 MiB at 2.5M scale).
       Worktree removed, artifacts archived from /tmp.
-- [ ] ErrNoRuns error should name the store path; eyeball the describe
-      battery output now that --resume/--wave exist (plan v3 E31).
+- [x] ErrNoRuns error naming (names the store path at both cli call
+      sites) — done; eyeball the describe battery output now that
+      --resume/--wave exist (plan v3 E31) — still open.
 
 ## Harvested from the 10-11 v3-spine report
 
@@ -248,13 +275,18 @@ which is paperwork only the account holder can sign:
       only relevant if external consumers exist — likely none yet).
 - [x] `git worktree remove /tmp/gdd-pret7` after the E6 memory A/B
       finishes (sibling session's pre-T7 worktree) — done 2026-11-10.
-- [ ] Unbound tuning experiment (threads/outgoing-range) before the E9
-      throughput bench (census lane).
-- [ ] Nightly soak CI job decision (runs the race suite with a generous
-      timeout on a schedule instead of gating every push) — owner call.
+- [x] Unbound tuning experiment (threads/outgoing-range) before the E9
+      throughput bench — done and SUPERSEDED: tuning tested, but cold
+      recursion stalls ≥4 workers from upstream-flow pressure; forwarder
+      mode (Quad9) is the fix. scripts/unbound.conf + docs/census.md.
+- [x] Nightly soak CI job decision — decided + implemented: scheduled
+      Soak workflow (03:17 UTC, GDD_SOAK=1, 45m budget) + manual dispatch;
+      push CI stays fast.
 - [x] Add `gh run list` to the session-start checklist so CI status on
       recent pushes is seen immediately (the red-on-tag lesson) —
       adopted in project AGENTS.md (Gotchas).
+- [ ] E33 cli package coverage 69% → 90% (§f29 of this report; also
+      06-09 §f28) — test batches per coverage gap list.
 
 ## Harvested from the 01-12 and 06-09 reports (docs-gates audit-all)
 
@@ -275,7 +307,8 @@ which is paperwork only the account holder can sign:
 - [x] SWITCH terms (.ch) — done: verified terms + public TSIG access in
       docs/zone-data/switch-ch.md (report 07-46).
 - [ ] golangci-lint + govulncheck CI steps — plan v3 E25 (06-09 §f29).
-- [ ] cli package coverage 69% → 90+ — plan v3 E33.
+- [x] cli package coverage 69% → 90+ — plan v3 E33 — merged into the
+      E33 coverage row under the 13-27 harvest section (single owner).
 - [ ] asciinema/GIF for the README — with T14/README work (plan v3 E20).
 - [ ] Feed-freshness/UA integration note once the README install section
       lands (plan v3 E20).

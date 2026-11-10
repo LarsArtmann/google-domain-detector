@@ -275,7 +275,10 @@ GitHub Release live, module proxy serving v0.1.0 (hash-verified).
     event-store work (premise flipped).
 28. E32 daily delta timer + journal-only stats (delete the ad-hoc JSON
     path) + lead scoring v1.
-29. E33 cli coverage 69% → 90%.
+29. E33 cli coverage 69% → 90%. — RESOLVED-INTO-TODO 2026-11-10:
+    lives as the "E33 cli package coverage 69% → 90%" row in TODO_LIST's
+    13-27 harvest section (binding note: this item's tokens are numeric
+    and cannot bind automatically).
 30. E33 input parser fuzzing (CSV quoting/encoding edges).
 31. ErrNoRuns error should name the store path (E31 leftover).
 32. describe contract test (E31): pin the battery output shape.
