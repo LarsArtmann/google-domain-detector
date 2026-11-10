@@ -28,7 +28,7 @@ func TestQueryReadModelsRoundTrip(t *testing.T) {
 	recorder := scanstore.NewRecorder(writer)
 
 	firstRun := scanstore.NewRunID()
-	firstResults := []classify.Result{workspaceResult("acme.com"), failedResult("gone.example")}
+	firstResults := []classify.Result{workspaceResult("acme.com"), failedResult()}
 
 	if err := recorder.StartScan(ctx, firstRun, "", "", len(firstResults), 0, 4); err != nil {
 		t.Fatalf("start first run: %v", err)

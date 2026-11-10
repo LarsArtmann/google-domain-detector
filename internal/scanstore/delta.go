@@ -47,6 +47,7 @@ func FlipDiff(from, to []classify.Result) []Delta {
 	}
 
 	var flips []Delta
+
 	for _, toResult := range to {
 		fromResult, seen := byDomain[toResult.Domain]
 		if !seen {
@@ -78,8 +79,9 @@ type FlipCounts struct {
 // CountFlips tallies adoption direction per platform. A single domain can
 // contribute to both platforms.
 func CountFlips(flips []Delta) FlipCounts {
-	var c FlipCounts
-	c.Compared = len(flips)
+	var counts FlipCounts
+
+	counts.Compared = len(flips)
 
 	for _, f := range flips {
 		fromWorkspace := stateOf(f.From).workspace != classify.ConfidenceNone
@@ -87,9 +89,9 @@ func CountFlips(flips []Delta) FlipCounts {
 
 		switch {
 		case !fromWorkspace && toWorkspace:
-			c.WorkspaceAdopted++
+			counts.WorkspaceAdopted++
 		case fromWorkspace && !toWorkspace:
-			c.WorkspaceLeft++
+			counts.WorkspaceLeft++
 		}
 
 		fromGCP := stateOf(f.From).gcp
@@ -97,11 +99,11 @@ func CountFlips(flips []Delta) FlipCounts {
 
 		switch {
 		case !fromGCP && toGCP:
-			c.GCPAdopted++
+			counts.GCPAdopted++
 		case fromGCP && !toGCP:
-			c.GCPLeft++
+			counts.GCPLeft++
 		}
 	}
 
-	return c
+	return counts
 }

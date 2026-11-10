@@ -35,8 +35,8 @@ func workspaceResult(domainName string) classify.Result {
 	}
 }
 
-func failedResult(domainName string) classify.Result {
-	return classify.Result{Domain: domainName, Err: "domain not found: nxdomain", ErrKind: classify.ErrorNXDomain}
+func failedResult() classify.Result {
+	return classify.Result{Domain: "gone.example", Err: "domain not found: nxdomain", ErrKind: classify.ErrorNXDomain}
 }
 
 // TestCommandsProjectReadModels runs the production DomainConfig through the
@@ -71,7 +71,7 @@ func TestCommandsProjectReadModels(t *testing.T) {
 
 	sc.When(scanstore.StartScanCmd{BasicCommand: startBasic, InputDomain: 2, Workers: 4}).
 		Command(observe(workspaceResult("acme.com"))).
-		Command(observe(failedResult("gone.example"))).
+		Command(observe(failedResult())).
 		Then("scan.started", "scan.domain_observed", "scan.domain_observed").
 		ThenQueryFunc(func() (any, error) {
 			view, found, err := metaengine.NewReader[scanstore.ObservationView](
@@ -121,7 +121,7 @@ func TestReplayRoundTrip(t *testing.T) {
 	recorder := scanstore.NewRecorder(writer)
 
 	firstRun := scanstore.NewRunID()
-	firstResults := []classify.Result{workspaceResult("acme.com"), failedResult("gone.example")}
+	firstResults := []classify.Result{workspaceResult("acme.com"), failedResult()}
 
 	if err := recorder.StartScan(ctx, firstRun, "", "", len(firstResults), 0, 4); err != nil {
 		t.Fatalf("start first run: %v", err)
@@ -262,7 +262,7 @@ func TestStreamObservationsMatchesReplay(t *testing.T) {
 	firstRun := scanstore.NewRunID()
 	seedResults := []classify.Result{
 		workspaceResult("acme.com"),
-		failedResult("gone.example"),
+		failedResult(),
 		workspaceResult("beta.io"),
 	}
 

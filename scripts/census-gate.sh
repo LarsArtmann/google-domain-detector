@@ -7,14 +7,28 @@
 # nothing about the domain and must be retried or re-tuned, never scaled
 # past (census plan guard 4, D3 bar).
 #
+# --servfail-stable: D3 refinement — reclassify SERVFAIL as explained
+# (domain-side broken delegation) instead of unknown. ONLY valid after
+# the SERVFAILs proved stable across >= 2 cleanup rounds through a
+# verified-healthy resolver (docs/census.md, E10 decision); the flag makes
+# the reclassification explicit in the gate output instead of silent.
+#
 # Input: either a scan's stderr file (its one-line run summary) or a
 # scan's jsonl output (error_kind counted per line).
-# usage: census-gate.sh <stderr-or-jsonl-file> [max-unknown-pct]
+# usage: census-gate.sh [--servfail-stable] <stderr-or-jsonl-file> [max-unknown-pct]
 #   max-unknown-pct defaults to 2 (the D3 bar); 0.5 works for cleanup loops
 set -euo pipefail
 
+sf_stable=0
+while [ $# -gt 0 ]; do
+    case $1 in
+        --servfail-stable) sf_stable=1; shift ;;
+        *) break ;;
+    esac
+done
+
 if [ $# -lt 1 ]; then
-    echo "usage: $0 <stderr-or-jsonl-file> [max-unknown-pct]" >&2
+    echo "usage: $0 [--servfail-stable] <stderr-or-jsonl-file> [max-unknown-pct]" >&2
     exit 2
 fi
 
@@ -27,12 +41,15 @@ if [ ! -f "$file" ]; then
 fi
 
 pass_fail() {
-    local total=$1 nxdomain=$2 unknown=$3
-    awk -v total="$total" -v nx="$nxdomain" -v unk="$unknown" -v budget="$budget" '
+    local total=$1 nxdomain=$2 servfail=$3 unknown=$4
+    awk -v total="$total" -v nx="$nxdomain" -v sf="$servfail" -v unk="$unknown" -v budget="$budget" -v sf_stable="$sf_stable" '
         BEGIN {
             if (total <= 0) { print "census-gate: FAIL (no domains counted)"; exit 1 }
             rate = unk * 100.0 / total
-            printf "domains %d | nxdomain %d (%.2f%%, domain truth) | unknown %d (%.2f%%, budget %.2f%%)\n", total, nx, nx*100.0/total, unk, rate, budget
+            if (sf_stable)
+                printf "domains %d | nxdomain %d (%.2f%%, domain truth) | servfail-stable %d (%.2f%%, broken delegation, explained) | unknown %d (%.2f%%, budget %.2f%%)\n", total, nx, nx*100.0/total, sf, sf*100.0/total, unk, rate, budget
+            else
+                printf "domains %d | nxdomain %d (%.2f%%, domain truth) | unknown %d (%.2f%%, budget %.2f%%)\n", total, nx, nx*100.0/total, unk, rate, budget
             if (rate >= budget) { print "census-gate: FAIL — resolver/tool health below bar, do NOT scale"; exit 1 }
             print "census-gate: PASS"
         }'
@@ -50,8 +67,8 @@ if grep -Eq "$summary_pattern" "$file"; then
         echo "census-gate: found summary line but could not parse it: $line" >&2
         exit 2
     fi
-    unknown=$((timeouts + servfail + canceled + other))
-    pass_fail "$total" "$nx" "$unknown"
+    if [ "$sf_stable" = 1 ]; then unknown=$((timeouts + canceled + other)); else unknown=$((timeouts + servfail + canceled + other)); fi
+    pass_fail "$total" "$nx" "$servfail" "$unknown"
 elif grep -q '"error_kind"' "$file"; then
     # jsonl form: count per-line error_kind values
     read -r total errors nx timeouts servfail canceled other <<<"$(jq -r '[.error_kind // "none"] | @tsv' "$file" | awk -F'\t' '
@@ -63,8 +80,8 @@ elif grep -q '"error_kind"' "$file"; then
         k=="canceled" { c++ }
         k=="other"    { o++ }
         END { printf "%d %d %d %d %d %d %d\n", total, total-(nx+t+s+c+o), nx+0, t+0, s+0, c+0, o+0 }')"
-    unknown=$((timeouts + servfail + canceled + other))
-    pass_fail "$total" "$nx" "$unknown"
+    if [ "$sf_stable" = 1 ]; then unknown=$((timeouts + canceled + other)); else unknown=$((timeouts + servfail + canceled + other)); fi
+    pass_fail "$total" "$nx" "$servfail" "$unknown"
 else
     echo "census-gate: $file is neither a run summary (stderr) nor jsonl output" >&2
     exit 2

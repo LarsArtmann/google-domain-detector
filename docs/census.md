@@ -31,6 +31,15 @@ scripts/unbound.sh start     # also: stop | status | restart
   on them). A SERVFAIL from our own overloaded resolver is not a fact
   about google-adoption; counting it against coverage would read
   resolver capacity as domain state.
+- **Refinement (E10, 2026-11-10): stable SERVFAIL is domain truth.** A
+  SERVFAIL that persists across ≥2 cleanup rounds through a verified
+  healthy forwarder is a domain-side broken delegation (dead or
+  misconfigured authoritative servers), not tool state. It counts as
+  *explained* in coverage — but never silently: confirm resolver health
+  first, then pass `--servfail-stable` to `census-gate.sh` so the
+  reclassification is explicit in the gate output. E10 evidence: 567
+  SERVFAILs stable across two rounds (r1 heavy-load, r2 healthy
+  forwarder w4), archived under `reports/census/unbound/raw/`.
 
 ## Pilot gate (G6)
 
@@ -47,7 +56,10 @@ scripts/census-gate.sh /tmp/pilot.jsonl 0.5       # cleanup-loop bar
 
 `census-gate.sh` accepts the stderr run summary or jsonl output; the
 second argument overrides the unknown budget (2 = D3 bar default,
-0.5 = cleanup-loop target).
+0.5 = cleanup-loop target). `--servfail-stable` reclassifies SERVFAIL
+as explained (broken delegation) — only after the ≥2-round stability
+check above; the flag exists so the reclassification is a visible
+operator decision, not an accounting default.
 
 ## Waves
 

@@ -39,7 +39,7 @@ type RunView struct {
 	RunID       string          `json:"run_id"`
 	Started     bool            `json:"started"`
 	Completed   bool            `json:"completed"`
-	StartedAt   time.Time       `json:"started_at,omitempty"`
+	StartedAt   time.Time       `json:"started_at"`
 	Wave        string          `json:"wave,omitempty"`
 	ResumedFrom string          `json:"resumed_from,omitempty"`
 	Counts      classify.Counts `json:"counts"`
