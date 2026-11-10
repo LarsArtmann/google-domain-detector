@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"io"
 	"strings"
+	"sync"
 
 	"github.com/larsartmann/go-output"
 	_ "github.com/larsartmann/go-output/delimited"     // registers csv, tsv
@@ -101,17 +102,65 @@ func JSON(w io.Writer, results []classify.Result) error {
 // runs.
 func JSONL(w io.Writer, results []classify.Result) error {
 	for _, r := range results {
-		line, err := json.Marshal(jsonResultFrom(r))
-		if err != nil {
-			return fmt.Errorf("encode %s: %w", r.Domain, err)
-		}
-
-		if _, err := w.Write(append(line, '\n')); err != nil {
-			return fmt.Errorf("write %s: %w", r.Domain, err)
+		if err := encodeJSONLLine(w, r); err != nil {
+			return err
 		}
 	}
 
 	return nil
+}
+
+func encodeJSONLLine(w io.Writer, r classify.Result) error {
+	line, err := json.Marshal(jsonResultFrom(r))
+	if err != nil {
+		return fmt.Errorf("encode %s: %w", r.Domain, err)
+	}
+
+	if _, err := w.Write(append(line, '\n')); err != nil {
+		return fmt.Errorf("write %s: %w", r.Domain, err)
+	}
+
+	return nil
+}
+
+// JSONLStream writes JSONL lines as results complete instead of after the
+// whole run. Semantics: lines appear in COMPLETION order (not input order);
+// writes from concurrent worker goroutines are serialized; after the first
+// error the stream is a no-op and Err reports that error. Cancellation mid-
+// run simply stops the stream: domains never started produce no line.
+type JSONLStream struct {
+	writer  io.Writer
+	mutex   sync.Mutex
+	stopped bool
+	err     error
+}
+
+// NewJSONLStream wraps w for incremental one-line-per-result writes.
+func NewJSONLStream(w io.Writer) *JSONLStream {
+	return &JSONLStream{writer: w}
+}
+
+// Write emits r as one JSON line; safe for concurrent use.
+func (s *JSONLStream) Write(r classify.Result) {
+	s.mutex.Lock()
+	defer s.mutex.Unlock()
+
+	if s.stopped {
+		return
+	}
+
+	if err := encodeJSONLLine(s.writer, r); err != nil {
+		s.stopped = true
+		s.err = err
+	}
+}
+
+// Err reports the first write error; nil when every line landed.
+func (s *JSONLStream) Err() error {
+	s.mutex.Lock()
+	defer s.mutex.Unlock()
+
+	return s.err
 }
 
 func jsonResultFrom(r classify.Result) jsonResult {

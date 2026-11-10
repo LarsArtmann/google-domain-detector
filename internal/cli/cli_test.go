@@ -10,8 +10,11 @@ import (
 	"reflect"
 	"strings"
 	"testing"
+	"time"
 
 	v5 "github.com/larsartmann/cmdguard/v5/pkg/cmdguard/v5"
+
+	"github.com/larsartmann/google-domain-detector/internal/resolve"
 )
 
 // fakeRes is the same scripted resolver shape as scan's, reduced to what the
@@ -52,6 +55,12 @@ func workspaceDomain() *fakeRes {
 }
 
 func run(t *testing.T, res *fakeRes, stdin string, args ...string) (string, string, error) {
+	t.Helper()
+
+	return runRes(t, res, stdin, args...)
+}
+
+func runRes(t *testing.T, res resolve.Resolver, stdin string, args ...string) (string, string, error) {
 	t.Helper()
 
 	var stdout, stderr bytes.Buffer
@@ -175,6 +184,107 @@ func TestScanJSONLOutputsOneObjectPerLine(t *testing.T) {
 		if _, ok := got[key]; !ok {
 			t.Errorf("jsonl line missing %q:\n%s", key, lines[0])
 		}
+	}
+}
+
+// delayedRes stalls the apex TXT lookup of chosen domains so later-input
+// domains can complete first.
+type delayedRes struct {
+	*fakeRes
+	delays map[string]time.Duration
+}
+
+func (d delayedRes) LookupTXT(ctx context.Context, host string) ([]string, error) {
+	time.Sleep(d.delays[host])
+
+	return d.fakeRes.LookupTXT(ctx, host)
+}
+
+// TestScanJSONLStreamsInCompletionOrder pins the streaming semantics: jsonl
+// lines appear as results complete, so a slow first-input domain lands LAST,
+// not first. A buffered renderer would print input order instead.
+func TestScanJSONLStreamsInCompletionOrder(t *testing.T) {
+	t.Parallel()
+
+	res := &delayedRes{fakeRes: &fakeRes{}, delays: map[string]time.Duration{"slow.com": 150 * time.Millisecond}}
+	stdout, _, err := runRes(t, res, "", "scan", "--no-ranges", "--format", "jsonl",
+		"--workers", "3", "slow.com", "fast1.com", "fast2.com")
+	if err != nil {
+		t.Fatalf("scan failed: %v", err)
+	}
+
+	lines := strings.Split(strings.TrimRight(stdout, "\n"), "\n")
+	if len(lines) != 3 {
+		t.Fatalf("want 3 lines, got %d:\n%s", len(lines), stdout)
+	}
+
+	var first, last map[string]any
+	if err := json.Unmarshal([]byte(lines[0]), &first); err != nil {
+		t.Fatalf("first line is not JSON: %v\n%s", err, lines[0])
+	}
+
+	if err := json.Unmarshal([]byte(lines[2]), &last); err != nil {
+		t.Fatalf("last line is not JSON: %v\n%s", err, lines[2])
+	}
+
+	if first["domain"] == "slow.com" {
+		t.Errorf("slow domain streamed first; jsonl is not streaming:\n%s", stdout)
+	}
+
+	if last["domain"] != "slow.com" {
+		t.Errorf("slow domain should complete last:\n%s", stdout)
+	}
+}
+
+// hangRes blocks the TXT lookup of slow.com until its context dies, so the
+// run can be canceled mid-flight while another domain already completed.
+type hangRes struct {
+	*fakeRes
+}
+
+func (h hangRes) LookupTXT(ctx context.Context, host string) ([]string, error) {
+	if host == "slow.com" {
+		<-ctx.Done()
+
+		return nil, ctx.Err()
+	}
+
+	return h.fakeRes.LookupTXT(ctx, host)
+}
+
+// TestScanJSONLCancelMidStream proves cancellation stops the stream cleanly:
+// the completed domain has its line, the hung domain reports the
+// cancellation instead of hanging the run.
+func TestScanJSONLCancelMidStream(t *testing.T) {
+	t.Parallel()
+
+	var stdout, stderr bytes.Buffer
+
+	d, err := BuildCLI(&stdout, &stderr, "test", "", &hangRes{&fakeRes{}}, strings.NewReader(""), false)
+	if err != nil {
+		t.Fatalf("BuildCLI failed: %v", err)
+	}
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	// Ctrl-C sends an explicit cancellation (context.Canceled), not a
+	// deadline; a parent deadline would classify as a per-domain timeout.
+	time.AfterFunc(100*time.Millisecond, cancel)
+
+	err = d.ExecuteWithArgs(ctx, []string{"scan", "--no-ranges", "--format", "jsonl", "fast1.com", "slow.com"})
+	if err != nil {
+		t.Fatalf("canceled scan must still finish the report: %v", err)
+	}
+
+	lines := strings.Split(strings.TrimRight(stdout.String(), "\n"), "\n")
+	if len(lines) != 2 || !strings.Contains(lines[0], "fast1.com") {
+		t.Fatalf("want fast1 line then canceled slow line, got %d lines:\n%s\nstderr:\n%s",
+			len(lines), stdout.String(), stderr.String())
+	}
+
+	if !strings.Contains(lines[1], "slow.com") || !strings.Contains(lines[1], "canceled") {
+		t.Errorf("hung domain must report its cancellation:\n%s", lines[1])
 	}
 }
 

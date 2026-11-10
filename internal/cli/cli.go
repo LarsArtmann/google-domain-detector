@@ -177,11 +177,28 @@ func runScan(
 		return err
 	}
 
+	// jsonl renders as results complete instead of after the whole run;
+	// every other format needs the full result set and stays buffered.
+	var stream *render.JSONLStream
+	if format == output.FormatJSONL {
+		stream = render.NewJSONLStream(stdout)
+		chainOnResult(&scanOpts, func(r classify.Result) {
+			if render.Matches(r, filter) {
+				stream.Write(r)
+			}
+		})
+	}
+
 	started := time.Now()
 
 	results := scan.Run(ctx, activeRes, domains, scanOpts)
 
-	rendered := renderResults(stdout, results, filter, format)
+	var rendered error
+	if stream != nil {
+		rendered = stream.Err() // lines were already written as they completed
+	} else {
+		rendered = renderResults(stdout, results, filter, format)
+	}
 
 	counts := classify.Count(results)
 	fmt.Fprintf(stderr, "%d domains: workspace certain %d / likely %d, gcp %d, errors %d%s\n",
@@ -208,9 +225,23 @@ func errorKindsSuffix(c classify.Counts) string {
 		k.NXDomain, k.Timeout, k.ServFail, k.Canceled, k.Other)
 }
 
+// chainOnResult adds next to opts.OnResult, keeping whatever callback was
+// already installed (the event-store sink): both run, existing first.
+func chainOnResult(opts *scan.Options, next func(classify.Result)) {
+	if prev := opts.OnResult; prev != nil {
+		opts.OnResult = func(r classify.Result) { prev(r); next(r) }
+		return
+	}
+
+	opts.OnResult = next
+}
+
 // renderResults filters and writes the report in the requested format.
 // json and jsonl carry the full-evidence DTO (array vs one object per
-// line); every other format is table-shaped via go-output.
+// line); every other format is table-shaped via go-output. The scan command
+// bypasses this for jsonl, streaming lines as results complete (see
+// render.JSONLStream); replay keeps the buffered path until journal walks
+// stream natively.
 func renderResults(w io.Writer, results []classify.Result, filter render.Filter, format output.Format) error {
 	results = render.Filtered(results, filter)
 
