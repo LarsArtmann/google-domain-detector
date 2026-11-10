@@ -116,6 +116,16 @@ first-party lib is considered.
   (D013). New events must follow both.
 - Binary flag name is `--ranges-cache` (not `--cache-path`).
 - Binary flag for the SQLite journal is `--event-store` (env `GDD_EVENT_STORE`).
+- Raising the go.mod `go` directive (dependency floor) can break the INSTALLED
+  buildflow binary: its embedded analyzers run the Go they were built with
+  (observed 2026-11-10: go1.27.0 binary vs `go 1.27.2` floor → samber-linter
+  `toolchain.skew` + test-compile `stale_toolchain` both fail). Fix is
+  rebuilding/refreshing the buildflow binary, not repo changes.
+- docs-gates verdicts can legitimately differ between the pre-commit hook and
+  a direct run: the hook runs `--build-mode pre-commit --staged-only` and
+  stashes unstaged changes, so it evaluates a different file set (plus result
+  cache keys are per matched-file set). Diagnose red-hook/green-direct with a
+  direct `docs-gates freshness` run before suspecting the gate itself.
 
 ## Git remotes
 
@@ -125,3 +135,11 @@ first-party lib is considered.
 
 Push to both. The auto-commit daemon (pma) may commit mid-session — check
 `git status` before committing; never assume.
+
+Mixed-commit policy (daemon-swept bundles): when the daemon has already
+committed your content under a junk message AND bundled unrelated concurrent
+changes, prefer `git reset --soft <daemon-commit>^` + per-file commits over a
+message-only amend of the bundle — one-commit-one-authorship beats a flattering
+message on murky content. Message-only amend (`--no-verify`) is acceptable ONLY
+when the tree is byte-identical to the already-committed tree. Never rewrite
+pushed history (mirror included) without explicit approval.

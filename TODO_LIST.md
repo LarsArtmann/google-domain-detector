@@ -101,3 +101,17 @@ which is paperwork only the account holder can sign:
 - [ ] TimeoutMiddleware whole-run budget for huge inputs.
 - [ ] Consider output.FormatsForShape to auto-generate the flag values
       enum from registered formats.
+
+## Pareto plan execution (docs/planning/2026-11-10_00-50_*)
+
+- [ ] T4: CLI hardening bundle (validate tag, ExitError(2), WithEnvPrefix,
+      RecoveryMiddleware).
+- [ ] T5: real-world validation run (lead list / Tranco slice) before the tag.
+- [ ] T11: go-output polish (`--color`, SetFooter, Title, AddRowChecked).
+- [ ] T13: nom live progress during long scans (TTY-only).
+- [ ] T20: `-o` implementation if T1 says adopt.
+- [ ] T22: registry-derived format enum, drift-proof (FormatsForShape).
+- [ ] T25: error-family exit codes (75 fetch / 65 corrupt) in internal/ranges.
+- [ ] T27: ROADMAP parking of deferred tail items.
+- [x] Mermaid compile-check of the plan graph; fix if broken — done: mmdc
+      12.0.0 compiles the graph clean to SVG (2026-11-10).

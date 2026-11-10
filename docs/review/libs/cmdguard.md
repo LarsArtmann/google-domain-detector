@@ -82,9 +82,13 @@ and 6 of 8 misses are S-effort.
 5. **`RecoveryMiddleware`** (S) — panic → printed error + exit 1.
 6. **`WithCLICommit` + `WithExample`** (S) — exact-build version output,
    self-documenting help.
-7. **`WithOutputFormat` adoption** (M) — `-o/--output` global flag with
-   JSON error envelopes; breaking flag rename (`--format` → `-o`), cheapest
-   now while the user base is one person.
+7. **`WithOutputFormat` adoption** (M) — **decided against 2026-11-10**
+   (STACK.md decision log): `-o/--output` is a global flag whose resolved
+   value is read via the CLI object, conflicting with per-command flag
+   structs and the injected-deps test seam; `--format` stays. The registry-
+   derived-enum benefit is delivered on `--format` instead (plan T22).
+   JSON error envelopes were the other half of this gap and went with it —
+   revisit only if scripted consumers ask for machine-readable errors.
 8. **cmdguard-lint in CI** (free) — expected zero findings today.
 
 ## Misuse check
