@@ -10,7 +10,6 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"path/filepath"
 	"time"
 
 	v5 "github.com/larsartmann/cmdguard/v5/pkg/cmdguard/v5"
@@ -39,7 +38,7 @@ type ScanFlags struct {
 	Workers    int           `flag:"workers"      help:"Parallel DNS lookups"                                                                                                               short:"j" default:"8"                                                                                                validate:"min=1,max=512"`
 	Timeout    time.Duration `flag:"timeout"      help:"Per-domain lookup budget"                                                                                                                     default:"5s"`
 	Only       string        `flag:"only"         help:"Report only matching domains"                                                                                                                 default:"all"                                         values:"all,workspace,gcp,google"`
-	RangesURL  string        `flag:"ranges-url"   help:"GCP IP-range feed"                                                                                                                            default:"https://www.gstatic.com/ipranges/cloud.json"`
+	RangesURL  string        `flag:"ranges-url"   help:"GCP IP-range feed"                                                                                                                            default:"https://www.gstatic.com/ipranges/cloud.json"                                                                                                                                                                                                                                                       env:"RANGES_URL"`
 	CachePath  string        `flag:"ranges-cache" help:"Range-feed cache file (default ~/.cache/google-domain-detector/cloud.json)"                                                                                                                                                                                                       env:"RANGES_CACHE"`
 	NoRanges   bool          `flag:"no-ranges"    help:"Skip GCP IP-range matching (CNAME/MX/NS evidence only)"`
 	NoDKIM     bool          `flag:"no-dkim"      help:"Skip the google._domainkey probe"`
@@ -176,6 +175,16 @@ func BuildCLI(
 	v5.Try(b, replayCmd, replayErr)
 	v5.Try(b, showCmd, showErr)
 	v5.Try(b, runsCmd, runsErr)
+
+	// The doctor command replaces cmdguard's battery default so the
+	// domain preflights (dns-resolver, ranges-feed) run alongside the DI
+	// health checks; a consumer-defined "doctor" wins per the battery
+	// contract.
+	docCmd, docErr := v5.DoctorCommand[RootConfig](cli,
+		v5.WithDoctorCheck[RootConfig]("dns-resolver", probeDNS),
+		v5.WithDoctorCheck[RootConfig]("ranges-feed", probeRanges),
+	)
+	v5.Try(b, docCmd, docErr)
 
 	if err := b.Build(); err != nil {
 		return nil, err
@@ -511,12 +520,12 @@ func loadRanges(ctx context.Context, f ScanFlags, version string) (*ranges.Set, 
 
 	cache := f.CachePath
 	if cache == "" {
-		home, err := os.UserHomeDir()
+		defaultCache, err := defaultRangesCache()
 		if err != nil {
-			return nil, fmt.Errorf("resolve cache dir: %w", err)
+			return nil, err
 		}
 
-		cache = filepath.Join(home, ".cache", Name, "cloud.json")
+		cache = defaultCache
 	}
 
 	userAgent := Name
