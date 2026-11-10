@@ -3,6 +3,7 @@
 > Reviewed: 2026-11-09 · Module: `github.com/larsartmann/cqrs-htmx/v4` (multi-module: root + adminui, auditlog, dashboardui, datastar, huma, health, identity-model, loginpage, setup, systemadapter, usermgmt[+oauth2/totp/webauthn], e2e)
 > Status in google-domain-detector: **NOT IN MODULE GRAPH** (not adopted)
 > Audited checkout: `/home/lars/projects/cqrs-htmx` @ `45a29b62` (2026-11-08) — newest tags `huma/v4.0.0`, root `v4.18.1`; HEAD 120+ commits past newest tag (co-developed lockstep with go-cqrs-lite via ~35 go.work replace pins)
+> Consumer repo state at review: google-domain-detector @d07a343 (2026-11-09) — verdicts are point-in-time; re-verify citations against HEAD before relying on them
 
 ## Verdict
 

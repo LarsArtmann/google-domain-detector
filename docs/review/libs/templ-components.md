@@ -3,6 +3,7 @@
 > Reviewed: 2026-11-09 · Module: `github.com/larsartmann/templ-components` (multi-module: root + themed, ui, base, charts/*, go-htmx, demo-site, devserver, docs)
 > Status in google-domain-detector: **NOT IN MODULE GRAPH** (not adopted)
 > Audited checkout: `/home/lars/projects/templ-components` @ `5c0d170a` = `charts/echarts/v1.27.0` + 87 commits (v1.27.0 family is the latest tag set across modules)
+> Consumer repo state at review: google-domain-detector @f5ea3ac (2026-11-09) — verdicts are point-in-time; re-verify citations against HEAD before relying on them
 
 ## Verdict
 

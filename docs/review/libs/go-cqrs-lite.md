@@ -3,6 +3,7 @@
 > Reviewed: 2026-11-09 · Module: `github.com/larsartmann/go-cqrs-lite` (monorepo, 90+ modules)
 > Status in google-domain-detector: **NOT IN MODULE GRAPH** (not adopted)
 > Audited checkout: `/home/lars/projects/go-cqrs-lite` @ `7f88d0618` (2026-11-09, 50 commits ahead of newest tag `systemscenario/v4.3.0`)
+> Consumer repo state at review: google-domain-detector @06cad49 (2026-11-09) — verdicts are point-in-time; re-verify citations against HEAD before relying on them
 
 ## Verdict
 

@@ -4,6 +4,7 @@
 > Status in google-domain-detector: **NOT IN MODULE GRAPH** (not adopted)
 > Audited checkout: `/home/lars/projects/go-etag` @ `226fa97` = v0.7.0 + 1 CI-only commit. **Root module is deprecated** (deprecated.go — re-exports
 > go-etag/server symbols, slated for removal).
+> Consumer repo state at review: google-domain-detector @f5ea3ac (2026-11-09) — verdicts are point-in-time; re-verify citations against HEAD before relying on them
 
 ## Verdict
 

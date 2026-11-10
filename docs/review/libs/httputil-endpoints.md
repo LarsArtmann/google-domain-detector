@@ -3,6 +3,7 @@
 > Reviewed: 2026-11-09 · Module: `github.com/larsartmann/httputil/endpoints`
 > Status in google-domain-detector: **NOT IN MODULE GRAPH** (not adopted)
 > Audited checkout: `/home/lars/projects/httputil/endpoints` @ HEAD, exactly at newest tag **endpoints/v0.1.0** (2026-11-02)
+> Consumer repo state at review: google-domain-detector @d07a343 (2026-11-09) — verdicts are point-in-time; re-verify citations against HEAD before relying on them
 
 ## Verdict
 

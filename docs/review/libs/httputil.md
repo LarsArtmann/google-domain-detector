@@ -3,6 +3,7 @@
 > Reviewed: 2026-11-09 · Module: `github.com/larsartmann/httputil` (root module)
 > Status in google-domain-detector: **NOT IN MODULE GRAPH** (not adopted)
 > Audited checkout: `/home/lars/projects/httputil` @ HEAD, 35 commits past newest tag **v1.8.0** (2026-11-03; unreleased commits are CI/docs/test hygiene only, no API changes)
+> Consumer repo state at review: google-domain-detector @06cad49 (2026-11-09) — verdicts are point-in-time; re-verify citations against HEAD before relying on them
 
 ## Verdict
 

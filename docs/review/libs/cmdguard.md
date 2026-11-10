@@ -3,6 +3,7 @@
 > Reviewed: 2026-11-09 · Module: `github.com/larsartmann/cmdguard/v5`
 > Status in google-domain-detector: **DIRECT, pinned v5.0.0** (the CLI framework; also the transit route for go-error-family, go-atomic-write, go-branded-id, go-ndjson, samber-do-auditlog, koanf, fang, lipgloss, samber/do)
 > Audited checkout: `/home/lars/projects/cmdguard` @ HEAD = `v5.0.0` + 23 commits (only 3 source files changed: `WithStrictPositionalArgs`, `WithArgsPassthrough` — both new opt-ins; mutex-guarded Builder)
+> Consumer repo state at review: google-domain-detector @b07de82 (2026-11-09) — verdicts are point-in-time; re-verify citations against HEAD before relying on them
 
 ## Verdict
 

@@ -3,6 +3,7 @@
 > Reviewed: 2026-11-09 · Module: `github.com/larsartmann/httputil/server_timing` (package `servertiming`)
 > Status in google-domain-detector: **NOT IN MODULE GRAPH** (not adopted)
 > Audited checkout: `/home/lars/projects/httputil/server_timing` @ HEAD, exactly at newest tag **server_timing/v1.0.3** (2026-10-24; zero dependencies)
+> Consumer repo state at review: google-domain-detector @06cad49 (2026-11-09) — verdicts are point-in-time; re-verify citations against HEAD before relying on them
 
 ## Verdict
 

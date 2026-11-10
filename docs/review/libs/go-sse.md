@@ -4,6 +4,7 @@
 > Status in google-domain-detector: **NOT IN MODULE GRAPH** (not adopted)
 > Audited checkout: `/home/lars/projects/go-sse` @ `443abdd` = v0.7.0 + 1 test-only commit
 > Deps: a-h/templ, go-branded-id, go-error-family (not stdlib-only)
+> Consumer repo state at review: google-domain-detector @d07a343 (2026-11-09) — verdicts are point-in-time; re-verify citations against HEAD before relying on them
 
 ## Verdict
 

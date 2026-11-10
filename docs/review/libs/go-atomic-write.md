@@ -3,6 +3,7 @@
 > Reviewed: 2026-11-09 · Module: `github.com/larsartmann/go-atomic-write`
 > Status in google-domain-detector: **INDIRECT v0.6.1** — already compiled into the binary via `cmdguard/v5 → samber-do-auditlog → go-atomic-write` (go.mod:39), but never called directly
 > Audited checkout: `/home/lars/projects/go-atomic-write` @ `5688158` = v0.6.2 + 39 commits (only 2 code-relevant: `WriteFuncWithPerm`, MkdirAll-on-demand in `tempPathFor` — both **unreleased**)
+> Consumer repo state at review: google-domain-detector @d07a343 (2026-11-09) — verdicts are point-in-time; re-verify citations against HEAD before relying on them
 
 ## Verdict
 

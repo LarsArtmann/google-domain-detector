@@ -3,6 +3,7 @@
 > Reviewed: 2026-11-09 · Module: `github.com/LarsArtmann/go-daemon` (capital L)
 > Status in google-domain-detector: **NOT IN MODULE GRAPH** (not adopted)
 > Audited checkout: `/home/lars/projects/go-daemon` @ `e8e1a1f` = v0.4.0 + 32 commits (code-relevant: injectable JSON/CBOR codec negotiation; rest is chores/docs)
+> Consumer repo state at review: google-domain-detector @d07a343 (2026-11-09) — verdicts are point-in-time; re-verify citations against HEAD before relying on them
 
 ## Verdict
 

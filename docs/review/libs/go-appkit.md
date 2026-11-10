@@ -3,6 +3,7 @@
 > Reviewed: 2026-11-09 · Module: `github.com/larsartmann/go-appkit` (multi-module: core + config, cqrs, docs, errorpages, flightrecorder(+health), health, httpx, otel, preset, realtime, security, systemd)
 > Status in google-domain-detector: **NOT IN MODULE GRAPH** (not adopted)
 > Audited checkout: `/home/lars/projects/go-appkit` @ `86bd621` (2026-11-08) — newest tags `httpx/v0.2.0`, `cqrs/v0.9.0`, root `v0.12.0`; HEAD 10 commits past `httpx/v0.2.0`
+> Consumer repo state at review: google-domain-detector @d07a343 (2026-11-09) — verdicts are point-in-time; re-verify citations against HEAD before relying on them
 
 ## Verdict
 

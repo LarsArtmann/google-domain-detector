@@ -3,6 +3,7 @@
 > Reviewed: 2026-11-09 · Module: `github.com/larsartmann/go-error-family`
 > Status in google-domain-detector: **INDIRECT v0.12.0** — compiled into the binary via `cmdguard/v5 → samber-do-auditlog → go-error-family` (go.mod:40); never called directly
 > Audited checkout: `/home/lars/projects/go-error-family` @ `7ccca5c` = v0.12.0 + 6 commits, **zero .go changes** (README/metadata only) — API-identical to the pin
+> Consumer repo state at review: google-domain-detector @f5ea3ac (2026-11-09) — verdicts are point-in-time; re-verify citations against HEAD before relying on them
 
 ## Verdict
 

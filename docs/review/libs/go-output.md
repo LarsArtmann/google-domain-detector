@@ -3,6 +3,7 @@
 > Reviewed: 2026-11-09 · Module: `github.com/larsartmann/go-output` (+ sub-modules)
 > Status in google-domain-detector: **DIRECT, pinned v0.38.7** (root + `delimited`, `markdown`, `serialization`, `table`; six more sub-modules ride along indirectly: d2, daghtml, escape, graph, markup, plantuml, tree)
 > Audited checkout: `/home/lars/projects/go-output` @ HEAD `ba50334` = **v0.38.7 + 7 docs/CI-only commits — pin is current, zero code drift**
+> Consumer repo state at review: google-domain-detector @b07de82 (2026-11-09) — verdicts are point-in-time; re-verify citations against HEAD before relying on them
 
 ## Verdict
 

@@ -3,6 +3,7 @@
 > Reviewed: 2026-11-09 · Module: `github.com/larsartmann/go-datastar` (multi-module: root + `broadcast`, `datastartest`, `static` per go.work)
 > Status in google-domain-detector: **NOT IN MODULE GRAPH** (not adopted)
 > Audited checkout: `/home/lars/projects/go-datastar` @ `39e415f` = `broadcast/v0.7.0` + 4 commits (security fix, tests, docs — API surface unchanged)
+> Consumer repo state at review: google-domain-detector @d07a343 (2026-11-09) — verdicts are point-in-time; re-verify citations against HEAD before relying on them
 
 ## Verdict
 

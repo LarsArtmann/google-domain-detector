@@ -3,6 +3,7 @@
 > Reviewed: 2026-11-09 · Module: `github.com/larsartmann/go-retry`
 > Status in google-domain-detector: **NOT IN MODULE GRAPH** (not adopted; STACK.md exclusion on record)
 > Audited checkout: `/home/lars/projects/go-retry` @ `047d55a` = v0.9.0 + 4 chore-only commits (README/codeql/docs)
+> Consumer repo state at review: google-domain-detector @f5ea3ac (2026-11-09) — verdicts are point-in-time; re-verify citations against HEAD before relying on them
 
 ## Verdict
 
