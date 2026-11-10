@@ -85,7 +85,9 @@ first-party lib is considered.
 
 - **G4 verdict (2026-11-10, plan v3):** the journal is trustworthy to at
   least 100k events — append 18.7s (5 345/s), replay 2.0s (51 035/s), db
-  125 MiB, heap 15 MiB (`TestJournalOneHundredThousandEvents`). Extrapolated
+  125 MiB, heap 15 MiB (`TestJournalOneHundredThousandEvents`, opt-in via
+  `GDD_SOAK=1` — the soak exceeds CI's default 10-min test budget on
+  2-core runners and is not a functional gate). Extrapolated
   to 2.5M domains: ~8 min append, ~3 GiB db, ~50s replay. Sink retries each
   observation 3× with backoff and reports the exact dropped count on Close;
   Ctrl-C mid-domain drains and still completes the run record (pinned by
