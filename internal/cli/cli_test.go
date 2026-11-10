@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"fmt"
 	"net"
 	"os"
 	"path/filepath"
@@ -539,5 +540,81 @@ func TestReplayEmptyStoreFails(t *testing.T) {
 	_, _, err := run(t, workspaceDomain(), "", "replay", "--event-store", store)
 	if err == nil {
 		t.Fatal("replay of a store with no runs must fail")
+	}
+}
+
+// TestScanInputParityAcrossSources pins 8.7: the same domain set yields the
+// same report whether it arrives as arguments, a --input file, or piped
+// stdin (input order is part of the table contract).
+func TestScanInputParityAcrossSources(t *testing.T) {
+	t.Parallel()
+
+	res := workspaceDomain()
+	args := []string{"scan", "--no-ranges", "acme.com", "beta.io", "gamma.net"}
+
+	viaArgs, _, err := run(t, res, "", args...)
+	if err != nil {
+		t.Fatalf("args scan failed: %v", err)
+	}
+
+	list := filepath.Join(t.TempDir(), "domains.txt")
+	if err := os.WriteFile(list, []byte("acme.com\nbeta.io\ngamma.net\n"), 0o600); err != nil {
+		t.Fatalf("write list: %v", err)
+	}
+
+	viaFile, _, err := run(t, res, "", "scan", "--no-ranges", "--input", list)
+	if err != nil {
+		t.Fatalf("file scan failed: %v", err)
+	}
+
+	viaStdin, _, err := run(t, res, "acme.com\nbeta.io\ngamma.net\n", "scan", "--no-ranges")
+	if err != nil {
+		t.Fatalf("stdin scan failed: %v", err)
+	}
+
+	if viaArgs != viaFile || viaArgs != viaStdin {
+		t.Errorf("input paths diverge:\nargs:\n%s\nfile:\n%s\nstdin:\n%s", viaArgs, viaFile, viaStdin)
+	}
+}
+
+// TestScanMultiChunkRunRecordsAndReplays shrinks the chunk size and proves
+// chunked scanning is invisible to the product contract: every domain is
+// scanned exactly once, the event store records all of them, and replay
+// rebuilds the full set.
+func TestScanMultiChunkRunRecordsAndReplays(t *testing.T) {
+	t.Parallel()
+
+	prev := scanChunkSize
+	scanChunkSize = 4
+	t.Cleanup(func() { scanChunkSize = prev })
+
+	store := filepath.Join(t.TempDir(), "scans.db")
+
+	domains := make([]string, 11) // 4 + 4 + 3 chunks
+	for i := range domains {
+		domains[i] = fmt.Sprintf("d%d.example", i)
+	}
+
+	stdout, _, err := run(t, &fakeRes{}, "", append([]string{"scan", "--no-ranges", "--format", "jsonl", "--event-store", store}, domains...)...)
+	if err != nil {
+		t.Fatalf("scan failed: %v", err)
+	}
+
+	lines := strings.Split(strings.TrimRight(stdout, "\n"), "\n")
+	if len(lines) != len(domains) {
+		t.Fatalf("want %d jsonl lines, got %d", len(domains), len(lines))
+	}
+
+	replayed, replayStderr, err := run(t, &fakeRes{}, "", "replay", "--event-store", store, "--format", "jsonl")
+	if err != nil {
+		t.Fatalf("replay failed: %v", err)
+	}
+
+	if got := strings.Count(replayed, `"domain"`); got != len(domains) {
+		t.Errorf("replay rebuilt %d domains, want %d", got, len(domains))
+	}
+
+	if !strings.Contains(replayStderr, fmt.Sprintf("%d domains", len(domains))) {
+		t.Errorf("replay summary missing the total:\n%s", replayStderr)
 	}
 }

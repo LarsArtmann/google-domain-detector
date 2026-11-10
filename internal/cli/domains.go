@@ -17,8 +17,9 @@ import (
 
 // scanChunkSize bounds how many domains (and, for buffered formats, their
 // results) sit in memory at once. Every chunk is full except the last one —
-// a short chunk marks the end of the input.
-const scanChunkSize = 4096
+// a short chunk marks the end of the input. A var so tests can exercise
+// chunk boundaries without 4096-domain fixtures.
+var scanChunkSize = 4096
 
 // domainFeeder yields deduplicated domain chunks across all input sources in
 // first-seen order: positional arguments first, then the --input file or

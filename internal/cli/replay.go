@@ -8,6 +8,7 @@ import (
 
 	"github.com/larsartmann/go-output"
 
+	"github.com/larsartmann/google-domain-detector/internal/classify"
 	"github.com/larsartmann/google-domain-detector/internal/render"
 	"github.com/larsartmann/google-domain-detector/internal/scanstore"
 )
