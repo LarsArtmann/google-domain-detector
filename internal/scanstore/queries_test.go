@@ -6,6 +6,9 @@ import (
 	"testing"
 	"time"
 
+	"github.com/larsartmann/go-cqrs-lite/id/v4"
+	"github.com/larsartmann/go-cqrs-lite/system/v4"
+
 	"github.com/larsartmann/google-domain-detector/internal/classify"
 	"github.com/larsartmann/google-domain-detector/internal/scanstore"
 )
@@ -29,20 +32,7 @@ func TestQueryReadModelsRoundTrip(t *testing.T) {
 
 	firstRun := scanstore.NewRunID()
 	firstResults := []classify.Result{workspaceResult("acme.com"), failedResult()}
-
-	if err := recorder.StartScan(ctx, firstRun, "", "", len(firstResults), 0, 4); err != nil {
-		t.Fatalf("start first run: %v", err)
-	}
-
-	for _, result := range firstResults {
-		if err := recorder.Observe(ctx, firstRun, result); err != nil {
-			t.Fatalf("observe: %v", err)
-		}
-	}
-
-	if err := recorder.CompleteScan(ctx, firstRun, time.Minute, classify.Count(firstResults)); err != nil {
-		t.Fatalf("complete first run: %v", err)
-	}
+	recordRun(t, ctx, recorder, firstRun, firstResults, "", "", time.Minute)
 
 	if err := writer.GracefulClose(ctx); err != nil {
 		t.Fatalf("close writer: %v", err)
@@ -57,20 +47,7 @@ func TestQueryReadModelsRoundTrip(t *testing.T) {
 	}
 
 	recorder = scanstore.NewRecorder(writer)
-
-	if err := recorder.StartScan(ctx, secondRun, firstRun.Get(), "wave-x", len(secondResults), 0, 4); err != nil {
-		t.Fatalf("start second run: %v", err)
-	}
-
-	for _, result := range secondResults {
-		if err := recorder.Observe(ctx, secondRun, result); err != nil {
-			t.Fatalf("observe: %v", err)
-		}
-	}
-
-	if err := recorder.CompleteScan(ctx, secondRun, time.Second, classify.Count(secondResults)); err != nil {
-		t.Fatalf("complete second run: %v", err)
-	}
+	recordRun(t, ctx, recorder, secondRun, secondResults, firstRun.Get(), "wave-x", time.Second)
 
 	if err := writer.GracefulClose(ctx); err != nil {
 		t.Fatalf("close writer: %v", err)
@@ -82,6 +59,34 @@ func TestQueryReadModelsRoundTrip(t *testing.T) {
 	}
 
 	defer func() { _ = reader.Close() }()
+
+	assertLatestObservation(t, ctx, reader, secondRun)
+	assertRunViews(t, ctx, reader, firstRun, secondRun, firstResults)
+}
+
+// recordRun starts a scan, observes every result, and completes the run.
+func recordRun(t *testing.T, ctx context.Context, recorder *scanstore.Recorder, runID id.StreamID, results []classify.Result, resumedFrom, wave string, took time.Duration) {
+	t.Helper()
+
+	if err := recorder.StartScan(ctx, runID, resumedFrom, wave, len(results), 0, 4); err != nil {
+		t.Fatalf("start run: %v", err)
+	}
+
+	for _, result := range results {
+		if err := recorder.Observe(ctx, runID, result); err != nil {
+			t.Fatalf("observe: %v", err)
+		}
+	}
+
+	if err := recorder.CompleteScan(ctx, runID, took, classify.Count(results)); err != nil {
+		t.Fatalf("complete run: %v", err)
+	}
+}
+
+// assertLatestObservation checks that acme.com's projection reflects both
+// runs (newest evidence, count 2) and unobserved domains read as absent.
+func assertLatestObservation(t *testing.T, ctx context.Context, reader *system.System, lastRun id.StreamID) {
+	t.Helper()
 
 	var (
 		view     scanstore.ObservationView
@@ -103,8 +108,8 @@ func TestQueryReadModelsRoundTrip(t *testing.T) {
 		t.Errorf("acme.com observations = %d, want 2 (one per run)", view.Observations)
 	}
 
-	if view.LastRunID != secondRun.Get() {
-		t.Errorf("acme.com last run = %s, want %s", view.LastRunID, secondRun.Get())
+	if view.LastRunID != lastRun.Get() {
+		t.Errorf("acme.com last run = %s, want %s", view.LastRunID, lastRun.Get())
 	}
 
 	if len(view.Evidence) != 1 || view.Evidence[0].Kind != classify.EvidenceMXGoogle {
@@ -114,8 +119,17 @@ func TestQueryReadModelsRoundTrip(t *testing.T) {
 	if _, found, err := scanstore.LatestObservation(ctx, reader, "never-scanned.example"); err != nil || found {
 		t.Errorf("unobserved domain: found=%v err=%v, want found=false err=nil", found, err)
 	}
+}
 
-	var runs []scanstore.RunView
+// assertRunViews checks ListRuns returns both runs newest-first with
+// provenance and tallies intact.
+func assertRunViews(t *testing.T, ctx context.Context, reader *system.System, firstRun, secondRun id.StreamID, firstResults []classify.Result) {
+	t.Helper()
+
+	var (
+		runs     []scanstore.RunView
+		queryErr error
+	)
 
 	await(t, func() bool {
 		runs, queryErr = scanstore.ListRuns(ctx, reader)

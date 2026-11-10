@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"slices"
 	"time"
 
 	"github.com/larsartmann/go-cqrs-lite/event/v4"
@@ -160,23 +161,23 @@ func walkRuns(ctx context.Context, store event.Store, runFilter string) (Replay,
 	err := walkJournal(ctx, store, func(evt event.Event) error {
 		switch evt.Type() {
 		case evtScanStarted:
-			p, err := event.DecodePayloadAuto[ScanStartedPayload](evt)
+			payload, err := event.DecodePayloadAuto[ScanStartedPayload](evt)
 			if err != nil {
 				return fmt.Errorf("decode %s: %w", evtScanStarted, err)
 			}
 
-			if _, seen := runs[p.RunID]; !seen {
-				runs[p.RunID] = &RunSummary{
-					RunID:       p.RunID,
-					StartedAt:   p.StartedAt.Time(),
-					ResumedFrom: p.ResumedFrom,
-					Wave:        p.Wave,
-					Ruleset:     p.Ruleset,
+			if _, seen := runs[payload.RunID]; !seen {
+				runs[payload.RunID] = &RunSummary{
+					RunID:       payload.RunID,
+					StartedAt:   payload.StartedAt.Time(),
+					ResumedFrom: payload.ResumedFrom,
+					Wave:        payload.Wave,
+					Ruleset:     payload.Ruleset,
 				}
-				runOrder = append(runOrder, p.RunID)
+				runOrder = append(runOrder, payload.RunID)
 			}
 
-			latest = p.RunID
+			latest = payload.RunID
 		case evtScanCompleted:
 			p, err := event.DecodePayloadAuto[ScanCompletedPayload](evt)
 			if err != nil {
@@ -224,7 +225,7 @@ type ResumeSource struct {
 	Observed map[string]struct{}
 }
 
-// ResumeSource loads the skip-set for a --resume run. runRef is an exact
+// LoadResumeSource loads the skip-set for a --resume run. runRef is an exact
 // run ID or "latest" for the most recently started run. It fails when the
 // journal holds no runs at all or the referenced run does not exist.
 func LoadResumeSource(ctx context.Context, dsn, runRef string) (ResumeSource, error) {
@@ -248,18 +249,8 @@ func LoadResumeSource(ctx context.Context, dsn, runRef string) (ResumeSource, er
 		return ResumeSource{}, fmt.Errorf("%w in %s", ErrNoRuns, dsn)
 	}
 
-	found := false
-
-	for _, r := range runs.Runs {
-		if r.RunID == runs.RunID {
-			found = true
-
-			break
-		}
-	}
-
-	if !found {
-		return ResumeSource{}, fmt.Errorf("run %s not found in %s (known runs: %d)", runRef, dsn, len(runs.Runs))
+	if !slices.ContainsFunc(runs.Runs, func(r RunSummary) bool { return r.RunID == runs.RunID }) {
+		return ResumeSource{}, fmt.Errorf("%w: %s in %s (known runs: %d)", ErrUnknownRun, runRef, dsn, len(runs.Runs))
 	}
 
 	source := ResumeSource{RunID: runs.RunID, Observed: map[string]struct{}{}}
@@ -290,6 +281,10 @@ func LoadResumeSource(ctx context.Context, dsn, runRef string) (ResumeSource, er
 // replayBatchSize bounds journal-walk memory for whole-TLD stores.
 const replayBatchSize = 1000
 
+// errUnsupportedStore reports an event store implementing neither the
+// seekable-batch nor the plain-journal read interface.
+var errUnsupportedStore = errors.New("event store supports neither seeking nor journal reads")
+
 // walkJournal feeds visit every event in the journal in order, batching when
 // the store supports seeking so memory stays bounded by the batch. An error
 // from visit aborts the walk and is returned unchanged.
@@ -319,7 +314,7 @@ func walkJournal(ctx context.Context, store event.Store, visit func(event.Event)
 
 	journal, ok := store.(event.Journal)
 	if !ok {
-		return errors.New("event store supports neither seeking nor journal reads")
+		return errUnsupportedStore
 	}
 
 	events, err := journal.ReadAll(ctx)

@@ -25,10 +25,12 @@ waves, manifests, unbound, pilot gates, reports, deltas.
 - [x] T08 Throughput benchmark — done: E9 ladder (recursion w2/4/8,
       forwarder w4/8/16); wave params: workers 8, timeout 10s, forwarder
       resolver (~4.1 dom/s cold). Table in docs/census.md.
-- [~] T09 Recover the 7,204 legacy unknowns (.de/.ch/.uk) — running:
-      forwarder scan into census.db (wave legacy-2026-11-09-unknowns);
-      slow tail expected (~0.5 dom/s — the set is selection-biased to
-      pathological DNS).
+- [x] T09 Recover the 7,204 legacy unknowns (.de/.ch/.uk) — done:
+      3 rounds into census.db (waves legacy-2026-11-09-unknowns{,-c1,-c2});
+      final: 4,732 resolved, 1,864 dead, 595 broken delegations (D3
+      refinement: stable SERVFAIL = explained, gate flag
+      `--servfail-stable`), 13 residual timeouts (0.18% < 0.5% bar).
+      Findings: reports/census/README.md.
 - [x] T10 Tranco full-list import + wave manifests — done: list 947N2
       frozen into reports/census/waves/tranco1m-{a,b,c}.txt (sha256 in
       MANIFEST.sha256), splitter scripts/tranco-manifests.sh, ledger in
