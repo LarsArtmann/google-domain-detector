@@ -58,32 +58,32 @@ func newDomainFeeder(
 		chunkSize = defaultScanChunkSize
 	}
 
-	f := &domainFeeder{seen: map[string]bool{}, skip: skip, chunkSize: chunkSize}
+	feeder := &domainFeeder{seen: map[string]bool{}, skip: skip, chunkSize: chunkSize}
 
 	for _, raw := range args {
-		f.streamers = append(f.streamers, input.NewStreamer(strings.NewReader(raw)))
-		f.closers = append(f.closers, nil)
+		feeder.streamers = append(feeder.streamers, input.NewStreamer(strings.NewReader(raw)))
+		feeder.closers = append(feeder.closers, nil)
 	}
 
 	switch {
 	case inputPath == "-":
-		f.streamers = append(f.streamers, input.NewStreamer(stdin))
-		f.closers = append(f.closers, nil)
+		feeder.streamers = append(feeder.streamers, input.NewStreamer(stdin))
+		feeder.closers = append(feeder.closers, nil)
 	case inputPath != "":
 		file, err := os.Open(inputPath)
 		if err != nil {
 			return nil, fmt.Errorf("open --input %s: %w", inputPath, err)
 		}
 
-		f.streamers = append(f.streamers, input.NewStreamer(file))
-		f.closers = append(f.closers, file)
+		feeder.streamers = append(feeder.streamers, input.NewStreamer(file))
+		feeder.closers = append(feeder.closers, file)
 	case len(args) == 0:
 		// Piped stdin (a terminal was already rejected above).
-		f.streamers = append(f.streamers, input.NewStreamer(stdin))
-		f.closers = append(f.closers, nil)
+		feeder.streamers = append(feeder.streamers, input.NewStreamer(stdin))
+		feeder.closers = append(feeder.closers, nil)
 	}
 
-	return f, nil
+	return feeder, nil
 }
 
 // next yields the next chunk. last reports that the input is drained after
@@ -92,16 +92,16 @@ func (f *domainFeeder) next() (chunk []domain.Domain, last bool, err error) {
 	chunk = make([]domain.Domain, 0, f.chunkSize)
 
 	for f.current < len(f.streamers) && len(chunk) < f.chunkSize {
-		s := f.streamers[f.current]
+		streamer := f.streamers[f.current]
 
 		for len(chunk) < f.chunkSize {
-			d, ok := s.Next()
+			dom, ok := streamer.Next()
 			if !ok {
-				if streamErr := s.Err(); streamErr != nil {
+				if streamErr := streamer.Err(); streamErr != nil {
 					return nil, false, streamErr
 				}
 
-				total, kept := s.Skipped()
+				total, kept := streamer.Skipped()
 
 				f.skippedTotal += total
 				if f.skippedFirst == "" && len(kept) > 0 {
@@ -118,16 +118,16 @@ func (f *domainFeeder) next() (chunk []domain.Domain, last bool, err error) {
 			}
 
 			if f.skip != nil {
-				if _, done := f.skip[d.String()]; done {
-					f.seen[d.String()] = true
+				if _, done := f.skip[dom.String()]; done {
+					f.seen[dom.String()] = true
 
 					continue
 				}
 			}
 
-			if !f.seen[d.String()] {
-				f.seen[d.String()] = true
-				chunk = append(chunk, d)
+			if !f.seen[dom.String()] {
+				f.seen[dom.String()] = true
+				chunk = append(chunk, dom)
 			}
 		}
 	}

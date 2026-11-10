@@ -53,14 +53,7 @@ func Run(ctx context.Context, res resolve.Resolver, domains []domain.Domain, opt
 	// authoritative answers (NXDOMAIN is never retried).
 	res = retryResolver{inner: res}
 
-	workers := opts.Workers
-	if workers <= 0 {
-		workers = defaultWorkers
-	}
-
-	if workers > len(domains) {
-		workers = len(domains)
-	}
+	workers := resolveWorkers(opts.Workers, len(domains))
 
 	queue := make(chan int)
 
@@ -101,6 +94,29 @@ func Run(ctx context.Context, res resolve.Resolver, domains []domain.Domain, opt
 	close(queue)
 	wg.Wait()
 
+	fillUnrunResults(ctx, results, domains)
+
+	return results
+}
+
+// resolveWorkers clamps the requested parallelism to the pool defaults and
+// the input size.
+func resolveWorkers(requested, domainCount int) int {
+	workers := requested
+	if workers <= 0 {
+		workers = defaultWorkers
+	}
+
+	if workers > domainCount {
+		workers = domainCount
+	}
+
+	return workers
+}
+
+// fillUnrunResults turns slots a canceled run never reached into explicit
+// cancellation results, so the report accounts for every input domain.
+func fillUnrunResults(ctx context.Context, results []classify.Result, domains []domain.Domain) {
 	for i := range results {
 		if results[i].Domain == "" {
 			err := ctx.Err()
@@ -111,8 +127,6 @@ func Run(ctx context.Context, res resolve.Resolver, domains []domain.Domain, opt
 			}
 		}
 	}
-
-	return results
 }
 
 // ScanDomain probes one domain: TXT (SPF, site verification) and MX at the
@@ -122,33 +136,56 @@ func Run(ctx context.Context, res resolve.Resolver, domains []domain.Domain, opt
 // short-circuits the domain.
 func ScanDomain(ctx context.Context, res resolve.Resolver, d domain.Domain, opts Options) classify.Result {
 	apex := d.String()
-	r := classify.Result{Domain: apex}
+	result := classify.Result{Domain: apex}
 
+	lookupErr := probeApexRecords(ctx, res, apex, opts, &result)
+	if lookupErr == errShortCircuit {
+		return result
+	}
+
+	lookupErr = firstErr(lookupErr, probeHosts(ctx, res, d, opts, &result))
+
+	if lookupErr != nil && len(result.Evidences) == 0 {
+		result.Err = lookupErr.Error()
+		result.ErrKind = classify.ErrorKindOf(lookupErr)
+	}
+
+	return result
+}
+
+// errShortCircuit signals that the domain answered NXDOMAIN: no further
+// lookups can change the verdict.
+var errShortCircuit = errors.New("nxdomain short-circuit")
+
+// probeApexRecords collects apex TXT/SPF, MX, DKIM (only when MX+SPF are
+// silent), and NS evidence. The returned error is the first non-NXDOMAIN
+// lookup failure, or errShortCircuit when the domain does not exist.
+func probeApexRecords(ctx context.Context, res resolve.Resolver, apex string, opts Options, result *classify.Result) error {
 	var lookupErr error
 
 	txts, err := res.LookupTXT(ctx, apex)
 	if err != nil {
 		if dnsErr, ok := errors.AsType[*net.DNSError](err); ok && dnsErr.IsNotFound {
-			r.Err = "domain not found: " + err.Error()
-			r.ErrKind = classify.ErrorNXDomain
+			result.Err = "domain not found: " + err.Error()
+			result.ErrKind = classify.ErrorNXDomain
 
-			return r
+			return errShortCircuit
 		}
 
 		lookupErr = err
 	} else {
-		r.Evidences = append(r.Evidences, classify.ClassifyTXT(apex, txts)...)
+		result.Evidences = append(result.Evidences, classify.ClassifyTXT(apex, txts)...)
 	}
 
 	if mxs, err := res.LookupMX(ctx, apex); err != nil {
 		lookupErr = firstErr(lookupErr, err)
 	} else {
-		r.Evidences = append(r.Evidences, classify.ClassifyMX(apex, mxs)...)
+		result.Evidences = append(result.Evidences, classify.ClassifyMX(apex, mxs)...)
 	}
 
-	if opts.ProbeDKIM && !r.WorkspaceVerdict().Detected {
+	if opts.ProbeDKIM && !result.WorkspaceVerdict().Detected {
 		if dkim, err := res.LookupTXT(ctx, "google._domainkey."+apex); err == nil {
-			r.Evidences = append(r.Evidences, classify.ClassifyDKIM(apex, dkim)...)
+			result.Evidences = append(result.Evidences, classify.ClassifyDKIM(apex, dkim)...)
 		}
 		// A missing selector is the normal case, not an error worth reporting.
 	}
@@ -156,30 +193,33 @@ func ScanDomain(ctx context.Context, res resolve.Resolver, d domain.Domain, opts
 	if nss, err := res.LookupNS(ctx, apex); err != nil {
 		lookupErr = firstErr(lookupErr, err)
 	} else {
-		r.Evidences = append(r.Evidences, classify.ClassifyNS(apex, nss)...)
+		result.Evidences = append(result.Evidences, classify.ClassifyNS(apex, nss)...)
 	}
+
+	return lookupErr
+}
+
+// probeHosts collects CNAME and IP-range evidence for every host of the
+// domain (apex, then www). CNAME absence is normal for A-record hosts and
+// never an error; the returned error is the first IP lookup failure.
+func probeHosts(ctx context.Context, res resolve.Resolver, d domain.Domain, opts Options, result *classify.Result) error {
+	var lookupErr error
 
 	for _, host := range d.Hosts() {
 		if target, err := res.LookupCNAME(ctx, host); err == nil {
-			r.Evidences = append(r.Evidences, classify.ClassifyCNAME(host, target)...)
+			result.Evidences = append(result.Evidences, classify.ClassifyCNAME(host, target)...)
 		}
-		// No CNAME is the normal case for A-record hosts, never an error.
 
 		if opts.GCP != nil {
 			if ips, err := res.LookupIP(ctx, host); err != nil {
 				lookupErr = firstErr(lookupErr, err)
 			} else {
-				r.Evidences = append(r.Evidences, classify.ClassifyIPs(host, ips, opts.GCP)...)
+				result.Evidences = append(result.Evidences, classify.ClassifyIPs(host, ips, opts.GCP)...)
 			}
 		}
 	}
 
-	if lookupErr != nil && len(r.Evidences) == 0 {
-		r.Err = lookupErr.Error()
-		r.ErrKind = classify.ErrorKindOf(lookupErr)
-	}
-
-	return r
+	return lookupErr
 }
 
 // retryResolver retries every lookup once when the failure is transient
