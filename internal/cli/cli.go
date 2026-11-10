@@ -574,7 +574,7 @@ func attachEventStore(
 		return nil, fmt.Errorf("start run in event store: %w", err)
 	}
 
-	sink := scanstore.NewSink(ctx, recorder, runID, sinkDepth)
+	sink := scanstore.NewSink(recorder, runID, sinkDepth) //nolint:contextcheck // record() detaches on purpose: a canceled scan still journals (resume checkpoint)
 	opts.OnResult = sink.OnResult
 
 	return func(closeCtx context.Context, duration time.Duration, counts classify.Counts) error {

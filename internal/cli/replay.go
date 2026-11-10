@@ -37,10 +37,14 @@ func runSummaryLine(prefix string, c classify.Counts) string {
 	return b.String()
 }
 
+// provenanceParts bounds the wave/ruleset stamp list; both stamps may
+// appear on one run line.
+const provenanceParts = 2
+
 // provenanceSuffix renders the wave/ruleset journal stamps, empty when the
 // run predates them (pre-census journals decode with zero values).
 func provenanceSuffix(wave string, ruleset classify.Ruleset) string {
-	parts := make([]string, 0, 2)
+	parts := make([]string, 0, provenanceParts)
 	if wave != "" {
 		parts = append(parts, "wave "+wave)
 	}
@@ -89,56 +93,85 @@ func runReplay(ctx context.Context, f ReplayFlags, stdout, stderr io.Writer) err
 	// (--since) is the one exception on the memory promise: the baseline run
 	// is materialized to make flips comparable, the walked run still streams.
 	if format == output.FormatJSONL {
-		var fromByDomain map[string]classify.Result
-		var fromSummary *scanstore.RunSummary
+		return runReplayStreaming(ctx, f, sys, stdout, stderr, filter)
+	}
 
-		if f.Since != "" {
-			from, err := replayBaseline(ctx, sys, f.Since, f.EventStore)
-			if err != nil {
-				return err
-			}
+	return runReplayBuffered(ctx, f, sys, stdout, stderr, filter, format, colorMode)
+}
 
-			fromByDomain = from.byDomain()
-			fromSummary = from.summary()
-		}
+// runReplayStreaming is the jsonl path: matching (delta mode: flipping)
+// observations are written as the journal walk reaches them.
+func runReplayStreaming(
+	ctx context.Context,
+	f ReplayFlags,
+	sys *system.System,
+	stdout, stderr io.Writer,
+	filter render.Filter,
+) error {
+	var (
+		fromByDomain map[string]classify.Result
+		fromSummary  *scanstore.RunSummary
+	)
 
-		stream := render.NewJSONLStream(stdout)
-
-		flips := 0
-
-		summary, err := scanstore.StreamObservations(ctx, sys, f.Run, func(r classify.Result) error {
-			if render.Matches(r, filter) && isFlipAgainst(fromByDomain, r) {
-				stream.Write(r)
-				flips++
-			}
-
-			return nil
-		})
+	if f.Since != "" {
+		from, err := replayBaseline(ctx, sys, f.Since, f.EventStore)
 		if err != nil {
-			if errors.Is(err, scanstore.ErrNoRuns) {
-				return fmt.Errorf("%s: %w", f.EventStore, err)
-			}
-
-			if errors.Is(err, scanstore.ErrUnknownRun) {
-				return fmt.Errorf("run %q not found in %s: %w", runRefOrLatest(f.Run), f.EventStore, err)
-			}
-
 			return err
 		}
 
-		_, _ = fmt.Fprintf(stderr, "run %s: %d domains, %s%s\n",
-			summary.RunID, summary.Counts.Scanned,
-			runSummaryLine("", summary.Counts),
-			provenanceSuffix(summary.Wave, summary.Ruleset))
-
-		if f.Since != "" {
-			_, _ = fmt.Fprintf(stderr, "delta vs run %s: %d flips\n", f.Since, flips)
-			warnRulesetMismatch(stderr, fromSummary, &summary)
-		}
-
-		return stream.Err()
+		fromByDomain = from.byDomain()
+		fromSummary = from.summary()
 	}
 
+	stream := render.NewJSONLStream(stdout)
+
+	flips := 0
+
+	summary, err := scanstore.StreamObservations(ctx, sys, f.Run, func(r classify.Result) error {
+		if render.Matches(r, filter) && isFlipAgainst(fromByDomain, r) {
+			stream.Write(r)
+
+			flips++
+		}
+
+		return nil
+	})
+	if err != nil {
+		if errors.Is(err, scanstore.ErrNoRuns) {
+			return fmt.Errorf("%s: %w", f.EventStore, err)
+		}
+
+		if errors.Is(err, scanstore.ErrUnknownRun) {
+			return fmt.Errorf("run %q not found in %s: %w", runRefOrLatest(f.Run), f.EventStore, err)
+		}
+
+		return err
+	}
+
+	_, _ = fmt.Fprintf(stderr, "run %s: %d domains, %s%s\n",
+		summary.RunID, summary.Counts.Scanned,
+		runSummaryLine("", summary.Counts),
+		provenanceSuffix(summary.Wave, summary.Ruleset))
+
+	if f.Since != "" {
+		_, _ = fmt.Fprintf(stderr, "delta vs run %s: %d flips\n", f.Since, flips)
+		warnRulesetMismatch(stderr, fromSummary, &summary)
+	}
+
+	return stream.Err()
+}
+
+// runReplayBuffered is every non-jsonl path: the run rebuilds fully, delta
+// mode filters it down to flips, then one report renders.
+func runReplayBuffered(
+	ctx context.Context,
+	f ReplayFlags,
+	sys *system.System,
+	stdout, stderr io.Writer,
+	filter render.Filter,
+	format output.Format,
+	colorMode output.ColorMode,
+) error {
 	replay, err := scanstore.ReplayJournal(ctx, sys, f.Run)
 	if err != nil {
 		if errors.Is(err, scanstore.ErrNoRuns) {
@@ -152,15 +185,7 @@ func runReplay(ctx context.Context, f ReplayFlags, stdout, stderr io.Writer) err
 		return err
 	}
 
-	var summary *scanstore.RunSummary
-
-	for i := range replay.Runs {
-		if replay.Runs[i].RunID == replay.RunID {
-			summary = &replay.Runs[i]
-
-			break
-		}
-	}
+	summary := runSummary(replay)
 
 	if summary != nil {
 		_, _ = fmt.Fprintf(stderr, "run %s: %d domains, %s%s\n",
@@ -172,41 +197,74 @@ func runReplay(ctx context.Context, f ReplayFlags, stdout, stderr io.Writer) err
 	results := replay.Results
 
 	if f.Since != "" {
-		from, err := replayBaseline(ctx, sys, f.Since, f.EventStore)
+		delta, err := applyDelta(ctx, f, sys, stderr, replay, summary)
 		if err != nil {
 			return err
 		}
 
-		flips := scanstore.FlipDiff(from.replay.Results, replay.Results)
-		flipSet := make(map[string]bool, len(flips))
-		for _, flip := range flips {
-			flipSet[flip.Domain] = true
-		}
-
-		results = make([]classify.Result, 0, len(flips))
-		for _, r := range replay.Results {
-			if flipSet[r.Domain] {
-				results = append(results, r)
-			}
-		}
-
-		counts := scanstore.CountFlips(flips)
-		_, _ = fmt.Fprintf(stderr, "delta vs run %s: %d flips — workspace adopted %d / left %d, gcp adopted %d / left %d\n",
-			f.Since, len(flips),
-			counts.WorkspaceAdopted, counts.WorkspaceLeft,
-			counts.GCPAdopted, counts.GCPLeft)
-
-		fromSummary := from.summary()
-		warnRulesetMismatch(stderr, fromSummary, summary)
+		results = delta
 	}
 
 	return renderResults(stdout, results, filter, format, render.TableOptions{ColorMode: colorMode})
 }
 
+// applyDelta narrows replay results to the domains that flipped since the
+// baseline run and reports the flip tallies plus any ruleset mismatch.
+func applyDelta(
+	ctx context.Context,
+	f ReplayFlags,
+	sys *system.System,
+	stderr io.Writer,
+	replay scanstore.Replay,
+	summary *scanstore.RunSummary,
+) ([]classify.Result, error) {
+	from, err := replayBaseline(ctx, sys, f.Since, f.EventStore)
+	if err != nil {
+		return nil, err
+	}
+
+	flips := scanstore.FlipDiff(from.replay.Results, replay.Results)
+
+	flipSet := make(map[string]bool, len(flips))
+
+	for _, flip := range flips {
+		flipSet[flip.Domain] = true
+	}
+
+	results := make([]classify.Result, 0, len(flips))
+
+	for _, r := range replay.Results {
+		if flipSet[r.Domain] {
+			results = append(results, r)
+		}
+	}
+
+	counts := scanstore.CountFlips(flips)
+	_, _ = fmt.Fprintf(stderr, "delta vs run %s: %d flips — workspace adopted %d / left %d, gcp adopted %d / left %d\n",
+		f.Since, len(flips),
+		counts.WorkspaceAdopted, counts.WorkspaceLeft,
+		counts.GCPAdopted, counts.GCPLeft)
+
+	warnRulesetMismatch(stderr, from.summary(), summary)
+
+	return results, nil
+}
+
+// runSummary locates the summary of the replay's selected run; nil when the
+// journal predates scan.started summaries.
+func runSummary(replay scanstore.Replay) *scanstore.RunSummary {
+	for i := range replay.Runs {
+		if replay.Runs[i].RunID == replay.RunID {
+			return &replay.Runs[i]
+		}
+	}
+
+	return nil
+}
+
 // baseline is the --since side of a delta replay.
 type baseline struct {
-	replay  scanstore.Replay
-	runByID map[string]scanstore.RunSummary
+	replay scanstore.Replay
 }
 
 func (b baseline) byDomain() map[string]classify.Result {
@@ -219,13 +277,7 @@ func (b baseline) byDomain() map[string]classify.Result {
 }
 
 func (b baseline) summary() *scanstore.RunSummary {
-	for i := range b.replay.Runs {
-		if b.replay.Runs[i].RunID == b.replay.RunID {
-			return &b.replay.Runs[i]
-		}
-	}
-
-	return nil
+	return runSummary(b.replay)
 }
 
 func replayBaseline(ctx context.Context, sys *system.System, sinceRun, eventStore string) (baseline, error) {
@@ -281,7 +333,7 @@ func warnRulesetMismatch(stderr io.Writer, from, to *scanstore.RunSummary) {
 	}
 
 	if from.Ruleset != "" && to.Ruleset != "" && from.Ruleset != to.Ruleset {
-		fmt.Fprintf(stderr, "warning: ruleset changed between runs (%s → %s); flips may be rule artifacts, not adoption\n",
+		_, _ = fmt.Fprintf(stderr, "warning: ruleset changed between runs (%s → %s); flips may be rule artifacts, not adoption\n",
 			from.Ruleset, to.Ruleset)
 	}
 }

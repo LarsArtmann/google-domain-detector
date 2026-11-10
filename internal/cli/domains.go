@@ -92,47 +92,75 @@ func (f *domainFeeder) next() (chunk []domain.Domain, last bool, err error) {
 	chunk = make([]domain.Domain, 0, f.chunkSize)
 
 	for f.current < len(f.streamers) && len(chunk) < f.chunkSize {
-		streamer := f.streamers[f.current]
-
-		for len(chunk) < f.chunkSize {
-			dom, ok := streamer.Next()
-			if !ok {
-				if streamErr := streamer.Err(); streamErr != nil {
-					return nil, false, streamErr
-				}
-
-				total, kept := streamer.Skipped()
-
-				f.skippedTotal += total
-				if f.skippedFirst == "" && len(kept) > 0 {
-					f.skippedFirst = kept[0]
-				}
-
-				if closer := f.closers[f.current]; closer != nil {
-					_ = closer.Close()
-				}
-
-				f.current++
-
-				break
-			}
-
-			if f.skip != nil {
-				if _, done := f.skip[dom.String()]; done {
-					f.seen[dom.String()] = true
-
-					continue
-				}
-			}
-
-			if !f.seen[dom.String()] {
-				f.seen[dom.String()] = true
-				chunk = append(chunk, dom)
-			}
+		if drainErr := f.drainStreamer(f.current, &chunk); drainErr != nil {
+			return nil, false, drainErr
 		}
 	}
 
 	return chunk, f.current == len(f.streamers), nil
+}
+
+// drainStreamer appends new (unskipped, unseen) domains from streamer index
+// i until the chunk is full or the stream ends; an exhausted stream is
+// closed, its skipped-entry tally folded in, and the feeder advances to the
+// next source.
+func (f *domainFeeder) drainStreamer(i int, chunk *[]domain.Domain) error {
+	streamer := f.streamers[i]
+
+	for len(*chunk) < f.chunkSize {
+		dom, ok := streamer.Next()
+		if !ok {
+			if streamErr := streamer.Err(); streamErr != nil {
+				return streamErr
+			}
+
+			total, kept := streamer.Skipped()
+			f.foldSkipped(total, kept)
+
+			if closer := f.closers[i]; closer != nil {
+				_ = closer.Close()
+			}
+
+			f.current++
+
+			return nil
+		}
+
+		if f.accept(dom) {
+			*chunk = append(*chunk, dom)
+		}
+	}
+
+	return nil
+}
+
+func (f *domainFeeder) foldSkipped(total int, kept []string) {
+	f.skippedTotal += total
+
+	if f.skippedFirst == "" && len(kept) > 0 {
+		f.skippedFirst = kept[0]
+	}
+}
+
+// accept reports whether dom enters the scan: skip-listed (--resume) and
+// already-seen domains never do, but both mark the domain as seen so the
+// first source wins.
+func (f *domainFeeder) accept(dom domain.Domain) bool {
+	if f.skip != nil {
+		if _, done := f.skip[dom.String()]; done {
+			f.seen[dom.String()] = true
+
+			return false
+		}
+	}
+
+	if !f.seen[dom.String()] {
+		f.seen[dom.String()] = true
+
+		return true
+	}
+
+	return false
 }
 
 // skippedEntries reports the aggregated skip count and first example.
