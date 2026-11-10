@@ -147,6 +147,7 @@ linters:
         - anon
         - stdlib
         - generic
+        - Resolver
     makezero:
       always: true
     mnd:
@@ -171,6 +172,13 @@ linters:
         - validate
         - mapstructure
       sort: true
+    # Project policy (not fleet default): the JSON DTO contract shipped in
+    # v0.1.0 is snake_case (error_kind, run_id, ...); renaming fields would
+    # break every published consumer and the documented format.
+    tagliatelle:
+      case:
+        rules:
+          json: snake
     testifylint:
       disable:
         - go-require
@@ -228,7 +236,10 @@ linters:
         - filepath\.
         - compress/gzip
         - \(context\.Context\)\.Err
+        - \(\*net\.Resolver\)\.
         - github\.com/larsartmann/([^/]+/pkg/errors|go-error-family)\.
+        - github\.com/larsartmann/google-domain-detector/internal/
+        - github\.com/larsartmann/(cmdguard|go-output|go-cqrs-lite|go-atomic-write)
       ignore-sigs:
         - .Errorf(
         - errors.New(
@@ -258,6 +269,10 @@ linters:
           - recvcheck
           - contextcheck
           - exhaustive
+          - err113
+      - path: internal/cli/doctor_test\.go
+        linters:
+          - paralleltest
       - path: _test\.go
         text: unused
         linters:

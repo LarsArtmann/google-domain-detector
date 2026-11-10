@@ -45,7 +45,7 @@ type Set struct {
 	v6 []netip.Prefix
 }
 
-type feed struct {
+type feed struct { //nolint:tagliatelle // field names are Google cloud.json's wire format
 	Prefixes []struct {
 		IPv4Prefix string `json:"ipv4Prefix"`
 		IPv6Prefix string `json:"ipv6Prefix"`
