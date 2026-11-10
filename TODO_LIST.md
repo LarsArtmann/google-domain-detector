@@ -5,11 +5,15 @@ markers: `[ ]` open, `[~]` in progress, `[x]` done.
 
 ## Detection coverage
 
-- [ ] Batch retry (once) for transient resolver failures — a flaky local
-      resolver currently surfaces as an `Error` cell; one retry would clear
-      most of them without hiding hard failures.
+- [ ] Batch retry (once) for transient resolver failures — PROVEN necessary at
+      bulk scale (2026-11-09 run: blocky under 24-worker load returned
+      malformed replies; Quad9 then 8.8.8.8 throttled the client after ~2 h
+      sustained; two retry passes recovered 7.1k of 14.3k failures).
+- [ ] Own recursive resolver guidance for whole-zone scale (unbound/knot) —
+      public resolvers throttle bulk scanners; results stay ~11 % unknown
+      otherwise (see reports/2026-11-09-tranco-de-ch-uk).
 - [ ] `--jsonl` streaming output for very large batches (render results as
-      they complete instead of after the whole run).
+           they complete instead of after the whole run).
 - [ ] Resume/checkpointing for multi-hour runs (`--resume results.jsonl`:
       skip domains already in the output file) — required before any
       whole-zone scan.

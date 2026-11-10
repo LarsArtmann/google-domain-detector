@@ -16,10 +16,11 @@ import (
 // RunSummary is one run as seen while walking the journal.
 type RunSummary struct {
 	//cqrs-lint:ignore(A032) journal-derived summaries are a serialized data surface; branded IDs stop at the command/stream boundary (goal-shaped-app precedent)
-	RunID     string
-	StartedAt time.Time
-	Completed bool
-	Counts    classify.Counts
+	RunID       string
+	StartedAt  time.Time
+	Completed   bool
+	ResumedFrom string
+	Counts     classify.Counts
 }
 
 // Replay is the rebuild-from-events result: the per-domain observations of
@@ -158,7 +159,7 @@ func walkRuns(ctx context.Context, store event.Store, runFilter string) (Replay,
 			}
 
 			if _, seen := runs[p.RunID]; !seen {
-				runs[p.RunID] = &RunSummary{RunID: p.RunID, StartedAt: p.StartedAt.Time()}
+				runs[p.RunID] = &RunSummary{RunID: p.RunID, StartedAt: p.StartedAt.Time(), ResumedFrom: p.ResumedFrom}
 				runOrder = append(runOrder, p.RunID)
 			}
 
@@ -191,6 +192,78 @@ func walkRuns(ctx context.Context, store event.Store, runFilter string) (Replay,
 	}
 
 	return out, nil
+}
+
+// ResumeSource answers "what did this run already observe?" for --resume:
+// the resolved run identity plus the set of domain names it recorded. The
+// set holds only domain-name keys, so memory stays proportional to the
+// run's domains, not its evidence.
+type ResumeSource struct {
+	RunID string
+	Observed map[string]struct{}
+}
+
+// ResumeSource loads the skip-set for a --resume run. runRef is an exact
+// run ID or "latest" for the most recently started run. It fails when the
+// journal holds no runs at all or the referenced run does not exist.
+func LoadResumeSource(ctx context.Context, dsn, runRef string) (ResumeSource, error) {
+	sys, err := Boot(ctx, dsn)
+	if err != nil {
+		return ResumeSource{}, fmt.Errorf("open event store %s: %w", dsn, err)
+	}
+
+	defer func() { _ = sys.Close() }()
+
+	if runRef == "" || runRef == "latest" {
+		runRef = ""
+	}
+
+	runs, err := walkRuns(ctx, sys.EventStore(), runRef)
+	if err != nil {
+		return ResumeSource{}, err
+	}
+
+	if runs.RunID == "" {
+		return ResumeSource{}, fmt.Errorf("%w in %s", ErrNoRuns, dsn)
+	}
+
+	found := false
+
+	for _, r := range runs.Runs {
+		if r.RunID == runs.RunID {
+			found = true
+
+			break
+		}
+	}
+
+	if !found {
+		return ResumeSource{}, fmt.Errorf("run %s not found in %s (known runs: %d)", runRef, dsn, len(runs.Runs))
+	}
+
+	source := ResumeSource{RunID: runs.RunID, Observed: map[string]struct{}{}}
+
+	err = walkJournal(ctx, sys.EventStore(), func(evt event.Event) error {
+		if evt.Type() != evtDomainObserved {
+			return nil
+		}
+
+		p, err := event.DecodePayloadAuto[DomainObservedPayload](evt)
+		if err != nil {
+			return fmt.Errorf("decode %s: %w", evtDomainObserved, err)
+		}
+
+		if p.RunID == source.RunID {
+			source.Observed[p.Domain] = struct{}{}
+		}
+
+		return nil
+	})
+	if err != nil {
+		return ResumeSource{}, fmt.Errorf("read event journal: %w", err)
+	}
+
+	return source, nil
 }
 
 // replayBatchSize bounds journal-walk memory for whole-TLD stores.

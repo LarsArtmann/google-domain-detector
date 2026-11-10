@@ -45,6 +45,7 @@ type ScanFlags struct {
 	NoDKIM     bool          `flag:"no-dkim"      help:"Skip the google._domainkey probe"`
 	Resolver   string        `flag:"resolver"     help:"Query this DNS server (host or host:port) instead of the system resolver"                                                                                                                                      env:"RESOLVER"`
 	EventStore string        `flag:"event-store"  help:"Persist the run as events in this SQLite file (go-cqrs-lite journal; replay with the replay command)"                                                                                                          env:"EVENT_STORE"`
+	Resume     string        `flag:"resume"       help:"Skip domains already observed in a recorded run (exact run ID, or 'latest'); starts a new run linked to it. Requires --event-store"`
 }
 
 // Run builds the CLI and executes args. Construction errors are printed to
@@ -145,7 +146,28 @@ func runScan(
 		return err
 	}
 
-	feeder, err := newDomainFeeder(args, f.Input, stdin, stdinTTY)
+	// A --resume run first learns what its source run already observed,
+	// then skips those domains; the new run links back via scan.started.
+	var (
+		resume      *scanstore.ResumeSource
+		skipDomains map[string]struct{}
+	)
+
+	if f.Resume != "" {
+		if f.EventStore == "" {
+			return usageError(errors.New("--resume requires --event-store (the journal IS the checkpoint)"))
+		}
+
+		source, err := scanstore.LoadResumeSource(ctx, f.EventStore, f.Resume)
+		if err != nil {
+			return err
+		}
+
+		resume = &source
+		skipDomains = source.Observed
+	}
+
+	feeder, err := newDomainFeeder(args, f.Input, stdin, stdinTTY, skipDomains)
 	if err != nil {
 		return err
 	}
@@ -156,6 +178,12 @@ func runScan(
 	}
 
 	if len(first) == 0 {
+		if resume != nil {
+			fmt.Fprintf(stderr, "resume: run %s already observed every input domain — nothing to do\n", resume.RunID)
+
+			return nil
+		}
+
 		return usageError(errNoValidDomains)
 	}
 
@@ -185,7 +213,12 @@ func runScan(
 		inputDomains, skipped = len(first), skippedTotal
 	}
 
-	finish, err := attachEventStore(ctx, f, inputDomains, skipped, stderr, &scanOpts)
+	resumedFrom := ""
+	if resume != nil {
+		resumedFrom = resume.RunID
+	}
+
+	finish, err := attachEventStore(ctx, f, resumedFrom, inputDomains, skipped, stderr, &scanOpts)
 	if err != nil {
 		return err
 	}
@@ -308,6 +341,7 @@ func renderResults(w io.Writer, results []classify.Result, filter render.Filter,
 func attachEventStore(
 	ctx context.Context,
 	f ScanFlags,
+	resumedFrom string,
 	inputDomain, skipped int,
 	stderr io.Writer,
 	opts *scan.Options,
@@ -324,7 +358,7 @@ func attachEventStore(
 	runID := scanstore.NewRunID()
 
 	recorder := scanstore.NewRecorder(sys)
-	if err := recorder.StartScan(ctx, runID, inputDomain, skipped, opts.Workers); err != nil {
+	if err := recorder.StartScan(ctx, runID, resumedFrom, inputDomain, skipped, opts.Workers); err != nil {
 		_ = sys.GracefulClose(context.WithoutCancel(ctx))
 
 		return nil, fmt.Errorf("start run in event store: %w", err)

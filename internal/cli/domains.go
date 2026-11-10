@@ -29,20 +29,22 @@ type domainFeeder struct {
 	closers   []io.Closer
 	current   int
 	seen      map[string]bool
+	skip      map[string]struct{}
 
 	skippedTotal int
 	skippedFirst string
 }
 
-// newDomainFeeder wires up the input sources. It fails before reading
-// anything when no source exists at all (no arguments, no --input, and a
-// terminal stdin nobody will pipe into).
-func newDomainFeeder(args []string, inputPath string, stdin io.Reader, stdinTTY bool) (*domainFeeder, error) {
+// newDomainFeeder wires up the input sources. skip names domains a
+// --resume run must not re-scan (already observed in its source run). It
+// fails before reading anything when no source exists at all (no arguments,
+// no --input, and a terminal stdin nobody will pipe into).
+func newDomainFeeder(args []string, inputPath string, stdin io.Reader, stdinTTY bool, skip map[string]struct{}) (*domainFeeder, error) {
 	if inputPath == "" && len(args) == 0 && stdinTTY {
 		return nil, usageError(errNoDomainsGiven)
 	}
 
-	f := &domainFeeder{seen: map[string]bool{}}
+	f := &domainFeeder{seen: map[string]bool{}, skip: skip}
 
 	for _, raw := range args {
 		f.streamers = append(f.streamers, input.NewStreamer(strings.NewReader(raw)))
@@ -98,6 +100,14 @@ func (f *domainFeeder) next() (chunk []domain.Domain, last bool, err error) {
 				f.current++
 
 				break
+			}
+
+			if f.skip != nil {
+				if _, done := f.skip[d.String()]; done {
+					f.seen[d.String()] = true
+
+					continue
+				}
 			}
 
 			if !f.seen[d.String()] {

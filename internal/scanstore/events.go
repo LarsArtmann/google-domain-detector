@@ -30,13 +30,15 @@ const (
 	CmdCompleteScan = command.Type("scan.complete")
 )
 
-// ScanStartedPayload opens a run.
+// ScanStartedPayload opens a run. ResumedFrom names the run whose
+// observations a --resume run deliberately skips (empty otherwise).
 type ScanStartedPayload struct {
 	RunID       string        `json:"run_id"`
 	StartedAt   event.Instant `json:"started_at"`
 	InputDomain int           `json:"input_domains"`
 	Skipped     int           `json:"skipped"`
 	Workers     int           `json:"workers"`
+	ResumedFrom string        `json:"resumed_from,omitempty"`
 }
 
 // DomainObservedPayload records everything one scan learned about one
@@ -67,6 +69,7 @@ type StartScanCmd struct {
 	InputDomain int
 	Skipped     int
 	Workers     int
+	ResumedFrom string
 }
 
 // RecordObservationCmd appends one observation to the domain's stream.

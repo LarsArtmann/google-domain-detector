@@ -177,14 +177,15 @@ func NewRunID() id.StreamID {
 	return id.NewStreamID()
 }
 
-// StartScan opens the run.
-func (rec *Recorder) StartScan(ctx context.Context, runID id.StreamID, inputDomain, skipped, workers int) error {
+// StartScan opens the run. resumedFrom names the run this run resumes
+// (empty for a fresh scan).
+func (rec *Recorder) StartScan(ctx context.Context, runID id.StreamID, resumedFrom string, inputDomain, skipped, workers int) error {
 	basic, err := command.New(CmdStartScan, runID)
 	if err != nil {
 		return fmt.Errorf("build %s command: %w", CmdStartScan, err)
 	}
 
-	cmd := StartScanCmd{BasicCommand: basic, InputDomain: inputDomain, Skipped: skipped, Workers: workers}
+	cmd := StartScanCmd{BasicCommand: basic, InputDomain: inputDomain, Skipped: skipped, Workers: workers, ResumedFrom: resumedFrom}
 
 	return rec.sys.CommandDispatcher().Dispatch(ctx, cmd)
 }
