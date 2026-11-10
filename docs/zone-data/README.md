@@ -10,8 +10,8 @@ project.
 | TLD   | Registry | Program (verified 2026-11-10)                     | Fee    | Draft                         | Status       |
 | ----- | -------- | ------------------------------------------------- | ------ | ----------------------------- | ------------ |
 | .uk   | Nominet  | .UK Zone Files Access Licence                     | free   | `nominet-uk.md`               | draft ready  |
-| .de   | DENIC    | (see `denic-de.md`)                               | (tbd)  | `denic-de.md`                 | research     |
-| .ch   | SWITCH   | (see `switch-ch.md`)                              | (tbd)  | `switch-ch.md`                | research     |
+| .de   | DENIC    | (research pending)                                | (tbd)  | `denic-de.md`                 | researching  |
+| .ch   | SWITCH   | none — open data via AXFR + free TSIG keys        | free   | `switch-ch.md`                | instructions ready |
 
 ## Constraint review (what the licences permit)
 
