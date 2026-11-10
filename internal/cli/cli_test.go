@@ -930,6 +930,33 @@ func stderrRunID(t *testing.T, stderr string) string {
 	return fields[len(fields)-1]
 }
 
+// showAfterScan retries show until the scan's projections catch up: the
+// scan process journals synchronously, but the observation's read-model
+// projection lands asynchronously, and an immediate show races it.
+func showAfterScan(t *testing.T, res *fakeRes, args ...string) (string, string) {
+	t.Helper()
+
+	deadline := time.Now().Add(5 * time.Second)
+
+	var (
+		stdout, stderr string
+		err            error
+	)
+
+	for {
+		stdout, stderr, err = run(t, res, "", args...)
+		if err == nil {
+			return stdout, stderr
+		}
+
+		if time.Now().After(deadline) {
+			t.Fatalf("show still failing after 5s (projection catch-up stalled?): %v", err)
+		}
+
+		time.Sleep(10 * time.Millisecond)
+	}
+}
+
 func TestShowPrintsLatestObservation(t *testing.T) {
 	t.Parallel()
 
@@ -940,11 +967,8 @@ func TestShowPrintsLatestObservation(t *testing.T) {
 		t.Fatalf("scan failed: %v", err)
 	}
 
-	stdout, stderr, err := run(t, workspaceDomain(), "",
+	stdout, stderr := showAfterScan(t, workspaceDomain(),
 		"show", "--event-store", store, "acme.com")
-	if err != nil {
-		t.Fatalf("show failed: %v", err)
-	}
 
 	if !strings.Contains(stdout, "acme.com") || !strings.Contains(stdout, "certain") {
 		t.Errorf("show table should carry the domain and its verdict, got:\n%s", stdout)
@@ -965,11 +989,8 @@ func TestShowJSONCarriesEvidence(t *testing.T) {
 		t.Fatalf("scan failed: %v", err)
 	}
 
-	stdout, _, err := run(t, workspaceDomain(), "",
+	stdout, _ := showAfterScan(t, workspaceDomain(),
 		"show", "--event-store", store, "--format", "json", "acme.com")
-	if err != nil {
-		t.Fatalf("show failed: %v", err)
-	}
 
 	byDomain := jsonResultsByDomain(t, stdout)
 	if _, ok := byDomain["acme.com"]; !ok {
