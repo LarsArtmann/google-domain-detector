@@ -72,24 +72,35 @@ second argument overrides the unknown budget (2 = D3 bar default,
 | tranco1m-b  | 100 001–500 000| 947N2 | b6d5b3821c90               | pending |
 | tranco1m-c  | 500 001–1 000 000 | 947N2 | b0317d71873a             | pending |
 
-## Worker-pressure findings (E7/E9, measured 2026-11-10)
+## Worker-pressure findings (E7/E9 ladder, measured 2026-11-10)
 
-Measured on single-TLD (.ch) lists through local unbound — the worst
-case, all queries hammer one TLD's nameservers:
+Two resolver modes were measured, cold cache, 10s timeout, mixed-TLD
+Tranco slices (worst-case single-TLD .ch noted where it differs):
 
-- workers 2, cold: 3.0% unknown; warm: clean.
-- workers 4, cold: 19.5% unknown (73/400 timeouts) — TLD nameserver
-  rate limiting under burst; every victim resolves instantly in
-  isolation afterwards.
-- workers 8, cold: 20–22% unknown; warm w8: 1% unknown, 22 domains/s.
+| Mode            | Workers | dom/s | unknown% | Gate |
+| --------------- | ------- | ----- | -------- | ---- |
+| full recursion  | 2       | 2.9   | 3.0%     | FAIL |
+| full recursion  | 4       | 1.2   | 19.5–24% | FAIL |
+| full recursion  | 8       | 0.7   | 20–22%   | FAIL |
+| **forwarder**   | 4       | 3.7   | 0.5%     | PASS |
+| **forwarder**   | **8**   | **4.1** | **1.5%** | **PASS** |
+| forwarder       | 16      | 1.9   | 65.5%    | FAIL |
 
-Consequences:
+Full recursion from this host collapses under scan bursts: cold
+recursions take 10–20s+ at ≥4 workers (every victim resolves instantly
+in isolation; unbound's front door stayed responsive throughout), which
+matches upstream-flow pressure on the local NAT path, not resolver CPU.
+Forwarding to Quad9 (scripts/unbound.conf) moves recursion onto
+infrastructure built for it; census qps stays far under bulk-throttle
+thresholds. Warm cache at any worker count: clean and fast.
 
-1. **Wave runs** (mixed-TLD Tranco): concurrency is bounded by TLD-NS
-   politeness, not by local CPU. Use the worker count the E9 mixed-TLD
-   ladder measured (see `reports/census/unbound/NOTES.md`), expect the
-   first pass to leave unknowns, and let the cleanup loop
-   (low-worker re-runs via `--resume`) collapse them — the gate applies
-   to the post-cleanup state.
-2. **Single-TLD scans** (.ch zone pulls etc.): workers ≤ 2 plus cleanup
-   loops, always.
+**Wave parameters: workers 8, timeout 10s, resolver 127.0.0.1:5353
+(forwarder mode).** ~4.1 domains/s ⇒ wave A ≈ 7 h, full 1M ≈ 2.9 days —
+resumable by design (`--resume latest`); cleanup loops re-run unknowns
+at low workers until < 0.5%. Sustained-throttle contingency: the gate
+runs after every pass; a throttle window surfaces as elevated timeouts
+and is absorbed by the cleanup loop (optionally add 1.1.1.1 as a third
+forwarder — documented lever, deliberately homogeneous Quad9 for now).
+
+Single-TLD scans (.ch zone pulls): the same ladder's recursion-mode w2
+row is the relevant bound — workers ≤ 2 plus cleanup loops, always.
