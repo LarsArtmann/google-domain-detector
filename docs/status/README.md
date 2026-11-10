@@ -7,6 +7,7 @@ TODO_LIST).
 
 | Report                                                                           | Scope                                                                                                                                                               |
 | -------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [2026-11-10_13-27](2026-11-10_13-27_v010-released-race-flake-killed-lane-landed.md) | **v0.1.0 RELEASED** (tag + push ×2 + GitHub Release + proxy-verified); race flake root-caused (startup-cancel → deterministic triggers); E19/E26/E27/T15/T16/E30 landed; negative-cache finding; CI-red-on-tag incident |
 | [2026-11-10_10-11](2026-11-10_10-11_v3-spine-race-blocked-session-status.md)     | Plan v3 spine: E3/E4/E5 landed, E1 replication (best run), release blocked on a flaky cancel test (since fixed deterministically — see 2026-11-10 E1 finding below) |
 | [2026-11-10_07-46](2026-11-10_07-46_t5-validated-read-models-cli-polish.md)      | T5 validation, show/runs read models, CLI polish; **nxdomain-bucket conclusion retracted** — see the correction note at the top                                     |
 | [2026-11-10_06-58](2026-11-10_06-58_scale-tier-execution-session-status.md)      | Scale-tier execution session                                                                                                                                        |
