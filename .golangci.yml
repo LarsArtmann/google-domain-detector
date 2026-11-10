@@ -161,17 +161,6 @@ linters:
           name: exported
         - disabled: true
           name: package-comments
-    tagalign:
-      align: false
-      order:
-        - binding
-        - json
-        - yaml
-        - xml
-        - toml
-        - validate
-        - mapstructure
-      sort: true
     # Project policy (not fleet default): the JSON DTO contract shipped in
     # v0.1.0 is snake_case (error_kind, run_id, ...); renaming fields would
     # break every published consumer and the documented format.

@@ -20,9 +20,9 @@ type ReplayFlags struct {
 	EventStore string `env:"EVENT_STORE" flag:"event-store" help:"SQLite event store written by scan --event-store"`
 	Run        string `                  flag:"run"         help:"Rebuild this run ID (default: the most recent run)"`
 	Since      string `                  flag:"since"       help:"Diff mode: report only domains whose verdict flipped since this run ID (the adoption/departure signal)"`
-	Format     string `default:"table" flag:"format" help:"Output format" values:"table,json,csv,tsv,markdown,yaml,toml,jsonl"`
-	Only       string `default:"all" flag:"only" help:"Report only matching domains" values:"all,workspace,gcp,google"`
-	Color      string `default:"auto" flag:"color" help:"Terminal colors for table output" values:"auto,always,never"`
+	Format     string `                  flag:"format"      help:"Output format"                                                                                          default:"table" values:"table,json,csv,tsv,markdown,yaml,toml,jsonl"`
+	Only       string `                  flag:"only"        help:"Report only matching domains"                                                                           default:"all"   values:"all,workspace,gcp,google"`
+	Color      string `                  flag:"color"       help:"Terminal colors for table output"                                                                       default:"auto"  values:"auto,always,never"`
 }
 
 // runSummaryLine is the one-line run readout shared by scan and replay:
@@ -333,7 +333,11 @@ func warnRulesetMismatch(stderr io.Writer, from, to *scanstore.RunSummary) {
 	}
 
 	if from.Ruleset != "" && to.Ruleset != "" && from.Ruleset != to.Ruleset {
-		_, _ = fmt.Fprintf(stderr, "warning: ruleset changed between runs (%s → %s); flips may be rule artifacts, not adoption\n",
-			from.Ruleset, to.Ruleset)
+		_, _ = fmt.Fprintf(
+			stderr,
+			"warning: ruleset changed between runs (%s → %s); flips may be rule artifacts, not adoption\n",
+			from.Ruleset,
+			to.Ruleset,
+		)
 	}
 }
