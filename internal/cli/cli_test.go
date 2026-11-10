@@ -244,12 +244,21 @@ func TestScanJSONLStreamsInCompletionOrder(t *testing.T) {
 
 // hangRes blocks the TXT lookup of slow.com until its context dies, so the
 // run can be canceled mid-flight while another domain already completed.
+// When cancel is non-nil it fires the moment slow.com's TXT lookup begins —
+// a deterministic trigger strictly after the event-store run record exists
+// (attachEventStore precedes the worker pool), so suite-load timing can
+// never pre-empt run-start the way the old wall-clock AfterFunc did.
 type hangRes struct {
 	*fakeRes
+	cancel context.CancelFunc
 }
 
 func (h hangRes) LookupTXT(ctx context.Context, host string) ([]string, error) {
 	if host == "slow.com" {
+		if h.cancel != nil {
+			h.cancel()
+		}
+
 		<-ctx.Done()
 
 		return nil, ctx.Err()
@@ -266,18 +275,18 @@ func TestScanJSONLCancelMidStream(t *testing.T) {
 
 	var stdout, stderr bytes.Buffer
 
-	d, err := BuildCLI(&stdout, &stderr, "test", "", &hangRes{&fakeRes{}}, strings.NewReader(""), false)
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	d, err := BuildCLI(&stdout, &stderr, "test", "", &hangRes{fakeRes: &fakeRes{}, cancel: cancel}, strings.NewReader(""), false)
 	if err != nil {
 		t.Fatalf("BuildCLI failed: %v", err)
 	}
 
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
-
 	// Ctrl-C sends an explicit cancellation (context.Canceled), not a
 	// deadline; a parent deadline would classify as a per-domain timeout.
-	time.AfterFunc(100*time.Millisecond, cancel)
-
+	// The cancel fires from inside hangRes when slow.com's lookup begins —
+	// deterministic under any suite load.
 	err = d.ExecuteWithArgs(ctx, []string{"scan", "--no-ranges", "--format", "jsonl", "fast1.com", "slow.com"})
 	if err != nil {
 		t.Fatalf("canceled scan must still finish the report: %v", err)
@@ -898,15 +907,13 @@ func TestScanCancelMidRunDrainsEventStore(t *testing.T) {
 
 	var stdout, stderr bytes.Buffer
 
-	d, err := BuildCLI(&stdout, &stderr, "test", "", &hangRes{&fakeRes{}}, strings.NewReader(""), false)
-	if err != nil {
-		t.Fatalf("BuildCLI failed: %v", err)
-	}
-
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	time.AfterFunc(100*time.Millisecond, cancel)
+	d, err := BuildCLI(&stdout, &stderr, "test", "", &hangRes{fakeRes: &fakeRes{}, cancel: cancel}, strings.NewReader(""), false)
+	if err != nil {
+		t.Fatalf("BuildCLI failed: %v", err)
+	}
 
 	if err := d.ExecuteWithArgs(ctx, []string{"scan", "--no-ranges", "--format", "jsonl", "--event-store", store, "fast1.com", "slow.com"}); err != nil {
 		t.Fatalf("canceled scan must still finish cleanly: %v", err)
