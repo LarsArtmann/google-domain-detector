@@ -80,3 +80,24 @@ which is paperwork only the account holder can sign:
       to the audit section — done: added above the Library audit section
       (2026-11-10).
 - [ ] `go mod tidy` sweep after the other session's feature stabilizes.
+
+## Scanstore session follow-ups (docs/status/2026-11-10_01-12_*)
+
+- [ ] Error taxonomy in `classify.Counts`: break Errors into
+      nxdomain/timeout/servfail (would have explained the 1730-error tail
+      with data instead of interpretation).
+- [ ] Sink retry/backoff instead of drop-after-first-error in scanstore
+      recording (one store hiccup must not discard a 2.5M-domain journal).
+- [ ] Streaming/chunked input loader for whole-TLD scale.
+- [ ] cmdguard extras: WithCLICommit in nix build; WithExample/WithLong on
+      scan.
+- [ ] RegisterUnknownRenderer(FormatJSON, dto) to dissolve the cli.go JSON
+      special-case.
+- [ ] Lint-cleanup pass: ~29 pre-existing golangci warnings (err113,
+      wrapcheck, varnamelen, tagalign, cyclop) to zero.
+- [ ] docs/status index (README) so status reports are discoverable.
+- [ ] Version-freshness guard: CI/docs step flagging reports whose pinned
+      lib released a newer tag.
+- [ ] TimeoutMiddleware whole-run budget for huge inputs.
+- [ ] Consider output.FormatsForShape to auto-generate the flag values
+      enum from registered formats.
