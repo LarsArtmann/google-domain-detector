@@ -176,8 +176,13 @@ TimeoutMiddleware, FormatsForShape (=T23), error taxonomy (DONE via T10).
 3. Push the 11 local commits now (both remotes) — pending owner call.
 4. Retry DENIC zone-data research (rate-limited); write denic-de.md.
 5. crt.sh fallback extractor for non-Tranco .ch (v2 T19 add-on).
-6. T7 jsonl streaming (visitor refactor in scan.Run).
-7. T8 input streaming + streaming replay.
+6. T7 jsonl streaming (visitor refactor in scan.Run). — RESOLVED-DONE
+   (line-oriented output landed as render JSONLStream; struck row in
+   TODO_LIST Detection coverage; annotated 2026-11-10, tokens went
+   generic).
+7. T8 input streaming + streaming replay. — RESOLVED-DONE (chunked
+   domainFeeder + input.Streamer + replay walk; struck row in TODO_LIST
+   01-12/06-09 harvest; annotated 2026-11-10, tokens went generic).
 8. T9 journal-based --resume.
 9. T11 scanstore sink retry/backoff + ctrl-C test + 100k bench (G4).
 10. T12 show/runs commands (de-ghost read models).
