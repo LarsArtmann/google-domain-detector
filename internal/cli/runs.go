@@ -47,7 +47,8 @@ func runRuns(ctx context.Context, f RunsFlags, stdout, stderr io.Writer) error {
 		if !run.StartedAt.IsZero() {
 			// The operator's wall clock, not a fixed zone: the ledger is
 			// read by humans sitting at this machine.
-			started = run.StartedAt.Local().Format(time.DateTime) //nolint:gosmopolitan // deliberate local-time rendering
+			//nolint:gosmopolitan // deliberate local-time rendering
+			started = run.StartedAt.Local().Format(time.DateTime)
 		}
 
 		status := "started"

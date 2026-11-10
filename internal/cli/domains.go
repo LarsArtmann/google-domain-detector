@@ -88,8 +88,8 @@ func newDomainFeeder(
 
 // next yields the next chunk. last reports that the input is drained after
 // this chunk, so callers can pin exact input totals up front.
-func (f *domainFeeder) next() (chunk []domain.Domain, last bool, err error) {
-	chunk = make([]domain.Domain, 0, f.chunkSize)
+func (f *domainFeeder) next() ([]domain.Domain, bool, error) {
+	chunk := make([]domain.Domain, 0, f.chunkSize)
 
 	for f.current < len(f.streamers) && len(chunk) < f.chunkSize {
 		if drainErr := f.drainStreamer(f.current, &chunk); drainErr != nil {

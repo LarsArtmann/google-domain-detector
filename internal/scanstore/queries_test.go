@@ -65,7 +65,15 @@ func TestQueryReadModelsRoundTrip(t *testing.T) {
 }
 
 // recordRun starts a scan, observes every result, and completes the run.
-func recordRun(t *testing.T, ctx context.Context, recorder *scanstore.Recorder, runID id.StreamID, results []classify.Result, resumedFrom, wave string, took time.Duration) {
+func recordRun(
+	t *testing.T,
+	ctx context.Context,
+	recorder *scanstore.Recorder,
+	runID id.StreamID,
+	results []classify.Result,
+	resumedFrom, wave string,
+	took time.Duration,
+) {
 	t.Helper()
 
 	if err := recorder.StartScan(ctx, runID, resumedFrom, wave, len(results), 0, 4); err != nil {
@@ -97,7 +105,7 @@ func assertLatestObservation(t *testing.T, ctx context.Context, reader *system.S
 	await(t, func() bool {
 		view, found, queryErr = scanstore.LatestObservation(ctx, reader, "acme.com")
 
-		return found
+		return found && view.Observations >= 2
 	})
 
 	if queryErr != nil {
@@ -123,7 +131,13 @@ func assertLatestObservation(t *testing.T, ctx context.Context, reader *system.S
 
 // assertRunViews checks ListRuns returns both runs newest-first with
 // provenance and tallies intact.
-func assertRunViews(t *testing.T, ctx context.Context, reader *system.System, firstRun, secondRun id.StreamID, firstResults []classify.Result) {
+func assertRunViews(
+	t *testing.T,
+	ctx context.Context,
+	reader *system.System,
+	firstRun, secondRun id.StreamID,
+	firstResults []classify.Result,
+) {
 	t.Helper()
 
 	var (

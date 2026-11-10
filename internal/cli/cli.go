@@ -238,7 +238,7 @@ func runScan(
 		return err
 	}
 
-	feeder, first, last, err := scanTargets(ctx, f, args, stdin, stdinTTY, chunkSize, resume, stderr)
+	feeder, first, last, err := scanTargets(f, args, stdin, stdinTTY, chunkSize, resume, stderr)
 	if err != nil {
 		return err
 	}
@@ -300,7 +300,6 @@ func runScan(
 // input is a usage error; a --resume run whose input was fully observed
 // already is a printed no-op, signaled by a nil feeder and nil error.
 func scanTargets(
-	ctx context.Context,
 	f ScanFlags,
 	args []string,
 	stdin io.Reader,
@@ -619,11 +618,12 @@ func attachEventStore(
 		return nil, fmt.Errorf("start run in event store: %w", err)
 	}
 
+	//nolint:contextcheck // record() detaches on purpose: a canceled scan still journals (resume checkpoint)
 	sink := scanstore.NewSink(
 		recorder,
 		runID,
 		sinkDepth,
-	) //nolint:contextcheck // record() detaches on purpose: a canceled scan still journals (resume checkpoint)
+	)
 	opts.OnResult = sink.OnResult
 
 	return func(closeCtx context.Context, duration time.Duration, counts classify.Counts) error {

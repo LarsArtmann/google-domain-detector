@@ -768,7 +768,7 @@ func TestScanMultiChunkRunRecordsAndReplays(t *testing.T) {
 
 	store := filepath.Join(t.TempDir(), "scans.db")
 
-	domains := make([]string, 11) //nolint:makezero // presized and index-filled; append order is not the contract here // 4 + 4 + 3 chunks
+	domains := make([]string, 11) //nolint:makezero // presized, index-filled (input-order contract); 4 + 4 + 3 chunks
 	for i := range domains {
 		domains[i] = fmt.Sprintf("d%d.example", i)
 	}

@@ -44,7 +44,7 @@ type Options struct {
 // input order. Context cancellation aborts pending domains; their results
 // carry the cancellation as Err.
 func Run(ctx context.Context, res resolve.Resolver, domains []domain.Domain, opts Options) []classify.Result {
-	results := make([]classify.Result, len(domains)) //nolint:makezero // presized and index-filled in input order; appending would break the order contract
+	results := make([]classify.Result, len(domains)) //nolint:makezero // presized, index-filled in input order
 	if len(domains) == 0 {
 		return results
 	}
@@ -160,7 +160,13 @@ var errShortCircuit = errors.New("nxdomain short-circuit")
 // probeApexRecords collects apex TXT/SPF, MX, DKIM (only when MX+SPF are
 // silent), and NS evidence. The returned error is the first non-NXDOMAIN
 // lookup failure, or errShortCircuit when the domain does not exist.
-func probeApexRecords(ctx context.Context, res resolve.Resolver, apex string, opts Options, result *classify.Result) error {
+func probeApexRecords(
+	ctx context.Context,
+	res resolve.Resolver,
+	apex string,
+	opts Options,
+	result *classify.Result,
+) error {
 	var lookupErr error
 
 	txts, err := res.LookupTXT(ctx, apex)
@@ -202,7 +208,13 @@ func probeApexRecords(ctx context.Context, res resolve.Resolver, apex string, op
 // probeHosts collects CNAME and IP-range evidence for every host of the
 // domain (apex, then www). CNAME absence is normal for A-record hosts and
 // never an error; the returned error is the first IP lookup failure.
-func probeHosts(ctx context.Context, res resolve.Resolver, d domain.Domain, opts Options, result *classify.Result) error {
+func probeHosts(
+	ctx context.Context,
+	res resolve.Resolver,
+	d domain.Domain,
+	opts Options,
+	result *classify.Result,
+) error {
 	var lookupErr error
 
 	for _, host := range d.Hosts() {
