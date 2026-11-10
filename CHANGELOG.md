@@ -8,6 +8,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Added
 
+- Explained error tails: every result error is classified (nxdomain, timeout,
+  servfail, canceled) end to end — scan summary, replay summary, JSON DTO
+  (`error_kind`), and the event journal all carry it. Transient lookup
+  failures (timeouts, SERVFAIL) are retried once; authoritative NXDOMAIN
+  answers never are. `scan` now prints a one-line run summary to stderr
+  ("N domains: workspace certain X / likely Y, gcp Z, errors E (nxdomain a,
+  timeout b, ...)") so bulk-run health is readable without post-processing.
 - Scriptable exit codes: bad invocations (no domains given, replay without
   an event store) exit 2, scan failures exit 1. `--workers` is validated at
   parse time (1–512); env vars resolve under a single `GDD_` prefix

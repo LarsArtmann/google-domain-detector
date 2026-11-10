@@ -320,7 +320,7 @@ func TestCountTalliesVerdicts(t *testing.T) {
 			{Platform: PlatformGCP, Weight: WeightStrong},
 			{Platform: PlatformGoogle, Weight: WeightWeak},
 		}},
-		{Domain: "gone.example", Err: "domain not found"},
+		{Domain: "gone.example", Err: "domain not found", ErrKind: ErrorNXDomain},
 	}
 
 	got := Count(results)
@@ -332,6 +332,7 @@ func TestCountTalliesVerdicts(t *testing.T) {
 		GCPCertain:       1,
 		GenericGoogle:    1,
 		Errors:           1,
+		ErrorKinds:       ErrorKinds{NXDomain: 1},
 	}
 
 	if got != want {

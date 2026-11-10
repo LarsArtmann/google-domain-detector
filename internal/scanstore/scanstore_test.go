@@ -31,7 +31,7 @@ func workspaceResult(domainName string) classify.Result {
 }
 
 func failedResult(domainName string) classify.Result {
-	return classify.Result{Domain: domainName, Err: "domain not found: nxdomain"}
+	return classify.Result{Domain: domainName, Err: "domain not found: nxdomain", ErrKind: classify.ErrorNXDomain}
 }
 
 // TestCommandsProjectReadModels runs the production DomainConfig through the
