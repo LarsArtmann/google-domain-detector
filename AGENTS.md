@@ -176,6 +176,16 @@ first-party lib is considered.
   tidy` reverts it; it cannot stick while the cqrs pins are current.
 - Session start: run `gh run list --limit 3` before acting — the v0.1.0
   tag sat on a commit whose CI was red (soak timeout) for hours unnoticed.
+- Release law (learned 2026-11-10, §d1 of the 13-27 report): local green
+  gates do NOT substitute for CI green on the exact pushed commit — tag
+  only AFTER the push-triggered CI run completes green. CI's race suite
+  runs with `-timeout 20m` for the same reason (runners are ~1.5–2×
+  slower than local; the 10m default panicked mid-suite).
+- gh's Go-resolved DNS dies intermittently on this host while SSH and
+  glibc tools keep working (2026-11-10 outage). If `gh` fails to reach
+  api.github.com: retry later, or bypass with the documented
+  `curl --resolve api.github.com:443:<IP>` + token pattern; pushes via
+  SSH (`github` remote) are unaffected.
 
 ## Git remotes
 
