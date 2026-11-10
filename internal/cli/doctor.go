@@ -17,7 +17,7 @@ import (
 // process stdout and probes the real network; the offline suite pins the
 // error paths with fakes instead).
 var (
-	probeDNS = checkDNSResolver
+	probeDNS = checkDNSResolver //nolint:gochecknoglobals // test seam for the offline suite
 	//nolint:gochecknoglobals // test seam for the offline suite
 	probeRanges = checkRangesFeed
 )
@@ -26,7 +26,9 @@ var (
 // lookup inside a 5s budget: GDD_RESOLVER when set (mirroring scan's env
 // tag), the system resolver otherwise. Failure names the fix.
 func checkDNSResolver(ctx context.Context) error {
-	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	const dnsProbeBudget = 5 * time.Second
+
+	ctx, cancel := context.WithTimeout(ctx, dnsProbeBudget)
 	defer cancel()
 
 	res := resolve.New()
@@ -54,7 +56,9 @@ func checkDNSResolver(ctx context.Context) error {
 // budget — reachable network feed or a readable cache. Failure carries the
 // ranges error family (75 fetch / 65 corrupt) and names the fix.
 func checkRangesFeed(ctx context.Context) error {
-	ctx, cancel := context.WithTimeout(ctx, 10*time.Second)
+	const feedProbeBudget = 10 * time.Second
+
+	ctx, cancel := context.WithTimeout(ctx, feedProbeBudget)
 	defer cancel()
 
 	url := os.Getenv("GDD_RANGES_URL")
