@@ -146,7 +146,7 @@ domains.
 2. ⏳ Strike T11 wave-A half on green verdict.
 3. ⏳ Launch wave B (single-flight, same wrapper, fresh wave id +
    manifest slice).
-4. ⏳ Wave C (T13) after B.
+4. ⏳ Wave C (the T13 slice, 500k–1M) after wave B completes.
 5. ⏳ E17 census report from the journal (pin excluded pilot run ID;
    document soaks methodology + selection-bias warnings).
 6. Strike T14 per wave as cleanups land (may be zero rounds for A if
@@ -168,8 +168,9 @@ domains.
 19. 🔀 E29 CSV enrichment.
 20. 🔀 varnamelen `f` policy + final buildflow format pass.
 21. Harvest/route sales-lane 19-27 §f (18 items) — theirs or by policy
-    (§g2).
+    (§g2). <!-- fresh:skip sibling-scoped pending owner policy -->
 22. Harvest E24 02-00/19-08 §f (8 items) — same.
+    <!-- fresh:skip sibling-scoped pending owner policy -->
 23. Archive ritual for 16 status reports (cadence red; bulk git mv +
     check-rows first).
 24. Retract-note dry run (routed; go-release lane).
