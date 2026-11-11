@@ -101,6 +101,9 @@ which is paperwork only the account holder can sign:
       the whole input while the journal correctly records only real
       observations (census soaks 1–3, NOTES.md); fix the summary to
       report scanned-only plus an interrupted-unscanned count. cli lane.
+- [ ] Retract-note dry run — documentation-only emergency procedure for
+      poisoning a published release note; rehearse once so the real
+      path is known cold. go-release lane.
 
 ## Library audit follow-ups (2026-11-10, plan: docs/planning/2026-11-10_00-50_*)
 
