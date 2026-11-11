@@ -27,6 +27,13 @@ resolver=${GDD_RESOLVER:-127.0.0.1:5353}
 bar=${GDD_CLEANUP_BAR_PCT:-0.5}
 here=$(cd "$(dirname "$0")" && pwd)
 
+for f in "$gdd_bin" "$store" "$manifest"; do
+    if [ ! -e "$f" ]; then
+        echo "census-wave: no such path: $f" >&2
+        exit 2
+    fi
+done
+
 log() { printf '%s %s\n' "$(date '+%F %T')" "$*" >>"$out_dir/monitor.log"; }
 
 mkdir -p "$out_dir"
@@ -39,24 +46,21 @@ fi
 
 log "wave $wave pass 1 starting: workers=$workers timeout=$timeout_budget resolver=$resolver input=$manifest"
 
-"$gdd_bin" scan --no-ranges --workers "$workers" --timeout "$timeout_budget" \
-    --resolver "$resolver" --event-store "$store" --wave "$wave" \
-    --input "$manifest" --resume latest --format jsonl \
-    >"$out_dir/run1.jsonl" 2>"$out_dir/run1.stderr" &
-scan_pid=$!
-
 progress() {
     local total mixed
     total=$(wc -l <"$out_dir/run1.jsonl" 2>/dev/null || echo 0)
-    mixed=$(jq -r '.error_kind // "none"' "$out_dir/run1.jsonl" 2>/dev/null | sort | uniq -c | tr '\n' ';' )
+    mixed=$(jq -r '.error_kind // "none"' "$out_dir/run1.jsonl" 2>/dev/null | sort | uniq -c | tr '\n' ';')
     log "progress: $total scanned — $mixed"
 }
-while kill -0 "$scan_pid" 2>/dev/null; do
-    sleep 1800
-    progress
-done
-wait "$scan_pid"
+(while :; do sleep 1800; progress; done) &
+poller=$!
+
+"$gdd_bin" scan --no-ranges --workers "$workers" --timeout "$timeout_budget" \
+    --resolver "$resolver" --event-store "$store" --wave "$wave" \
+    --input "$manifest" --resume latest --format jsonl \
+    >"$out_dir/run1.jsonl" 2>"$out_dir/run1.stderr"
 scan_rc=$?
+kill "$poller" 2>/dev/null
 log "wave $wave pass 1 finished: exit=$scan_rc"
 grep -E '^[0-9]+ domains:' "$out_dir/run1.stderr" | tail -1 >>"$out_dir/monitor.log"
 
