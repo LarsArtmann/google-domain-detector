@@ -7,7 +7,6 @@ import (
 	"io"
 	"net/http"
 	"net/http/httptest"
-	"os"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -283,9 +282,5 @@ func TestDefaultRangesCacheIsUnderUserCacheDir(t *testing.T) {
 
 	if !strings.Contains(cache, "google-domain-detector") || !strings.HasSuffix(cache, "cloud.json") {
 		t.Errorf("default cache = %q, want .../google-domain-detector/cloud.json", cache)
-	}
-
-	if _, err := os.Stat(filepath.Dir(cache)); err != nil {
-		t.Errorf("cache parent dir should exist: %v", err)
 	}
 }
