@@ -37,7 +37,7 @@ for f in "$gdd_bin" "$store" "$manifest"; do
     fi
 done
 
-log() { printf '%s %s %s\n' "$(date '+%F %T')" "$*" >>"$out_dir/monitor.log"; }
+log() { printf '%s %s\n' "$(date '+%F %T')" "$*" >>"$out_dir/monitor.log"; }
 
 mkdir -p "$out_dir"
 : >"$out_dir/monitor.log"
