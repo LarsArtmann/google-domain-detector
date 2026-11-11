@@ -36,3 +36,6 @@ jobs:
             echo "$unformatted"
             exit 1
           fi
+
+      - name: Audit freshness
+        run: ./scripts/audit-freshness.sh

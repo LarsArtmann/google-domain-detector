@@ -1,8 +1,9 @@
 # cmdguard — utilization deep dive
 
 > Reviewed: 2026-11-09 · Module: `github.com/larsartmann/cmdguard/v5`
-> Status in google-domain-detector: **DIRECT, pinned v5.0.0** (the CLI framework; also the transit route for go-error-family, go-atomic-write, go-branded-id, go-ndjson, samber-do-auditlog, koanf, fang, lipgloss, samber/do)
+> Status in google-domain-detector: **DIRECT, pinned v5.1.0** (the CLI framework; also the transit route for go-error-family, go-atomic-write, go-branded-id, go-ndjson, samber-do-auditlog, koanf, fang, lipgloss, samber/do)
 > Audited checkout: `/home/lars/projects/cmdguard` @ HEAD = `v5.0.0` + 23 commits (only 3 source files changed: `WithStrictPositionalArgs`, `WithArgsPassthrough` — both new opt-ins; mutex-guarded Builder)
+> Re-verified against `v5.1.0` on 2026-11-11: tagged Go-source delta over `v5.0.0` is +101 non-test lines (`git diff v5.0.0..v5.1.0 -- '*.go' ':!*_test.go'`) — precisely the previewed opt-ins, the mutex-guarded Builder, and doctor doc-comment fixes. No API cited below changed signature or behavior, so the verdicts carry over unchanged; two more unused S-effort opt-ins exist now (strict-positional-as-default is ROADMAP, not v5.1.0).
 > Consumer repo state at review: google-domain-detector @b07de82 (2026-11-09) — verdicts are point-in-time; re-verify citations against HEAD before relying on them
 
 ## Verdict
@@ -12,8 +13,8 @@ applicable capabilities.** The core path (typed flags, builder, batteries,
 error contract, test seam) is exactly right. The gap is a shelf of S-effort
 features the single-command CLI never turned on: `validate` tags, doctor
 checks, env prefix, exit-code differentiation, recovery middleware, and the
-`-o/--output`+JSON-error-envelope plumbing. Version pin is **current**
-(v5.0.0 is the newest v5 tag; post-tag additions don't apply here).
+`-o/--output`+JSON-error-envelope plumbing. Pin re-verified current
+at v5.1.0 (2026-11-11, header note).
 
 ## What the library is
 
