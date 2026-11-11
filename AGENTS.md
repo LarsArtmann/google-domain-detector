@@ -151,7 +151,25 @@ first-party lib is considered.
   concurrent scans share the forwarder on 127.0.0.1:5353 and poison each
   other's unknown-rate measurements (proven: pilot + soak collision,
   docs/census.md). Check `pgrep -f 'gdd scan'` before launching; waves
-  run via `scripts/census-wave.sh` (detached, gate + cleanup built in).
+  run via `scripts/census-wave.sh` (detached, gate + cleanup built in,
+  auto-snapshots the journal into `reports/census/snapshots/` on
+  completion; poller warns above the D3 bar via `GDD_WARN_PCT`).
+- **Editing a RUNNING bash script corrupts it** — bash reads scripts by
+  byte offset on the SAME inode; in-place rewrites make the running
+  instance execute garbage after its current command. Replace via a new
+  inode instead (`install -m 755 new old` — unlink+create): the running
+  instance keeps the old inode and finishes on the old code. Used for
+  census-wave.sh mid-wave-A (2026-11-11); verified by inode + pid checks.
+- **Census binary provenance = the embedded VCS stamp**, not `version`
+  (which prints only "dev"): `go version -m <binary>` exposes
+  `vcs.revision` + `vcs.modified` + toolchain — authoritative even when
+  the build wasn't stamped. Byte-reproducing a build from another
+  directory is impossible (build-dir paths embedded), so don't try;
+  record the stamp + sha256 instead (`reports/census/unbound/PROVENANCE.md`).
+- **Snapshotting the journal: use `sqlite3 <db> ".backup '<dest>'"`**
+  (scripts/census-snapshot.sh) — WAL-consistent and safe while a scan is
+  mid-run; a plain file-copy of census.db misses/stale-reads the -wal.
+  Restore-verified: tar → integrity_check → row counts.
 - `DomainObservedPayload` carries evidence only, never verdicts — verdicts
   are derived by `classify.Result` methods; duplicating them in events would
   be a split brain. Same rule for any new event payload.
