@@ -7,7 +7,9 @@
 #   workers defaults to 4, timeout to 10s (the 2026-11-11 sustained-load
 #   decision; see docs/census.md). Progress lands in <out-dir>/monitor.log,
 #   the pass in <out-dir>/run1.{jsonl,stderr}, cleanup rounds in
-#   <out-dir>/<wave-id>-c<N>.{jsonl,stderr}.
+#   <out-dir>/<wave-id>-c<N>.{jsonl,stderr}. On completion (either path)
+#   it snapshots the journal via census-snapshot.sh into
+#   <store-dir>/snapshots/ (§g3 default: local tarball per wave).
 # env: GDD_RESOLVER (127.0.0.1:5353), GDD_CLEANUP_BAR_PCT (0.5),
 #   GDD_WARN_PCT (2) — mid-pass unknown-rate WARNING threshold (D3 bar;
 #   2 = percent). Set GDD_WARN_PCT=0 to disable the warning.
@@ -38,6 +40,16 @@ for f in "$gdd_bin" "$store" "$manifest"; do
 done
 
 log() { printf '%s %s\n' "$(date '+%F %T')" "$*" >>"$out_dir/monitor.log"; }
+
+snapshot() {
+    local snap_dir snap_log
+    snap_dir=$(dirname "$store")/snapshots
+    if snap_log=$("$here/census-snapshot.sh" "$store" "$snap_dir" "$wave-complete-$(date '+%Y%m%d-%H%M')" 2>&1); then
+        log "journal snapshot: $snap_log"
+    else
+        log "journal snapshot FAILED (journal remains the source of truth; re-run scripts/census-snapshot.sh manually): $snap_log"
+    fi
+}
 
 mkdir -p "$out_dir"
 : >"$out_dir/monitor.log"
@@ -81,9 +93,11 @@ if [ "$gate_rc" -ne 0 ]; then
     log "pass-1 gate FAIL — running cleanup loop (E16)"
     "$here/census-cleanup.sh" "$gdd_bin" "$store" "$wave" "$out_dir/run1.jsonl" >>"$out_dir/monitor.log" 2>&1
     cleanup_rc=$?
+    snapshot
     log "cleanup loop exit=$cleanup_rc — residual gate verdict above; stable-SERVFAIL assessment (census-gate.sh --servfail-stable) is the operator's explicit call"
     exit "$cleanup_rc"
 fi
 
 log "pass-1 gate PASS — wave $wave done (no cleanup needed)"
+snapshot
 exit 0
