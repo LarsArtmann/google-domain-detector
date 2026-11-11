@@ -87,6 +87,12 @@ operator decision, not an accounting default.
   (its input is 100% prior errorers). Afterwards, assess residual
   SERVFAILs for stability with `census-gate.sh --servfail-stable`
   (D3 refinement above).
+- Wave runner (`scripts/census-wave.sh`) wraps one wave: single-flight
+  check, pass 1 via `--resume latest`, a 30-min progress poller, the
+  gate, and on FAIL the cleanup loop — all appended to
+  `<out-dir>/monitor.log` so a detached wave survives its session. The
+  poller logs a WARNING when the running unknown rate exceeds the D3
+  bar (env `GDD_WARN_PCT`, default `2` = percent; `0` disables).
 - Ruleset: waves run under `classify.CurrentRuleset` (stamped into every
   event; provenance test pins it). Any detection-rule change MUST bump
   the ruleset before the next wave.

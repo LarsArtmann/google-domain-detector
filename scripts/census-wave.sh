@@ -8,7 +8,9 @@
 #   decision; see docs/census.md). Progress lands in <out-dir>/monitor.log,
 #   the pass in <out-dir>/run1.{jsonl,stderr}, cleanup rounds in
 #   <out-dir>/<wave-id>-c<N>.{jsonl,stderr}.
-# env: GDD_RESOLVER (127.0.0.1:5353), GDD_CLEANUP_BAR_PCT (0.5)
+# env: GDD_RESOLVER (127.0.0.1:5353), GDD_CLEANUP_BAR_PCT (0.5),
+#   GDD_WARN_PCT (2) — mid-pass unknown-rate WARNING threshold (D3 bar;
+#   2 = percent). Set GDD_WARN_PCT=0 to disable the warning.
 set -uo pipefail
 
 if [ $# -lt 5 ]; then
@@ -25,6 +27,7 @@ workers=${6:-4}
 timeout_budget=${7:-10s}
 resolver=${GDD_RESOLVER:-127.0.0.1:5353}
 bar=${GDD_CLEANUP_BAR_PCT:-0.5}
+warn_pct=${GDD_WARN_PCT:-2}
 here=$(cd "$(dirname "$0")" && pwd)
 
 for f in "$gdd_bin" "$store" "$manifest"; do
@@ -47,10 +50,17 @@ fi
 log "wave $wave pass 1 starting: workers=$workers timeout=$timeout_budget resolver=$resolver input=$manifest"
 
 progress() {
-    local total mixed
+    local total mixed unknown pct
     total=$(wc -l <"$out_dir/run1.jsonl" 2>/dev/null || echo 0)
     mixed=$(jq -r '.error_kind // "none"' "$out_dir/run1.jsonl" 2>/dev/null | sort | uniq -c | tr '\n' ';')
     log "progress: $total scanned — $mixed"
+    if [ "$total" -gt 0 ] 2>/dev/null && awk -v w="$warn_pct" 'BEGIN { exit !(w > 0) }'; then
+        unknown=$(jq -r '.error_kind // "none"' "$out_dir/run1.jsonl" 2>/dev/null | grep -c -v -E '^(none|nxdomain)$')
+        pct=$(awk -v u="$unknown" -v t="$total" 'BEGIN { printf "%.2f", 100 * u / t }')
+        if awk -v p="$pct" -v w="$warn_pct" 'BEGIN { exit !(p > w) }'; then
+            log "WARNING: unknown rate ${pct}% above bar ${warn_pct}% at $total scanned — check unbound health (scripts/unbound.sh status) and error mix above"
+        fi
+    fi
 }
 (while :; do sleep 1800; progress; done) &
 poller=$!
