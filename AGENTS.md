@@ -133,10 +133,10 @@ first-party lib is considered.
   one-line-per-domain JSON).
 - **jq on this host is a SHIM**, not real jq: it breaks on relative paths
   in some invocations (prefer absolute) and does NOT auto-iterate arrays
-  (always explicit `.[]`); it also sometimes silently emits fewer rows
-  than the input has (seen 2026-11-11: 1 373 of 3 153 lines through
-  `select()`). For anything counted or gated, verify with `wc -l` or use
-  awk/grep instead.
+  (always explicit `.[]`). Also remember plain jq semantics under it:
+  `select(.error_kind)` silently drops rows where the field is null
+  (clean scan results!) — count with `// "none"` defaulting or `wc -l`
+  when a number matters.
 - **Census single-flight law (2026-11-11):** ONE `gdd scan` at a time —
   concurrent scans share the forwarder on 127.0.0.1:5353 and poison each
   other's unknown-rate measurements (proven: pilot + soak collision,
