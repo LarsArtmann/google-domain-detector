@@ -203,3 +203,17 @@ message-only amend of the bundle — one-commit-one-authorship beats a flatterin
 message on murky content. Message-only amend (`--no-verify`) is acceptable ONLY
 when the tree is byte-identical to the already-committed tree. Never rewrite
 pushed history (mirror included) without explicit approval.
+
+## Downstream consumers (pointer)
+
+- The Kith CRM lead-engine plan (`crm/docs/planning/2026-11-10_14-59_SUPERB-lead-engine-first-contact-pareto-plan.md`)
+  consumes THIS repo's CLI outputs only (guard 3 of that plan): tier CSVs from
+  `gdd-final.json`/`gcp-tiers.json`, rescans via the `scan` subcommand (the
+  unbound forwarder 127.0.0.1:5353 + workers 4 / timeout 15s is the calibrated
+  setting — workers 8 through the recursive forwarder fabricates a large
+  "no-evidence" class, see that plan's §10 erratum), and the wave-1/2 target
+  CSVs under `reports/2026-11-09-tranco-de-ch-uk/` (gitignored data).
+- Sales-side artifacts: `crm/docs/research/2026-11-10_google-scan-sales-targets.html`
+  (the 150 A+B report), `crm/docs/sales/` (openers, playbook, wave handoffs).
+- Delta rescans (CRM M11) stay CLI-consumed until census T16 lands; when it
+  does, the CRM script's diff logic retires in favor of `replay`-based deltas.
