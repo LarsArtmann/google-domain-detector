@@ -36,6 +36,9 @@ waves, manifests, unbound, pilot gates, reports, deltas.
       MANIFEST.sha256), splitter scripts/tranco-manifests.sh, ledger in
       docs/census.md.
 - [ ] T11–T13 Waves A (1–100k), B (100–500k), C (500k–1M) with pilot gates.
+      Wave A pass 1 in flight since 2026-11-11 12:25 (w4/10s, monitor.log);
+      wave B launches after A completes, wave C after B — single-flight
+      sequential, same wrapper (scripts/census-wave.sh).
 - [ ] T14 Unknown-cleanup loop per wave (<0.5% unknown).
 - [ ] T15 Census report (journal-derived) archived under reports/.
 - [ ] T16 Delta query: verdict flips between runs (the sales signal).
@@ -237,6 +240,11 @@ which is paperwork only the account holder can sign:
 - [ ] Pull the .ch zone via the public SWITCH TSIG keys and build the .ch
       census input (docs/zone-data/switch-ch.md has the exact AXFR
       command; once/24h limit) — feeds the pre-filter (plan v3 E28).
+- [ ] crt.sh `.de` extractor rate-limit-aware scheduling — honor the
+      documented crt.sh limits (once/day per TLD,
+      scripts/crtsh-extract.sh, zone-inputs in docs/census.md) when
+      pulling `.de` fallback inputs; DENIC refuses all third-party zone
+      access so crt.sh is the only `.de` path.
 - [~] Re-verify the nxdomain bucket via a FRESH-cache resolver (unbound,
   census E7) before quoting any coverage number — the E1 replication
   found stale negative-cache lies at ~92% of the sampled bucket; D3's
