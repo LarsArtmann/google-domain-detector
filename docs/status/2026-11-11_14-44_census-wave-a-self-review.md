@@ -178,7 +178,7 @@ first real wave. This report covers this session only.
 2. Strike T11's wave-A half when the pass-1 verdict lands.
 3. Launch wave B via `scripts/census-wave.sh` (single-flight: only
    after A fully done incl. cleanup).
-4. Wave C after B.
+4. Wave C (the T13 slice, 500k–1M) after wave B completes.
 5. E17: journal-derived census report (include pilot-run exclusion by
    ID, soaks' methodology, selection-bias warnings).
 6. Strike T14 per wave as cleanup loops complete.
