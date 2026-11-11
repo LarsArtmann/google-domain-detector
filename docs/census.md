@@ -95,11 +95,11 @@ operator decision, not an accounting default.
 
 | Wave       | Ranks             | List  | Manifest sha256 (first 12) | Status  |
 | ---------- | ----------------- | ----- | -------------------------- | ------- |
-| tranco1m-a | 1–100 000         | 947N2 | b4450f660567               | pending |
+| tranco1m-a | 1–100 000         | 947N2 | b4450f660567               | in progress (w4 soaks 1–3 + pilot collision; main pass running) |
 | tranco1m-b | 100 001–500 000   | 947N2 | b6d5b3821c90               | pending |
 | tranco1m-c | 500 001–1 000 000 | 947N2 | b0317d71873a               | pending |
 
-## Worker-pressure findings (E7/E9 ladder, measured 2026-11-10)
+## Worker-pressure findings (E7/E9 ladder + 2026-11-11 soaks)
 
 Two resolver modes were measured, cold cache, 10s timeout, mixed-TLD
 Tranco slices (worst-case single-TLD .ch noted where it differs):
@@ -109,25 +109,43 @@ Tranco slices (worst-case single-TLD .ch noted where it differs):
 | full recursion | 2       | 2.9     | 3.0%     | FAIL     |
 | full recursion | 4       | 1.2     | 19.5–24% | FAIL     |
 | full recursion | 8       | 0.7     | 20–22%   | FAIL     |
-| **forwarder**  | 4       | 3.7     | 0.5%     | PASS     |
-| **forwarder**  | **8**   | **4.1** | **1.5%** | **PASS** |
+| forwarder      | 4       | 3.7     | 0.5%     | PASS     |
+| forwarder      | 8       | 4.1     | 1.5%     | PASS     |
 | forwarder      | 16      | 1.9     | 65.5%    | FAIL     |
 
-Full recursion from this host collapses under scan bursts: cold
-recursions take 10–20s+ at ≥4 workers (every victim resolves instantly
-in isolation; unbound's front door stayed responsive throughout), which
-matches upstream-flow pressure on the local NAT path, not resolver CPU.
-Forwarding to Quad9 (scripts/unbound.conf) moves recursion onto
-infrastructure built for it; census qps stays far under bulk-throttle
-thresholds. Warm cache at any worker count: clean and fast.
+The table above is ~50-second windows. **Sustained 30-minute soaks
+(2026-11-10/11, artifacts under
+`reports/census/waves/tranco1m-a/soak{,2,3}.*`) tell a different
+story:**
 
-**Wave parameters: workers 8, timeout 10s, resolver 127.0.0.1:5353
-(forwarder mode).** ~4.1 domains/s ⇒ wave A ≈ 7 h, full 1M ≈ 2.9 days —
-resumable by design (`--resume latest`); cleanup loops re-run unknowns
-at low workers until < 0.5%. Sustained-throttle contingency: the gate
-runs after every pass; a throttle window surfaces as elevated timeouts
-and is absorbed by the cleanup loop (optionally add 1.1.1.1 as a third
-forwarder — documented lever, deliberately homogeneous Quad9 for now).
+| Soak | Conf               | Workers | dom/s | unknown% |
+| ---- | ------------------ | ------- | ----- | -------- |
+| 1    | Quad9 only         | 8       | 1.75  | 26.0%    |
+| 2    | Quad9 + Cloudflare | 8       | 1.72  | 21.1%    |
+| 3    | Quad9 + Cloudflare | 4       | 1.52  | 5.35%*   |
+
+\* soak 3 shared the resolver with a concurrently-running pilot scan
+for part of its window (single-flight law below) — 5.35% is an upper
+bound. Unknown scales super-linearly with workers under sustained
+load; a second forwarder helps only marginally at w8.
+
+**Wave parameters (decided 2026-11-11): workers 4, timeout 10s,
+resolver 127.0.0.1:5353 (Quad9 + Cloudflare forwarder).** ~1.5 dom/s ⇒
+wave A ≈ 16–18 h, full 1M ≈ 7–8 days — resumable by design
+(`--resume latest`). Two-pass protocol: the first pass LEAVES
+unknowns, the cleanup loop (E16) drives them under 0.5%, and the D3
+gate runs POST-CLEANUP. Timeouts burn their full per-domain budget, so
+a timeout-heavy first pass is also the slow one — at w4 the expected
+first-pass residue is ≤5%: cleanup-territory, not pathology.
+
+**Single-flight law: ONE census scan at a time.** Concurrent scans
+share 127.0.0.1:5353 and poison each other's measurements — proven
+2026-11-11 09:33 (a pilot and a soak ran concurrently; both showed
+inflated unknowns). Before launching: `pgrep -f 'gdd scan'` must be
+empty, and the wave lane owns long runs. Bulk scans also NEVER use the
+system resolver directly — a 2026-11-11 pilot accidentally did (its
+observations went through 127.0.0.1:53 and are excluded from census
+accounting as protocol-contaminated).
 
 Single-TLD scans (.ch zone pulls): the same ladder's recursion-mode w2
 row is the relevant bound — workers ≤ 2 plus cleanup loops, always.
