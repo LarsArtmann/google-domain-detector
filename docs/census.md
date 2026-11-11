@@ -78,6 +78,15 @@ operator decision, not an accounting default.
   <id>` so the journal is the source of truth; interrupted waves resume
   via `--resume latest` (observed domains are skipped — never
   blind-rescan, census guard 3).
+- Cleanup loop (E16): after a wave pass, drive unknowns under the bar:
+  `scripts/census-cleanup.sh <gdd-binary> reports/census/census.db
+  <wave-id> <wave-jsonl> [max-rounds=3]` — re-scans only unknown-class
+  domains at falling workers (round 1: 4, later: 2) as journal runs
+  `<wave>-c<N>`. The bar (0.5%) applies to the ORIGINAL wave size, not
+  the shrinking round size: a round's own unknown-rate is meaningless
+  (its input is 100% prior errorers). Afterwards, assess residual
+  SERVFAILs for stability with `census-gate.sh --servfail-stable`
+  (D3 refinement above).
 - Ruleset: waves run under `classify.CurrentRuleset` (stamped into every
   event; provenance test pins it). Any detection-rule change MUST bump
   the ruleset before the next wave.
