@@ -140,8 +140,11 @@ which is paperwork only the account holder can sign:
 - [x] `RenderOptions.Title` for markdown/html output (S) — done (markdown
       pinned by test; html not registered in this binary).
 - [x] `WithExample`/`WithLong` on the scan command (S) — done (plan v2 T4).
-- [ ] Add a "verified against commit X" line to every audit report header
-      (point-in-time citation pinning).
+- [x] Add a "verified against commit X" line to every audit report header
+      (point-in-time citation pinning) — done both halves: consumer-commit
+      pins in all 22 audits (47d74ba) and scripts/audit-freshness.sh
+      comparing each pinned version against go.mod (exit 1 on drift;
+      currently 2 pinned audits fresh, 20 prospective SKIPs).
 - [x] vendorHash in flake.nix is stale vs go.mod (nix-checker warning from
       the concurrent session's dep additions) — done: nix-hash-fix repaired
       it, hermetic nix build + buildflow gate green (2026-11-10).
