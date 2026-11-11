@@ -223,6 +223,7 @@ docs-gate 0 fail.
 ## f) Up to 50 next things (ranked)
 
 **My lane (finish what I started):**
+
 1. Fix the 7 lint findings in coverage_test.go; verify via
    `buildflow -s golangci-lint` (raw golangci is phantom-poisoned right
    now).
@@ -247,9 +248,9 @@ docs-gate 0 fail.
 
 **Coordination lanes (sibling's work — verify/flag only):**
 11. Sibling's RED CI on f21c845 (E16 cleanup loop) — surface to them,
-    don't touch their commit.
+don't touch their commit.
 12. E25 CI lint step: propose the golangci-lint job now that E24=0, but
-    only after the toolchain-skew phantom has a pin or a rebuilt binary.
+only after the toolchain-skew phantom has a pin or a rebuilt binary.
 13. Describe contract test (E31.2) — unblocked since the tree compiles.
 
 **Census lane (sibling's — listed for completeness, OFF-LIMITS to me):**
@@ -276,15 +277,15 @@ docs-gate 0 fail.
 32. Session-end junk-commit squash policy decision (owner).
 33. E31.4 freshness script (if the sibling doesn't take it).
 34. docs/DOMAIN_LANGUAGE.md harvest (census terms are accreting fast —
-    wave, flip, servfail-stable, coverage bar all need one glossary).
+wave, flip, servfail-stable, coverage bar all need one glossary).
 35. FEATURES.md refresh post-v0.1.0 (replay --since, --resume, --wave,
-    show are undocumented there).
+show are undocumented there).
 36. CHANGELOG entry for the lint-zero/refactor batch (internal, one
-    line).
+line).
 37. Consider `gh run list` session-start habit now includes checking
-    the sibling's tips too (this session caught their red CI at 02:00).
+the sibling's tips too (this session caught their red CI at 02:00).
 38-50. Reserved: everything else waits for the owner's §g answers and
-    the sibling's census progress; no invented work.
+the sibling's census progress; no invented work.
 
 ## g) Questions for the owner (cannot self-answer)
 

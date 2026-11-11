@@ -56,7 +56,12 @@ func TestWarnRulesetMismatch(t *testing.T) {
 	}{
 		{"nil sides stay silent", nil, &scanstore.RunSummary{Ruleset: "r1"}, false},
 		{"nil target stays silent", &scanstore.RunSummary{Ruleset: "r1"}, nil, false},
-		{"same ruleset stays silent", &scanstore.RunSummary{Ruleset: "r1"}, &scanstore.RunSummary{Ruleset: "r1"}, false},
+		{
+			"same ruleset stays silent",
+			&scanstore.RunSummary{Ruleset: "r1"},
+			&scanstore.RunSummary{Ruleset: "r1"},
+			false,
+		},
 		{"empty rulesets stay silent", &scanstore.RunSummary{}, &scanstore.RunSummary{Ruleset: "r2"}, false},
 		{"mismatch warns", &scanstore.RunSummary{Ruleset: "r1"}, &scanstore.RunSummary{Ruleset: "r2"}, true},
 	}
@@ -117,7 +122,14 @@ func TestRunRejectsUnknownCommand(t *testing.T) {
 
 	var stdout, stderr bytes.Buffer
 
-	if err := Run(context.Background(), []string{"definitely-not-a-command"}, &stdout, &stderr, "test", ""); err == nil {
+	if err := Run(
+		context.Background(),
+		[]string{"definitely-not-a-command"},
+		&stdout,
+		&stderr,
+		"test",
+		"",
+	); err == nil {
 		t.Fatal("unknown command must fail")
 	}
 }
@@ -132,7 +144,10 @@ func TestLoadRangesUsesFreshCacheWithoutNetwork(t *testing.T) {
 	}))
 	defer server.Close()
 
-	if _, _, err := ranges.Load(context.Background(), ranges.Options{URL: server.URL, CachePath: cache, Now: time.Now}); err != nil {
+	if _, _, err := ranges.Load(
+		context.Background(),
+		ranges.Options{URL: server.URL, CachePath: cache, Now: time.Now},
+	); err != nil {
 		t.Fatalf("seed cache: %v", err)
 	}
 
@@ -233,7 +248,10 @@ func TestDoctorCheckRangesFeedFromCache(t *testing.T) {
 	}))
 	defer server.Close()
 
-	if _, _, err := ranges.Load(context.Background(), ranges.Options{URL: server.URL, CachePath: cache, Now: time.Now}); err != nil {
+	if _, _, err := ranges.Load(
+		context.Background(),
+		ranges.Options{URL: server.URL, CachePath: cache, Now: time.Now},
+	); err != nil {
 		t.Fatalf("seed cache: %v", err)
 	}
 
