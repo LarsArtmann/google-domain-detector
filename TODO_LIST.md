@@ -96,6 +96,11 @@ which is paperwork only the account holder can sign:
 - [x] nix run .#release wiring check — resolved: the flake exposes no
       release app (default/fmt/lint/test only); the release path is tag +
       GitHub Release per the go-release skill. Nothing to wire.
+- [ ] Interrupted-run stderr summary counts synthetic canceled fills as
+      scanned domains — a SIGINT'd run prints an N-domains line covering
+      the whole input while the journal correctly records only real
+      observations (census soaks 1–3, NOTES.md); fix the summary to
+      report scanned-only plus an interrupted-unscanned count. cli lane.
 
 ## Library audit follow-ups (2026-11-10, plan: docs/planning/2026-11-10_00-50_*)
 
