@@ -92,7 +92,15 @@ operator decision, not an accounting default.
   gate, and on FAIL the cleanup loop — all appended to
   `<out-dir>/monitor.log` so a detached wave survives its session. The
   poller logs a WARNING when the running unknown rate exceeds the D3
-  bar (env `GDD_WARN_PCT`, default `2` = percent; `0` disables).
+  bar (env `GDD_WARN_PCT`, default `2` = percent; `0` disables). On
+  completion (either path) it snapshots the journal (below).
+- Journal snapshots (§g3 default, local tarball per completed wave):
+  `scripts/census-snapshot.sh <store> <snapshots-dir> [label]` —
+  sqlite online backup (WAL-consistent, safe to run mid-scan) then
+  tar.gz + sha256 sidecar. The wave runner calls it automatically into
+  `reports/census/snapshots/` with label `<wave>-complete-<ts>`;
+  wave A (launched before this existed) gets a manual snapshot at
+  completion.
 - Ruleset: waves run under `classify.CurrentRuleset` (stamped into every
   event; provenance test pins it). Any detection-rule change MUST bump
   the ruleset before the next wave.

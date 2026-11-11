@@ -93,8 +93,8 @@ if [ "$gate_rc" -ne 0 ]; then
     log "pass-1 gate FAIL — running cleanup loop (E16)"
     "$here/census-cleanup.sh" "$gdd_bin" "$store" "$wave" "$out_dir/run1.jsonl" >>"$out_dir/monitor.log" 2>&1
     cleanup_rc=$?
-    snapshot
     log "cleanup loop exit=$cleanup_rc — residual gate verdict above; stable-SERVFAIL assessment (census-gate.sh --servfail-stable) is the operator's explicit call"
+    snapshot
     exit "$cleanup_rc"
 fi
 
