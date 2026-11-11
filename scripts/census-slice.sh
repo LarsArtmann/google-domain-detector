@@ -23,4 +23,7 @@ if ! [[ $count =~ ^[0-9]+$ ]] || [ "$count" -eq 0 ]; then
 	exit 2
 fi
 
-tr -d '\r' <"$list" | head -n "$count" >"$out"
+# head first, then tr: under pipefail the reverse order makes head's early
+# exit SIGPIPE tr and fail the script (exit 141) even though the slice is
+# complete.
+head -n "$count" <"$list" | tr -d '\r' >"$out"
