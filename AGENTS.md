@@ -83,6 +83,16 @@ first-party lib is considered.
 
 ## Gotchas
 
+- **metaengine dispatches ONE fold per (query, event type) — last registered
+  wins** (`foldByEvent` overwrite, planner.go in metaengine v4.23.0). The
+  observations query in `views.go` registers an insert-shaped AND an
+  update-shaped fold for `scan.domain_observed`; only the update fold ever
+  runs (MapUpdate invokes with nil prev on a missing key = upsert — pinned
+  by `TestCommandsProjectReadModels` expecting `Observations == 1`). The
+  insert fold is NOT dead weight: it declares the Map keyType that
+  `QueryKeyType()` reads for dispatcher input-key extraction and feeds the
+  planner's fold-kind ranking. Never "simplify" it away without re-running
+  the read-model round-trip tests on memory AND sqlite.
 - **G4 verdict (2026-11-10, plan v3):** the journal is trustworthy to at
   least 100k events — append 18.7s (5 345/s), replay 2.0s (51 035/s), db
   125 MiB, heap 15 MiB (`TestJournalOneHundredThousandEvents`, opt-in via
