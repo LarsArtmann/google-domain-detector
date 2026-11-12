@@ -89,11 +89,25 @@ coverage_check() {
 	manifest_unique=$(grep -v '^[[:space:]]*$' "$manifest" | sort -u | wc -l)
 	unparseable=$(sed -nE 's/^skipped ([0-9]+) unparseable.*/\1/p' "$file" | tail -1)
 	unparseable=${unparseable:-0}
+	# The scan's own accounting lines (2026-11-12): the summary counts only
+	# real scans, so interrupted and resume-skipped domains surface here.
+	# They explain a gap; they never excuse one (the journal reconciles).
+	local interrupted resumed
+	interrupted=$(sed -nE 's/^interrupted: ([0-9]+) input domains.*/\1/p' "$file" | tail -1)
+	interrupted=${interrupted:-0}
+	resumed=$(sed -nE 's/^resume: skipped ([0-9]+) input domains.*/\1/p' "$file" | tail -1)
+	resumed=${resumed:-0}
 	accounted=$((total + unparseable + expect_skip))
 	if [ "$accounted" -ne "$manifest_unique" ]; then
 		gap=$((manifest_unique - accounted))
 		echo "census-gate: FAIL — coverage gap: manifest $manifest_unique vs scanned $total + unparseable $unparseable + expect-skip $expect_skip = $accounted (missing $gap)"
-		echo "census-gate: likely silent --resume skips — reconcile against the journal (domain_observed events by run_idx) before trusting this pass; see docs/census.md 'resume hazard'"
+		if [ "$interrupted" -gt 0 ]; then
+			echo "census-gate: run was interrupted ($interrupted never scanned) — retry the out-dir (explicit --resume via run-id)"
+		fi
+		if [ "$resumed" -gt 0 ]; then
+			echo "census-gate: run resumed and skipped $resumed observed domains"
+		fi
+		echo "census-gate: reconcile against the journal (domain_observed events by run_idx) before trusting this pass; see docs/census.md 'resume hazard'"
 		exit 4
 	fi
 	echo "census-gate: coverage PASS — manifest $manifest_unique = scanned $total + unparseable $unparseable + expect-skip $expect_skip"
@@ -104,10 +118,14 @@ summary_pattern='^[0-9]+ domains: workspace certain [0-9]+ / likely [0-9]+, gcp 
 if grep -Eq "$summary_pattern" "$file"; then
 	# stderr run-summary form:
 	# "N domains: workspace certain X / likely Y, gcp Z, errors E (nxdomain a, timeout b, servfail c, canceled d, other e)"
+	# A zero-error run prints no kind suffix at all — then every kind is 0.
 	line="$(grep -E "$summary_pattern" "$file" | tail -1)"
-	read -r total nx timeouts servfail canceled other <<<"$(printf '%s\n' "$line" | sed -E '
-        s/^([0-9]+) domains:.*errors [0-9]+ \(nxdomain ([0-9]+), timeout ([0-9]+), servfail ([0-9]+), canceled ([0-9]+), other ([0-9]+)\).*/\1 \2 \3 \4 \5 \6/')"
-	if [ -z "${total:-}" ] || [ "$total" = "$line" ]; then
+	nums=$(printf '%s\n' "$line" | sed -nE 's/^([0-9]+) domains:.*errors [0-9]+ \(nxdomain ([0-9]+), timeout ([0-9]+), servfail ([0-9]+), canceled ([0-9]+), other ([0-9]+)\).*/\1 \2 \3 \4 \5 \6/p')
+	if [ -z "$nums" ]; then
+		nums=$(printf '%s\n' "$line" | sed -nE 's/^([0-9]+) domains:.*/\1 0 0 0 0 0/p')
+	fi
+	read -r total nx timeouts servfail canceled other <<<"$nums"
+	if [ -z "${total:-}" ]; then
 		echo "census-gate: found summary line but could not parse it: $line" >&2
 		exit 2
 	fi
