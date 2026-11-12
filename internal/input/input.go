@@ -300,6 +300,20 @@ func splitCSVLine(line string) []string {
 	return fields
 }
 
+// HeaderColumn reports which of the parsed header fields carries the
+// domains (the same keyword rules the streaming loader applies). Consumers
+// that already hold a parsed CSV header — enrichment joins, importers —
+// reuse this instead of re-deriving the convention.
+func HeaderColumn(fields []string) (int, bool) {
+	for i, field := range fields {
+		if headerKeywords[normalizeHeader(field)] {
+			return i, true
+		}
+	}
+
+	return 0, false
+}
+
 func normalizeHeader(field string) string {
 	return strings.ToLower(strings.TrimSpace(strings.Trim(field, `"' `)))
 }

@@ -188,11 +188,19 @@ func BuildCLI(
 		v5.WithShort("List recorded scan runs from the event store"),
 	)
 
+	enrichCmd, enrichErr := v5.NewCommand("enrich", EnrichFlags{},
+		func(ctx context.Context, _ *RootConfig, f EnrichFlags) error {
+			return runEnrich(ctx, f, stdin, stdout, stderr)
+		},
+		v5.WithShort("Append workspace/gcp verdict columns to a CSV, joined from the event store (no DNS)"),
+	)
+
 	b := v5.NewBuilder(cli)
 	v5.Try(b, scanCmd, cmdErr)
 	v5.Try(b, replayCmd, replayErr)
 	v5.Try(b, showCmd, showErr)
 	v5.Try(b, runsCmd, runsErr)
+	v5.Try(b, enrichCmd, enrichErr)
 
 	// The doctor command replaces cmdguard's battery default so the
 	// domain preflights (dns-resolver, ranges-feed) run alongside the DI
