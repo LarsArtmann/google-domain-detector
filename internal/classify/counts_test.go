@@ -42,6 +42,10 @@ func TestTallySkipsUnscannedPlaceholders(t *testing.T) {
 	}
 
 	if counts.Errors != 1 || counts.ErrorKinds.Canceled != 1 {
-		t.Errorf("error accounting = errors %d canceled %d, want 1/1 (in-flight only)", counts.Errors, counts.ErrorKinds.Canceled)
+		t.Errorf(
+			"error accounting = errors %d canceled %d, want 1/1 (in-flight only)",
+			counts.Errors,
+			counts.ErrorKinds.Canceled,
+		)
 	}
 }

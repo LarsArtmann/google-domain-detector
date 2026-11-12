@@ -495,7 +495,10 @@ func TestScanInterruptedSummaryCountsScannedOnly(t *testing.T) {
 		t.Errorf("summary must count only the scanned domain, got:\n%s", stderr.String())
 	}
 
-	if !strings.Contains(stderr.String(), "interrupted: 1 input domains were never scanned (canceled before their turn)") {
+	if !strings.Contains(
+		stderr.String(),
+		"interrupted: 1 input domains were never scanned (canceled before their turn)",
+	) {
 		t.Errorf("interrupted accounting line missing from stderr:\n%s", stderr.String())
 	}
 }
@@ -1024,7 +1027,7 @@ func TestScanResumeSkipsObservedDomains(t *testing.T) {
 		t.Fatalf("resume must scan only the unobserved domain, got:\n%s", stdout)
 	}
 
-	wantAccounting := fmt.Sprintf("resume: skipped 3 input domains already observed in run %s", firstRun)
+	wantAccounting := "resume: skipped 3 input domains already observed in run " + firstRun
 	if !strings.Contains(resumeStderr, wantAccounting) {
 		t.Errorf("resume must account its skips on stderr, want %q in:\n%s", wantAccounting, resumeStderr)
 	}

@@ -36,20 +36,20 @@ type RootConfig struct{}
 
 type ScanFlags struct {
 	Input      string        `flag:"input"        help:"Read domains from FILE ('-' reads stdin). Plain lists and CSV with a domain/website/url column both work"                           short:"i"`
-	Format     string        `flag:"format"       help:"Output format"                                                                                                                      short:"f" default:"table"                                       values:"table,json,csv,tsv,markdown,yaml,toml,jsonl"`
-	Workers    int           `flag:"workers"      help:"Parallel DNS lookups"                                                                                                               short:"j" default:"8"                                                                                                validate:"min=1,max=512"`
-	Timeout    time.Duration `flag:"timeout"      help:"Per-domain lookup budget"                                                                                                                     default:"5s"`
-	Only       string        `flag:"only"         help:"Report only matching domains"                                                                                                                 default:"all"                                         values:"all,workspace,gcp,google"`
-	RangesURL  string        `flag:"ranges-url"   help:"GCP IP-range feed"                                                                                                                            default:"https://www.gstatic.com/ipranges/cloud.json"                                                                               env:"RANGES_URL"`
-	CachePath  string        `flag:"ranges-cache" help:"Range-feed cache file (default ~/.cache/google-domain-detector/cloud.json)"                                                                                                                                                                                                       env:"RANGES_CACHE"`
-	NoRanges   bool          `flag:"no-ranges"    help:"Skip GCP IP-range matching (CNAME/MX/NS evidence only)"`
-	NoDKIM     bool          `flag:"no-dkim"      help:"Skip the google._domainkey probe"`
-	Resolver   string        `flag:"resolver"     help:"Query this DNS server (host or host:port) instead of the system resolver"                                                                                                                                                                                                         env:"RESOLVER"`
-	EventStore string        `flag:"event-store"  help:"Persist the run as events in this SQLite file (go-cqrs-lite journal; replay with the replay command)"                                                                                                                                                                             env:"EVENT_STORE"`
-	Resume     string        `flag:"resume"       help:"Skip domains already observed in a recorded run (exact run ID, or 'latest'); starts a new run linked to it. Requires --event-store"`
-	Budget     time.Duration `flag:"max-runtime"   help:"Abort the whole run after this budget (e.g. 2h30m); 0 = unlimited. Partial results still render, journal, and count"`
-	Wave       string        `flag:"wave"         help:"Census wave ID stamped into the event journal (e.g. tranco1m-a); empty for ad-hoc runs. Requires --event-store"`
-	Color      string        `flag:"color"        help:"Terminal colors for table output"                                                                                                             default:"auto"                                        values:"auto,always,never"`
+	Format     string        `default:"table" flag:"format" help:"Output format" short:"f" values:"table,json,csv,tsv,markdown,yaml,toml,jsonl"`
+	Workers    int           `validate:"min=1,max=512" default:"8" flag:"workers" help:"Parallel DNS lookups" short:"j"`
+	Timeout    time.Duration `default:"5s" flag:"timeout" help:"Per-domain lookup budget"`
+	Only       string        `default:"all" flag:"only" help:"Report only matching domains" values:"all,workspace,gcp,google"`
+	RangesURL  string        `default:"https://www.gstatic.com/ipranges/cloud.json" env:"RANGES_URL" flag:"ranges-url" help:"GCP IP-range feed"`
+	CachePath  string        `env:"RANGES_CACHE" flag:"ranges-cache" help:"Range-feed cache file (default ~/.cache/google-domain-detector/cloud.json)"`
+	NoRanges   bool          `flag:"no-ranges" help:"Skip GCP IP-range matching (CNAME/MX/NS evidence only)"`
+	NoDKIM     bool          `flag:"no-dkim" help:"Skip the google._domainkey probe"`
+	Resolver   string        `env:"RESOLVER" flag:"resolver" help:"Query this DNS server (host or host:port) instead of the system resolver"`
+	EventStore string        `env:"EVENT_STORE" flag:"event-store" help:"Persist the run as events in this SQLite file (go-cqrs-lite journal; replay with the replay command)"`
+	Resume     string        `flag:"resume" help:"Skip domains already observed in a recorded run (exact run ID, or 'latest'); starts a new run linked to it. Requires --event-store"`
+	Budget     time.Duration `flag:"max-runtime" help:"Abort the whole run after this budget (e.g. 2h30m); 0 = unlimited. Partial results still render, journal, and count"`
+	Wave       string        `flag:"wave" help:"Census wave ID stamped into the event journal (e.g. tranco1m-a); empty for ad-hoc runs. Requires --event-store"`
+	Color      string        `default:"auto" flag:"color" help:"Terminal colors for table output" values:"auto,always,never"`
 }
 
 // Run builds the CLI and executes args. Construction errors are printed to
@@ -305,7 +305,12 @@ func runScan(
 
 	if resume != nil {
 		if skipped := feeder.resumeSkippedCount(); skipped > 0 {
-			_, _ = fmt.Fprintf(stderr, "resume: skipped %d input domains already observed in run %s\n", skipped, resume.RunID)
+			_, _ = fmt.Fprintf(
+				stderr,
+				"resume: skipped %d input domains already observed in run %s\n",
+				skipped,
+				resume.RunID,
+			)
 		}
 	}
 
@@ -316,7 +321,11 @@ func runScan(
 		counts.GCPCertain, counts.Errors, errorKindsSuffix(counts))
 
 	if unscanned > 0 {
-		_, _ = fmt.Fprintf(stderr, "interrupted: %d input domains were never scanned (canceled before their turn)\n", unscanned)
+		_, _ = fmt.Fprintf(
+			stderr,
+			"interrupted: %d input domains were never scanned (canceled before their turn)\n",
+			unscanned,
+		)
 	}
 
 	if err := finish(ctx, time.Since(started), counts); err != nil {

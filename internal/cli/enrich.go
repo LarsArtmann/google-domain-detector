@@ -20,16 +20,22 @@ import (
 
 // EnrichFlags is the enrich command's flag set.
 //
-//nolint:tagalign // cmdguard renders the tag block; column alignment is cosmetic here
+
 type EnrichFlags struct {
 	EventStore string `env:"EVENT_STORE" flag:"event-store" help:"SQLite event store written by scan --event-store"`
-	Input      string `flag:"input"              help:"CSV with a domain/website/url column ('-' reads stdin)" short:"i"`
+	Input      string `                  flag:"input"       help:"CSV with a domain/website/url column ('-' reads stdin)" short:"i"`
 }
 
 var (
-	errEnrichNeedsStore = errors.New("enrich needs --event-store: the CSV is joined against recorded observations, no DNS runs")
-	errEnrichNeedsCSV   = errors.New("enrich needs --input FILE: a CSV whose header carries a domain/website/url column")
-	errEnrichNoHeader   = errors.New("enrich input has no recognizable header: add a domain, website, or url column header (enrichment preserves the original columns, so it must know where the domains live)")
+	errEnrichNeedsStore = errors.New(
+		"enrich needs --event-store: the CSV is joined against recorded observations, no DNS runs",
+	)
+	errEnrichNeedsCSV = errors.New(
+		"enrich needs --input FILE: a CSV whose header carries a domain/website/url column",
+	)
+	errEnrichNoHeader = errors.New(
+		"enrich input has no recognizable header: add a domain, website, or url column header (enrichment preserves the original columns, so it must know where the domains live)",
+	)
 )
 
 // enrichColumns appended to every row: the normalized domain the verdicts
@@ -52,6 +58,7 @@ func runEnrich(ctx context.Context, f EnrichFlags, stdin io.Reader, stdout, stde
 	}
 
 	source := stdin
+
 	if f.Input != "-" {
 		file, err := os.Open(f.Input)
 		if err != nil {
@@ -118,8 +125,13 @@ func runEnrich(ctx context.Context, f EnrichFlags, stdin io.Reader, stdout, stde
 		return fmt.Errorf("write CSV: %w", err)
 	}
 
-	_, _ = fmt.Fprintf(stderr, "%d rows enriched: %d with recorded observations, %d without (scan the missing domains first, then re-run)\n",
-		rows, enriched, rows-enriched)
+	_, _ = fmt.Fprintf(
+		stderr,
+		"%d rows enriched: %d with recorded observations, %d without (scan the missing domains first, then re-run)\n",
+		rows,
+		enriched,
+		rows-enriched,
+	)
 
 	return nil
 }
