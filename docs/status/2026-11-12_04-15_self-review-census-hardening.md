@@ -169,11 +169,14 @@ lane, per owner request. Live state embedded at the bottom.
 17. Monitor wave B with the NEW wrapper features (WARNING lines,
     auto-snapshot) — first live exercise of both.
 18. Archive ritual for 20 unarchived reports — BLOCKED on §g3.
+    <!-- fresh:skip owner-blocked archive ritual, §g3 of 15-27/04-15 -->
 19. 🔀 cli lane: interrupted-run stderr summary fix (TODO row filed).
 20. 🔀 cli/scanstore: runs-table metadata shutdown race (soak-3 row).
+    <!-- fresh:skip sibling-scoped pending owner policy -->
 21. 🔀 E29 CSV enrichment; TimeoutMiddleware; describe contract test.
 22. 🔀 Harvest sales-lane 19-27 §f (18 items) — owner policy §g1.
 23. 🔀 Harvest E24 02-00/19-08 §f (8 items) — same.
+    <!-- fresh:skip sibling-scoped pending owner policy -->
 24. flake vendorHash vs cmdguard v5.1.0: TODO row already struck [x]
     by the bumping lane — verify once with `nix build` when a lane
     next touches nix (do not take the strike on trust; see e1).

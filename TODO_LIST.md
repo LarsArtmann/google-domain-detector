@@ -41,6 +41,7 @@ waves, manifests, unbound, pilot gates, reports, deltas.
       sequential, same wrapper (scripts/census-wave.sh).
 - [ ] T14 Unknown-cleanup loop per wave (<0.5% unknown).
 - [ ] T15 Census report (journal-derived) archived under reports/.
+- [ ] Census gate: manifest-unique-count assertion in scripts/census-gate.sh — output line-count vs manifest unique-count must reconcile (caught the 90,834-vs-100,000 input-count fiction, 2026-11-12 04-15 report).
 - [ ] T16 Delta query: verdict flips between runs (the sales signal).
 
 ## Detection coverage
