@@ -390,12 +390,12 @@ func TestEnrichAppendsVerdictColumns(t *testing.T) {
 	store := filepath.Join(t.TempDir(), "scans.db")
 
 	_, _, err := run(t, workspaceDomain(), "", "scan", "--no-ranges", "--event-store", store,
-		"--format", "jsonl", "workspace.example")
+		"--format", "jsonl", "acme.com")
 	if err != nil {
 		t.Fatalf("seed scan failed: %v", err)
 	}
 
-	csvIn := "company,domain,tier\nAcme,https://workspace.example/pricing,A\nBeta,not a domain,B\nGamma,missing.example,C\n"
+	csvIn := "company,domain,tier\nAcme,https://acme.com/pricing,A\nBeta,not a domain,B\nGamma,missing.example,C\n"
 
 	stdout, stderr, err := runRes(t, &fakeRes{}, csvIn,
 		"enrich", "--event-store", store, "--input", "-")
@@ -412,7 +412,7 @@ func TestEnrichAppendsVerdictColumns(t *testing.T) {
 		t.Errorf("header must append exactly the enrich columns, got: %s", lines[0])
 	}
 
-	if lines[1] != "Acme,https://workspace.example/pricing,A,workspace.example,certain,no," {
+	if lines[1] != "Acme,https://acme.com/pricing,A,acme.com,certain,no," {
 		t.Errorf("scanned row must carry derived verdicts, got: %s", lines[1])
 	}
 
@@ -451,6 +451,8 @@ func TestEnrichRejectsMissingStoreAndHeader(t *testing.T) {
 		t.Errorf("enrich without a domain column must exit 2, got %d (%v)", code, err)
 	}
 }
+
+// TestScanInterruptedSummaryCountsScannedOnly pins the interrupted-run
 // accounting fix: a SIGINT'd run reports how many domains actually scanned,
 // plus an explicit interrupted line for the input domains the cancel
 // reached before their turn — instead of folding synthetic canceled
