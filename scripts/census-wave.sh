@@ -13,6 +13,16 @@
 # env: GDD_RESOLVER (127.0.0.1:5353), GDD_CLEANUP_BAR_PCT (0.5),
 #   GDD_WARN_PCT (2) — mid-pass unknown-rate WARNING threshold (D3 bar;
 #   2 = percent). Set GDD_WARN_PCT=0 to disable the warning.
+#
+# Resume policy (2026-11-12, wave-A post-mortem): a FRESH out-dir never
+# passes --resume — `--resume latest` silently skips whatever the latest
+# STARTED run (any aborted soak/pilot!) had journaled, and wave A lost
+# 2,731 of 100,000 domains to exactly that (docs/census.md "resume
+# hazard"). A RETRY of the same out-dir (run-id file present from a
+# previous attempt) resumes from THAT run explicitly, with the gate's
+# --expect-skip set to its observed-domain count so coverage still
+# reconciles. The run id is captured from stderr after every attempt
+# (the "run <id> recorded" line prints even on abort).
 set -uo pipefail
 
 if [ $# -lt 5 ]; then
@@ -61,6 +71,23 @@ fi
 
 log "wave $wave pass 1 starting: workers=$workers timeout=$timeout_budget resolver=$resolver input=$manifest"
 
+resume_args=()
+expect_skip=0
+if [ -s "$out_dir/run-id" ]; then
+	prior_run=$(cat "$out_dir/run-id")
+	resume_args=(--resume "$prior_run")
+	log "retry: resuming run $prior_run (domains it observed are skipped by design)"
+	if command -v sqlite3 >/dev/null 2>&1; then
+		observed=$(sqlite3 "$store" "SELECT COUNT(DISTINCT stream_id) FROM meta_stream_log WHERE value LIKE '%scan.domain_observed%' AND CAST(payload AS TEXT) LIKE '%$prior_run%'" 2>/dev/null || true)
+		if [ -n "$observed" ] && [ "$observed" -gt 0 ] 2>/dev/null; then
+			expect_skip=$observed
+			log "retry: gate expect-skip = $expect_skip (journal count for run $prior_run)"
+		fi
+	fi
+else
+	log "fresh pass: no --resume (immune to soak/pilot journal poisoning; docs/census.md 'resume hazard')"
+fi
+
 progress() {
 	local total mixed unknown pct
 	total=$(wc -l <"$out_dir/run1.jsonl" 2>/dev/null || echo 0)
@@ -82,15 +109,27 @@ poller=$!
 
 "$gdd_bin" scan --no-ranges --workers "$workers" --timeout "$timeout_budget" \
 	--resolver "$resolver" --event-store "$store" --wave "$wave" \
-	--input "$manifest" --resume latest --format jsonl \
+	--input "$manifest" --format jsonl ${resume_args[@]+"${resume_args[@]}"} \
 	>"$out_dir/run1.jsonl" 2>"$out_dir/run1.stderr"
 scan_rc=$?
 kill "$poller" 2>/dev/null
 log "wave $wave pass 1 finished: exit=$scan_rc"
 grep -E '^[0-9]+ domains:' "$out_dir/run1.stderr" | tail -1 >>"$out_dir/monitor.log"
 
-"$here/census-gate.sh" "$out_dir/run1.stderr" >>"$out_dir/monitor.log" 2>&1
+run_id=$(grep -oE 'run [0-9A-Z]{10,32} recorded' "$out_dir/run1.stderr" | tail -1 | awk '{print $2}')
+if [ -n "$run_id" ]; then
+	printf '%s\n' "$run_id" >"$out_dir/run-id"
+	log "run id: $run_id (recorded in $out_dir/run-id for explicit retries)"
+fi
+
+"$here/census-gate.sh" --manifest "$manifest" --expect-skip "$expect_skip" "$out_dir/run1.stderr" >>"$out_dir/monitor.log" 2>&1
 gate_rc=$?
+
+if [ "$gate_rc" -eq 4 ]; then
+	log "pass-1 COVERAGE GAP — do NOT scale and do NOT clean up: reconcile the missing domains against the journal (census.md 'resume hazard'), then retry this out-dir (explicit --resume via run-id) or patch-scan the gap"
+	snapshot
+	exit 4
+fi
 
 if [ "$gate_rc" -ne 0 ]; then
 	log "pass-1 gate FAIL — running cleanup loop (E16)"

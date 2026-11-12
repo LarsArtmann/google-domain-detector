@@ -13,25 +13,46 @@
 # verified-healthy resolver (docs/census.md, E10 decision); the flag makes
 # the reclassification explicit in the gate output instead of silent.
 #
+# --manifest FILE / --expect-skip N: coverage assertion — unique manifest
+# lines must reconcile with scanned + unparseable-skipped (+ expected)
+# domains. Guards against SILENT coverage holes: `--resume latest` skips
+# every domain the (possibly aborted soak/pilot) source run journaled and
+# the scan prints nothing about it — wave A lost 2,731 of 100,000 domains
+# exactly this way (2026-11-12; docs/census.md "resume hazard"). A
+# coverage gap exits 4 (health FAIL stays exit 1, the cleanup remedy).
+#
 # Input: either a scan's stderr file (its one-line run summary) or a
 # scan's jsonl output (error_kind counted per line).
-# usage: census-gate.sh [--servfail-stable] <stderr-or-jsonl-file> [max-unknown-pct]
+# usage: census-gate.sh [--servfail-stable] [--manifest FILE] [--expect-skip N] <stderr-or-jsonl-file> [max-unknown-pct]
 #   max-unknown-pct defaults to 2 (the D3 bar); 0.5 works for cleanup loops
+#   exit: 0 pass · 1 health FAIL · 2 usage/parse · 4 coverage gap
 set -euo pipefail
 
 sf_stable=0
+manifest=""
+expect_skip=0
 while [ $# -gt 0 ]; do
 	case $1 in
 	--servfail-stable)
 		sf_stable=1
 		shift
 		;;
+	--manifest)
+		[ $# -ge 2 ] || { echo "census-gate: --manifest needs a file" >&2; exit 2; }
+		manifest=$2
+		shift 2
+		;;
+	--expect-skip)
+		[ $# -ge 2 ] || { echo "census-gate: --expect-skip needs a count" >&2; exit 2; }
+		expect_skip=$2
+		shift 2
+		;;
 	*) break ;;
 	esac
 done
 
 if [ $# -lt 1 ]; then
-	echo "usage: $0 [--servfail-stable] <stderr-or-jsonl-file> [max-unknown-pct]" >&2
+	echo "usage: $0 [--servfail-stable] [--manifest FILE] [--expect-skip N] <stderr-or-jsonl-file> [max-unknown-pct]" >&2
 	exit 2
 fi
 
@@ -58,6 +79,26 @@ pass_fail() {
         }'
 }
 
+coverage_check() {
+	[ -n "$manifest" ] || return 0
+	if [ ! -f "$manifest" ]; then
+		echo "census-gate: no such manifest: $manifest" >&2
+		exit 2
+	fi
+	local manifest_unique unparseable accounted gap
+	manifest_unique=$(grep -v '^[[:space:]]*$' "$manifest" | sort -u | wc -l)
+	unparseable=$(sed -nE 's/^skipped ([0-9]+) unparseable.*/\1/p' "$file" | tail -1)
+	unparseable=${unparseable:-0}
+	accounted=$((total + unparseable + expect_skip))
+	if [ "$accounted" -ne "$manifest_unique" ]; then
+		gap=$((manifest_unique - accounted))
+		echo "census-gate: FAIL — coverage gap: manifest $manifest_unique vs scanned $total + unparseable $unparseable + expect-skip $expect_skip = $accounted (missing $gap)"
+		echo "census-gate: likely silent --resume skips — reconcile against the journal (domain_observed events by run_idx) before trusting this pass; see docs/census.md 'resume hazard'"
+		exit 4
+	fi
+	echo "census-gate: coverage PASS — manifest $manifest_unique = scanned $total + unparseable $unparseable + expect-skip $expect_skip"
+}
+
 summary_pattern='^[0-9]+ domains: workspace certain [0-9]+ / likely [0-9]+, gcp [0-9]+, errors [0-9]+'
 
 if grep -Eq "$summary_pattern" "$file"; then
@@ -72,6 +113,7 @@ if grep -Eq "$summary_pattern" "$file"; then
 	fi
 	if [ "$sf_stable" = 1 ]; then unknown=$((timeouts + canceled + other)); else unknown=$((timeouts + servfail + canceled + other)); fi
 	pass_fail "$total" "$nx" "$servfail" "$unknown"
+	coverage_check
 elif grep -q '"error_kind"' "$file"; then
 	# jsonl form: count per-line error_kind values
 	read -r total errors nx timeouts servfail canceled other <<<"$(jq -r '[.error_kind // "none"] | @tsv' "$file" | awk -F'\t' '
@@ -85,6 +127,7 @@ elif grep -q '"error_kind"' "$file"; then
         END { printf "%d %d %d %d %d %d %d\n", total, total-(nx+t+s+c+o), nx+0, t+0, s+0, c+0, o+0 }')"
 	if [ "$sf_stable" = 1 ]; then unknown=$((timeouts + canceled + other)); else unknown=$((timeouts + servfail + canceled + other)); fi
 	pass_fail "$total" "$nx" "$servfail" "$unknown"
+	coverage_check
 else
 	echo "census-gate: $file is neither a run summary (stderr) nor jsonl output" >&2
 	exit 2
