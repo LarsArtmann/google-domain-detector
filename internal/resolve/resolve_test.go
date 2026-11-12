@@ -65,11 +65,11 @@ func TestNewWithAddrQueriesIPv6Server(t *testing.T) {
 // QR bit set: same ID, same question, zero answers — a well-formed empty
 // NOERROR response the Go resolver accepts.
 func echoOneDNSResponse(conn net.PacketConn) {
-	buf := make([]byte, 512)
+	var buf [512]byte
 
 	_ = conn.SetReadDeadline(time.Now().Add(3 * time.Second))
 
-	n, from, err := conn.ReadFrom(buf)
+	n, from, err := conn.ReadFrom(buf[:])
 	if err != nil {
 		return
 	}

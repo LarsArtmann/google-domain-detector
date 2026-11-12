@@ -18,6 +18,7 @@ import (
 // ReplayFlags is the replay command's flag set.
 //
 
+//nolint:golines // fleet golines pads/reorders tags against the project tagalign policy; tags cannot wrap (see .golangci.yml)
 type ReplayFlags struct {
 	EventStore string `env:"EVENT_STORE" flag:"event-store" help:"SQLite event store written by scan --event-store"`
 	Run        string `flag:"run" help:"Rebuild this run ID (default: the most recent run)"`

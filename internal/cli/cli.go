@@ -34,6 +34,7 @@ type RootConfig struct{}
 // ScanFlags is the scan command's own flag set.
 //
 
+//nolint:golines // fleet golines pads/reorders tags against the project tagalign policy; tags cannot wrap (see .golangci.yml)
 type ScanFlags struct {
 	Input      string        `flag:"input"        help:"Read domains from FILE ('-' reads stdin). Plain lists and CSV with a domain/website/url column both work"                           short:"i"`
 	Format     string        `default:"table" flag:"format" help:"Output format" short:"f" values:"table,json,csv,tsv,markdown,yaml,toml,jsonl"`
@@ -242,16 +243,8 @@ func runScan(
 		return err
 	}
 
-	// Whole-run budget (E31): a deadline on everything below — feeding,
-	// scanning, recording. Expiry classifies in-flight lookups as timeouts
-	// and unstarted domains as interrupted (never scanned), so a budgeted
-	// run still renders, journals, and reconciles its coverage honestly.
-	if f.Budget > 0 {
-		var budgetCancel context.CancelFunc
-
-		ctx, budgetCancel = context.WithTimeout(ctx, f.Budget)
-		defer budgetCancel()
-	}
+	ctx, budgetDone := applyRunBudget(ctx, f.Budget)
+	defer budgetDone()
 
 	resume, err := resolveResume(ctx, f)
 	if err != nil {
@@ -299,20 +292,7 @@ func runScan(
 		return scanErr
 	}
 
-	if skippedTotal, firstSkipped := feeder.skippedEntries(); skippedTotal > 0 {
-		_, _ = fmt.Fprintf(stderr, "skipped %d unparseable input entries (first: %q)\n", skippedTotal, firstSkipped)
-	}
-
-	if resume != nil {
-		if skipped := feeder.resumeSkippedCount(); skipped > 0 {
-			_, _ = fmt.Fprintf(
-				stderr,
-				"resume: skipped %d input domains already observed in run %s\n",
-				skipped,
-				resume.RunID,
-			)
-		}
-	}
+	reportInputAccounting(stderr, feeder, resume)
 
 	rendered := renderOutput(stdout, results, filter, format, tableOpts, stream)
 
@@ -333,6 +313,40 @@ func runScan(
 	}
 
 	return rendered
+}
+
+// applyRunBudget wraps ctx with the --max-runtime deadline (E31): a
+// deadline on feeding, scanning, and recording. Expiry classifies in-flight
+// lookups as timeouts and unstarted domains as interrupted (never
+// scanned), so a budgeted run still renders, journals, and reconciles its
+// coverage honestly. budget <= 0 means unlimited and returns ctx as-is.
+func applyRunBudget(ctx context.Context, budget time.Duration) (context.Context, func()) {
+	if budget <= 0 {
+		return ctx, func() {}
+	}
+
+	budgetCtx, budgetCancel := context.WithTimeout(ctx, budget)
+
+	return budgetCtx, budgetCancel
+}
+
+// reportInputAccounting prints where input domains went besides the scan:
+// unparseable entries and domains a --resume skipped as already observed.
+func reportInputAccounting(stderr io.Writer, feeder *domainFeeder, resume *scanstore.ResumeSource) {
+	if skippedTotal, firstSkipped := feeder.skippedEntries(); skippedTotal > 0 {
+		_, _ = fmt.Fprintf(stderr, "skipped %d unparseable input entries (first: %q)\n", skippedTotal, firstSkipped)
+	}
+
+	if resume != nil {
+		if skipped := feeder.resumeSkippedCount(); skipped > 0 {
+			_, _ = fmt.Fprintf(
+				stderr,
+				"resume: skipped %d input domains already observed in run %s\n",
+				skipped,
+				resume.RunID,
+			)
+		}
+	}
 }
 
 // scanTargets builds the domain feeder and pulls the first chunk. Empty
