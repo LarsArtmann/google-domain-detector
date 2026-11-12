@@ -6,6 +6,7 @@ import (
 	"encoding/json/v2"
 	"errors"
 	"fmt"
+	"io"
 	"net"
 	"os"
 	"path/filepath"
@@ -365,6 +366,53 @@ func TestScanJSONLCancelMidStream(t *testing.T) {
 
 	if !strings.Contains(slowLine, "slow.com") || !strings.Contains(slowLine, "canceled") {
 		t.Errorf("hung domain must report its cancellation:\n%s", slowLine)
+	}
+}
+
+// TestScanInterruptedSummaryCountsScannedOnly pins the interrupted-run
+// accounting fix: a SIGINT'd run reports how many domains actually scanned,
+// plus an explicit interrupted line for the input domains the cancel
+// reached before their turn — instead of folding synthetic canceled
+// placeholders into the "N domains" total (which made an interrupted run
+// look like complete coverage).
+func TestScanInterruptedSummaryCountsScannedOnly(t *testing.T) {
+	t.Parallel()
+
+	var stderr bytes.Buffer
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	d, err := BuildCLI(
+		io.Discard,
+		&stderr,
+		"test",
+		"",
+		&hangRes{fakeRes: &fakeRes{}, cancel: cancel},
+		strings.NewReader(""),
+		false,
+		false,
+	)
+	if err != nil {
+		t.Fatalf("BuildCLI failed: %v", err)
+	}
+
+	// One worker: it cancels the run the moment slow.com's TXT lookup
+	// begins, so never.com is still queued behind it — a placeholder, not
+	// a scan. The summary must count slow.com only.
+	err = d.ExecuteWithArgs(ctx, []string{
+		"scan", "--no-ranges", "--workers", "1", "--format", "jsonl", "slow.com", "never.com",
+	})
+	if err != nil {
+		t.Fatalf("canceled scan must still finish the report: %v", err)
+	}
+
+	if !strings.Contains(stderr.String(), "1 domains:") {
+		t.Errorf("summary must count only the scanned domain, got:\n%s", stderr.String())
+	}
+
+	if !strings.Contains(stderr.String(), "interrupted: 1 input domains were never scanned (canceled before their turn)") {
+		t.Errorf("interrupted accounting line missing from stderr:\n%s", stderr.String())
 	}
 }
 
@@ -835,6 +883,11 @@ func TestScanResumeSkipsObservedDomains(t *testing.T) {
 	lines := strings.Split(strings.TrimRight(stdout, "\n"), "\n")
 	if len(lines) != 1 || !strings.Contains(lines[0], "d.example") {
 		t.Fatalf("resume must scan only the unobserved domain, got:\n%s", stdout)
+	}
+
+	wantAccounting := fmt.Sprintf("resume: skipped 3 input domains already observed in run %s", firstRun)
+	if !strings.Contains(resumeStderr, wantAccounting) {
+		t.Errorf("resume must account its skips on stderr, want %q in:\n%s", wantAccounting, resumeStderr)
 	}
 
 	secondRun := stderrRunID(t, resumeStderr)

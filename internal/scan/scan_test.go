@@ -21,6 +21,7 @@ type fake struct {
 	mu     sync.Mutex
 	called map[string]int
 
+	onTXT  func(ctx context.Context, host string)
 	txt    map[string][]string
 	txtErr map[string]error
 	mx     map[string][]*net.MX
@@ -48,8 +49,12 @@ func (f *fake) calls(key string) int {
 	return f.called[key]
 }
 
-func (f *fake) LookupTXT(_ context.Context, host string) ([]string, error) {
+func (f *fake) LookupTXT(ctx context.Context, host string) ([]string, error) {
 	f.record("txt:" + host)
+
+	if f.onTXT != nil {
+		f.onTXT(ctx, host)
+	}
 
 	if err, ok := f.txtErr[host]; ok {
 		return nil, err
@@ -281,10 +286,78 @@ func TestRunCancellationMarksPendingDomains(t *testing.T) {
 	cancel()
 
 	results := Run(ctx, res, domains, Options{Workers: 1, Timeout: time.Second})
-	for _, r := range results {
+	for i, r := range results {
 		if r.Domain == "" {
 			t.Error("every result must carry its domain")
 		}
+
+		if !r.Unscanned {
+			t.Errorf("result %d (%s) was never scanned; it must be marked Unscanned so counts exclude it", i, r.Domain)
+		}
+	}
+
+	if counts := classify.Count(results); counts.Scanned != 0 || counts.Errors != 0 {
+		t.Errorf("unscanned placeholders must tally nowhere, got %+v", counts)
+	}
+}
+
+// TestRunMarksOnlyNeverReachedDomainsUnscanned separates the two cancel
+// classes: a domain whose lookup was in flight when the run died is a real
+// scan (canceled, journaled), while a domain the pool never reached is an
+// Unscanned placeholder (excluded from counts and the journal).
+func TestRunMarksOnlyNeverReachedDomainsUnscanned(t *testing.T) {
+	t.Parallel()
+
+	res := newFake()
+	res.txtErr = map[string]error{"slow.com": context.Canceled}
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	started := make(chan struct{})
+
+	slow, err := domain.Parse("slow.com")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	never, err := domain.Parse("never.example")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// One worker: it enters slow.com's TXT lookup, signals, and holds there
+	// until the run dies — so never.example can never be fed to the pool.
+	var once sync.Once
+
+	res.onTXT = func(ctx context.Context, host string) {
+		if host != "slow.com" {
+			return
+		}
+
+		once.Do(func() {
+			close(started)
+			<-ctx.Done()
+		})
+	}
+
+	go func() {
+		<-started
+		cancel()
+	}()
+
+	results := Run(ctx, res, []domain.Domain{slow, never}, Options{Workers: 1, Timeout: 10 * time.Second})
+
+	if results[0].Unscanned {
+		t.Error("slow.com was in flight when canceled: a real scan, not a placeholder")
+	}
+
+	if !results[1].Unscanned {
+		t.Error("never.example was never fed to the pool: it must be marked Unscanned")
+	}
+
+	if counts := classify.Count(results); counts.Scanned != 1 {
+		t.Errorf("only the in-flight domain counts as scanned, got %+v", counts)
 	}
 }
 

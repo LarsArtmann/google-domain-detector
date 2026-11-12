@@ -25,3 +25,23 @@ func TestCountErrorKindsBreakdown(t *testing.T) {
 		t.Errorf("ErrorKinds = %+v, want servfail=0 canceled=0", counts.ErrorKinds)
 	}
 }
+
+// TestTallySkipsUnscannedPlaceholders pins the interrupted-run accounting
+// fix: a placeholder for an input domain the canceled run never reached is
+// not a scan, so neither Scanned nor the error kinds may count it.
+func TestTallySkipsUnscannedPlaceholders(t *testing.T) {
+	t.Parallel()
+
+	var counts Counts
+	counts.Tally(Result{Domain: "real.example"})
+	counts.Tally(Result{Domain: "hung.example", Err: "context canceled", ErrKind: ErrorCanceled})
+	counts.Tally(Result{Domain: "never.example", Err: "context canceled", ErrKind: ErrorCanceled, Unscanned: true})
+
+	if counts.Scanned != 2 {
+		t.Errorf("Scanned = %d, want 2 (the placeholder must not count)", counts.Scanned)
+	}
+
+	if counts.Errors != 1 || counts.ErrorKinds.Canceled != 1 {
+		t.Errorf("error accounting = errors %d canceled %d, want 1/1 (in-flight only)", counts.Errors, counts.ErrorKinds.Canceled)
+	}
+}
