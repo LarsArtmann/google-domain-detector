@@ -35,16 +35,30 @@ waves, manifests, unbound, pilot gates, reports, deltas.
       frozen into reports/census/waves/tranco1m-{a,b,c}.txt (sha256 in
       MANIFEST.sha256), splitter scripts/tranco-manifests.sh, ledger in
       docs/census.md.
-- [ ] T11–T13 Waves A (1–100k), B (100–500k), C (500k–1M) with pilot gates.
-      Wave A pass 1 in flight since 2026-11-11 12:25 (w4/10s, monitor.log);
-      wave B launches after A completes, wave C after B — single-flight
-      sequential, same wrapper (scripts/census-wave.sh).
+- [x] T11 Wave A (ranks 1–100k) — done 2026-11-12 04:51: pass 1 health PASS
+      (97,265 scanned, unknown 1.53% < 2%), coverage gap 2,731 resume-skipped
+      domains (soak3 poisoning, docs/census.md "Resume hazard"); patch scan
+      pending owner go.
+- [ ] T11-patch Wave-A coverage: scan the 2,731 resume-skipped domains
+      (input recoverable via journal run 01M74VTPD4FZ vs manifest) — held
+      with wave B for owner instruction.
+- [ ] T12–T13 Waves B (100–500k), C (500k–1M) with pilot gates — held for
+      owner go; wrapper now fresh-pass + explicit-retry (no --resume latest).
 - [ ] T14 Unknown-cleanup loop per wave (<0.5% unknown).
 - [ ] T15 Census report (journal-derived) archived under reports/.
-- [ ] Census gate: manifest-unique-count assertion in scripts/census-gate.sh — output line-count vs manifest unique-count must reconcile (caught the 90,834-vs-100,000 input-count fiction, 2026-11-12 04-15 report).
+- [x] Census gate: manifest-unique-count assertion in scripts/census-gate.sh —
+      done: --manifest/--expect-skip coverage check, exit 4 on gap; reproduces
+      wave A's 2,731 exactly, would have caught the 90,834 fiction too.
 - [ ] T16 Delta query: verdict flips between runs (the sales signal).
 
 ## Detection coverage
+
+- [ ] Input lane: www-strip normalizes www.<public-suffix> inputs (26 in
+      tranco1m-a, e.g. www.edu.cn) to bare public suffixes (edu.cn) and scans
+      them; decide skip-vs-scan policy. <!-- fresh:skip sibling-scoped pending owner policy -->
+- [ ] Scan should print resume-skip accounting ("N domains skipped as
+      already observed in run X") so coverage gaps are visible at the
+      source, not only at the gate. <!-- fresh:skip sibling-scoped pending owner policy -->
 
 - [x] Batch retry (once) for transient resolver failures — done:
       retryResolver in internal/scan (transient only, NXDOMAIN never

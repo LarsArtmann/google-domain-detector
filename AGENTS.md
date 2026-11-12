@@ -192,6 +192,10 @@ first-party lib is considered.
   `event.WithSchemaVersion(1)` so the first schema evolution can upcast
   (D013). New events must follow both.
 - Binary flag name is `--ranges-cache` (not `--cache-path`).
+- `--resume latest` resolves to the most recently STARTED journal run
+  (an aborted soak/pilot counts) and silently skips its observed domains
+  — wave A lost 2,731/100,000 to it. Waves run fresh or
+  `--resume <run-id>`; `census-gate.sh --manifest` catches gaps (exit 4).
 - Binary flag for the SQLite journal is `--event-store` (env `GDD_EVENT_STORE`).
 - Raising the go.mod `go` directive (dependency floor) can break the INSTALLED
   buildflow binary: its embedded analyzers run the Go they were built with

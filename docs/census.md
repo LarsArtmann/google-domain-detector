@@ -75,9 +75,10 @@ operator decision, not an accounting default.
 - Tranco list IDs and manifest hashes are recorded in the wave ledger
   below. Current freeze: list `947N2` (2026-11-10).
 - Every wave run uses `--event-store reports/census/census.db --wave
-  <id>` so the journal is the source of truth; interrupted waves resume
-  via `--resume latest` (observed domains are skipped — never
-  blind-rescan, census guard 3).
+  <id>` so the journal is the source of truth. NEVER `--resume latest`
+  for waves (resume hazard below): fresh wave passes run without
+  `--resume`; a retry resumes explicitly from the wave's recorded run id
+  (never blind-rescan, census guard 3).
 - Cleanup loop (E16): after a wave pass, drive unknowns under the bar:
   `scripts/census-cleanup.sh <gdd-binary> reports/census/census.db
   <wave-id> <wave-jsonl> [max-rounds=3]` — re-scans only unknown-class
@@ -88,12 +89,18 @@ operator decision, not an accounting default.
   SERVFAILs for stability with `census-gate.sh --servfail-stable`
   (D3 refinement above).
 - Wave runner (`scripts/census-wave.sh`) wraps one wave: single-flight
-  check, pass 1 via `--resume latest`, a 30-min progress poller, the
-  gate, and on FAIL the cleanup loop — all appended to
-  `<out-dir>/monitor.log` so a detached wave survives its session. The
-  poller logs a WARNING when the running unknown rate exceeds the D3
-  bar (env `GDD_WARN_PCT`, default `2` = percent; `0` disables). On
+  check, pass 1 (fresh — no `--resume`; retries resume explicitly from
+  `<out-dir>/run-id`, captured after every attempt), a 30-min progress
+  poller, the gate, and on health-FAIL the cleanup loop — all appended
+  to `<out-dir>/monitor.log` so a detached wave survives its session.
+  The poller logs a WARNING when the running unknown rate exceeds the
+  D3 bar (env `GDD_WARN_PCT`, default `2` = percent; `0` disables). On
   completion (either path) it snapshots the journal (below).
+- Gate coverage assertion: the runner always passes `--manifest` (and
+  `--expect-skip` on retries, journal-derived), so a pass whose scanned
+  + unparseable + expected skips do not reconcile with the manifest
+  fails with exit 4 ("coverage gap") and skips cleanup — reconcile
+  against the journal instead (resume hazard below).
 - Journal snapshots (§g3 default, local tarball per completed wave):
   `scripts/census-snapshot.sh <store> <snapshots-dir> [label]` —
   sqlite online backup (WAL-consistent, safe to run mid-scan) then
@@ -105,11 +112,33 @@ operator decision, not an accounting default.
   event; provenance test pins it). Any detection-rule change MUST bump
   the ruleset before the next wave.
 
+### Resume hazard (2026-11-12 wave-A post-mortem)
+
+`--resume latest` resolves to the most recently **started** run in the
+journal — including aborted soaks and pilots — and silently skips every
+domain that run journaled; the scan prints nothing about the skips.
+Wave A's pass 1 ran while soak3 (aborted, 2 731 observations journaled)
+was "latest": run 01M755NSBKB09MXM0EB0001CZB scanned 97 265 of 99 996
+parseable domains (100 000 manifest − 4 unparseable). The health gate
+passed (unknown 1.53% < 2%) because coverage is not a health metric;
+the missing 2 731 were only found by reconciling run1.jsonl against
+the manifest (26 further inputs appear as www-stripped renames, e.g.
+`www.edu.cn` → `edu.cn`, so 97 265 outputs = 99 996 − 2 731 skips with
+26 rename offsets inside that). The 2 731 domains exist in the journal
+under soak3's run id with full evidence — coverage is recoverable by a
+patch scan (owner call, wave B is held anyway).
+
+Protections since: the gate's `--manifest` coverage assertion (exit 4),
+the runner's fresh-pass/explicit-retry resume policy, and `run-id`
+capture per attempt. The prior "90 834 denominators" in three reports
+were never a real quantity (no journal or manifest figure reproduces
+it) — first appeared underved 2026-11-11 14:44 and was copied onward.
+
 ### Wave ledger
 
 | Wave       | Ranks             | List  | Manifest sha256 (first 12) | Status                                                          |
 | ---------- | ----------------- | ----- | -------------------------- | --------------------------------------------------------------- |
-| tranco1m-a | 1–100 000         | 947N2 | b4450f660567               | in progress (w4 soaks 1–3 + pilot collision; main pass running) |
+| tranco1m-a | 1–100 000         | 947N2 | b4450f660567               | pass 1 done 2026-11-12 04:51 — health PASS, 97 265 scanned, unknown 1.53%; coverage gap 2 731 (resume hazard below) pending owner call |
 | tranco1m-b | 100 001–500 000   | 947N2 | b6d5b3821c90               | pending                                                         |
 | tranco1m-c | 500 001–1 000 000 | 947N2 | b0317d71873a               | pending                                                         |
 

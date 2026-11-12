@@ -59,6 +59,10 @@ lane, per owner request. Live state embedded at the bottom.
    denominators < 2%). Root of 90,834 unestablished — needs a journal
    query (runs-table? prior session's arithmetic?) before E17 quotes
    any number.
+   <!-- RESOLVED 2026-11-12 18-40 report: no journal/manifest quantity
+   reproduces 90,834 (per-run observations, distinct domains, overlaps
+   all checked); first appeared underved in the 14-44 report and was
+   copied onward. Not a real number. -->
 3. **26 public-suffix normalization artifacts** in the wave A output:
    jsonl contains bare public suffixes (edu.cn, gob.ec, gob.pe,
    ba.gov.br, altoadige.it, …) that appear NOWHERE as manifest lines —
@@ -66,6 +70,10 @@ lane, per owner request. Live state embedded at the bottom.
    registrable domain. Found, counted, NOT diagnosed row-by-row (need
    the exact source rows) — input-lane wart (sibling's
    internal/input), flagged not touched.
+   <!-- RESOLVED 2026-11-12 18-40 report: confirmed www.<public-suffix>
+   input lines (26 of 32 www-lines in tranco1m-a) normalize to bare
+   suffixes; TODO row filed (input/www-strip), sibling lane. Part of
+   the same reconciliation that exposed the 2,731 resume hole. -->
 
 ## c) NOT STARTED (this session; deliberate)
 
