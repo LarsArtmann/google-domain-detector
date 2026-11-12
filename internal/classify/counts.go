@@ -22,8 +22,14 @@ type ErrorKinds struct {
 	Other    int `json:"other"`
 }
 
-// Tally folds one result into the counts.
+// Tally folds one result into the counts. Unscanned placeholders (input
+// domains a canceled run never reached) are not scans: they tally nowhere,
+// so Scanned and the error kinds describe what actually ran.
 func (c *Counts) Tally(res Result) {
+	if res.Unscanned {
+		return
+	}
+
 	c.Scanned++
 
 	if w := res.WorkspaceVerdict(); w.Detected {

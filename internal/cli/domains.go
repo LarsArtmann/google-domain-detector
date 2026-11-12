@@ -33,8 +33,9 @@ type domainFeeder struct {
 	skip      map[string]struct{}
 	chunkSize int
 
-	skippedTotal int
-	skippedFirst string
+	resumeSkipped int
+	skippedTotal  int
+	skippedFirst  string
 }
 
 // newDomainFeeder wires up the input sources. skip names domains a
@@ -144,11 +145,13 @@ func (f *domainFeeder) foldSkipped(total int, kept []string) {
 
 // accept reports whether dom enters the scan: skip-listed (--resume) and
 // already-seen domains never do, but both mark the domain as seen so the
-// first source wins.
+// first source wins. Skip-listed hits are counted so the run can report
+// exactly how many input domains a --resume skipped.
 func (f *domainFeeder) accept(dom domain.Domain) bool {
 	if f.skip != nil {
 		if _, done := f.skip[dom.String()]; done {
 			f.seen[dom.String()] = true
+			f.resumeSkipped++
 
 			return false
 		}
@@ -166,4 +169,10 @@ func (f *domainFeeder) accept(dom domain.Domain) bool {
 // skippedEntries reports the aggregated skip count and first example.
 func (f *domainFeeder) skippedEntries() (int, string) {
 	return f.skippedTotal, f.skippedFirst
+}
+
+// resumeSkippedCount reports how many input domains a --resume skipped
+// because their source run had already observed them.
+func (f *domainFeeder) resumeSkippedCount() int {
+	return f.resumeSkipped
 }

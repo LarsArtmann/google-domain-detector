@@ -274,7 +274,7 @@ func runScan(
 
 	started := time.Now()
 
-	results, counts, scanErr := scanAllChunks(ctx, feeder, first, last, scanOpts, activeRes, stream)
+	results, counts, unscanned, scanErr := scanAllChunks(ctx, feeder, first, last, scanOpts, activeRes, stream)
 	if scanErr != nil {
 		return scanErr
 	}
@@ -283,11 +283,21 @@ func runScan(
 		_, _ = fmt.Fprintf(stderr, "skipped %d unparseable input entries (first: %q)\n", skippedTotal, firstSkipped)
 	}
 
+	if resume != nil {
+		if skipped := feeder.resumeSkippedCount(); skipped > 0 {
+			_, _ = fmt.Fprintf(stderr, "resume: skipped %d input domains already observed in run %s\n", skipped, resume.RunID)
+		}
+	}
+
 	rendered := renderOutput(stdout, results, filter, format, tableOpts, stream)
 
 	_, _ = fmt.Fprintf(stderr, "%d domains: workspace certain %d / likely %d, gcp %d, errors %d%s\n",
 		counts.Scanned, counts.WorkspaceCertain, counts.WorkspaceLikely,
 		counts.GCPCertain, counts.Errors, errorKindsSuffix(counts))
+
+	if unscanned > 0 {
+		_, _ = fmt.Fprintf(stderr, "interrupted: %d input domains were never scanned (canceled before their turn)\n", unscanned)
+	}
 
 	if err := finish(ctx, time.Since(started), counts); err != nil {
 		return err
@@ -456,10 +466,12 @@ func newScanStream(
 }
 
 // scanAllChunks scans the first chunk and every following feeder chunk,
-// accumulating results (buffered formats only; jsonl discards per chunk) and
-// the verdict tally. Input totals are exact when everything fit in one chunk
-// (the common case); a streamed multi-chunk run journals 0 = unknown, and
-// the scan.completed tally stays the authoritative count.
+// accumulating results (buffered formats only; jsonl discards per chunk),
+// the verdict tally, and the count of input domains a canceled run never
+// reached (placeholders the report still accounts for, but excluded from
+// counts and the journal). Input totals are exact when everything fit in
+// one chunk (the common case); a streamed multi-chunk run journals 0 =
+// unknown, and the scan.completed tally stays the authoritative count.
 func scanAllChunks(
 	ctx context.Context,
 	feeder *domainFeeder,
@@ -468,10 +480,11 @@ func scanAllChunks(
 	scanOpts scan.Options,
 	activeRes resolve.Resolver,
 	stream *render.JSONLStream,
-) ([]classify.Result, classify.Counts, error) {
+) ([]classify.Result, classify.Counts, int, error) {
 	var (
-		counts  classify.Counts
-		results []classify.Result // buffered formats only; jsonl discards per chunk
+		counts    classify.Counts
+		results   []classify.Result // buffered formats only; jsonl discards per chunk
+		unscanned int
 	)
 
 	scanChunk := func(chunk []domain.Domain) {
@@ -481,6 +494,10 @@ func scanAllChunks(
 		}
 
 		for i := range chunkResults {
+			if chunkResults[i].Unscanned {
+				unscanned++
+			}
+
 			counts.Tally(chunkResults[i])
 		}
 	}
@@ -490,7 +507,7 @@ func scanAllChunks(
 	for !last {
 		chunk, isLast, err := feeder.next()
 		if err != nil {
-			return nil, classify.Counts{}, err
+			return nil, classify.Counts{}, 0, err
 		}
 
 		if len(chunk) == 0 {
@@ -502,7 +519,7 @@ func scanAllChunks(
 		scanChunk(chunk)
 	}
 
-	return results, counts, nil
+	return results, counts, unscanned, nil
 }
 
 // renderOutput writes the report: jsonl lines were already streamed as

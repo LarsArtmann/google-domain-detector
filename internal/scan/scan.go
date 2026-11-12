@@ -115,15 +115,18 @@ func resolveWorkers(requested, domainCount int) int {
 }
 
 // fillUnrunResults turns slots a canceled run never reached into explicit
-// cancellation results, so the report accounts for every input domain.
+// cancellation placeholders, so the report accounts for every input domain.
+// Placeholders carry Unscanned: they were never looked up, so counts and the
+// event journal must not treat them as scans.
 func fillUnrunResults(ctx context.Context, results []classify.Result, domains []domain.Domain) {
 	for i := range results {
 		if results[i].Domain == "" {
 			err := ctx.Err()
 			results[i] = classify.Result{
-				Domain:  domains[i].String(),
-				Err:     err.Error(),
-				ErrKind: classify.ErrorKindOf(err),
+				Domain:    domains[i].String(),
+				Err:       err.Error(),
+				ErrKind:   classify.ErrorKindOf(err),
+				Unscanned: true,
 			}
 		}
 	}

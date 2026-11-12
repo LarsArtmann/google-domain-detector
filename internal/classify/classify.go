@@ -108,6 +108,11 @@ type Result struct {
 	Err string `json:"error,omitempty"`
 	// ErrKind classifies Err (see ErrorKind); empty when Err is empty.
 	ErrKind ErrorKind `json:"error_kind,omitempty"`
+	// Unscanned marks a placeholder result for an input domain a canceled
+	// run never reached: no lookup ran for it. Placeholders keep reports
+	// accounting for every input domain but are excluded from Counts and
+	// never reach the event journal.
+	Unscanned bool `json:"-"`
 }
 
 // WorkspaceVerdict: MX evidence is certain (mail is delivered to Google);
