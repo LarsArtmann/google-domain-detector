@@ -47,6 +47,7 @@ type ScanFlags struct {
 	Resolver   string        `flag:"resolver"     help:"Query this DNS server (host or host:port) instead of the system resolver"                                                                                                                                                                                                         env:"RESOLVER"`
 	EventStore string        `flag:"event-store"  help:"Persist the run as events in this SQLite file (go-cqrs-lite journal; replay with the replay command)"                                                                                                                                                                             env:"EVENT_STORE"`
 	Resume     string        `flag:"resume"       help:"Skip domains already observed in a recorded run (exact run ID, or 'latest'); starts a new run linked to it. Requires --event-store"`
+	Budget     time.Duration `flag:"max-runtime"   help:"Abort the whole run after this budget (e.g. 2h30m); 0 = unlimited. Partial results still render, journal, and count"`
 	Wave       string        `flag:"wave"         help:"Census wave ID stamped into the event journal (e.g. tranco1m-a); empty for ad-hoc runs. Requires --event-store"`
 	Color      string        `flag:"color"        help:"Terminal colors for table output"                                                                                                             default:"auto"                                        values:"auto,always,never"`
 }
@@ -231,6 +232,17 @@ func runScan(
 	filter, format, tableOpts, err := scanOutputOpts(f)
 	if err != nil {
 		return err
+	}
+
+	// Whole-run budget (E31): a deadline on everything below — feeding,
+	// scanning, recording. Expiry classifies in-flight lookups as timeouts
+	// and unstarted domains as interrupted (never scanned), so a budgeted
+	// run still renders, journals, and reconciles its coverage honestly.
+	if f.Budget > 0 {
+		var budgetCancel context.CancelFunc
+
+		ctx, budgetCancel = context.WithTimeout(ctx, f.Budget)
+		defer budgetCancel()
 	}
 
 	resume, err := resolveResume(ctx, f)

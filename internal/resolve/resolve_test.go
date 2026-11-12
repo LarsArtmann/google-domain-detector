@@ -2,7 +2,7 @@ package resolve
 
 import (
 	"context"
-	"encoding/binary"
+	"errors"
 	"net"
 	"strconv"
 	"testing"
@@ -28,11 +28,15 @@ func TestResolverDialAddr(t *testing.T) {
 }
 
 // TestNewWithAddrQueriesIPv6Server proves the --resolver flag dials a real
-// IPv6 literal end to end: a one-shot DNS responder on [::1] answers the
-// resolver's query with an empty NOERROR response, and LookupTXT must come
-// back clean (empty, no error) rather than with a dial failure. Skipped on
-// hosts without IPv6 loopback.
+// IPv6 literal end to end. A one-shot responder on [::1] echoes the query
+// back with the QR bit set (NOERROR, zero answers); the Go resolver parses
+// that as "domain name has no TXT record" — a *net.DNSError with
+// IsNotFound. A broken v6 dial path would surface as an i/o timeout
+// instead, which fails the test. Skipped on hosts without IPv6 loopback.
 func TestNewWithAddrQueriesIPv6Server(t *testing.T) {
+	t.Parallel()
+
+	//nolint:noctx // test-local listener; no cancellation contract needed
 	conn, err := net.ListenPacket("udp", "[::1]:0")
 	if err != nil {
 		t.Skipf("no IPv6 loopback on this host: %v", err)
@@ -42,27 +46,25 @@ func TestNewWithAddrQueriesIPv6Server(t *testing.T) {
 
 	srvAddr := conn.LocalAddr().(*net.UDPAddr)
 
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
-
-	go serveOneEmptyResponse(ctx, conn)
+	go echoOneDNSResponse(conn)
 
 	res := NewWithAddr(net.JoinHostPort(srvAddr.IP.String(), strconv.Itoa(srvAddr.Port))) // bracketed [::1]:port
 
-	txts, err := res.LookupTXT(ctx, "example.com")
-	if err != nil {
-		t.Fatalf("LookupTXT over IPv6 resolver failed: %v", err)
-	}
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
 
-	if len(txts) != 0 {
-		t.Errorf("empty response must yield no TXT records, got %v", txts)
+	_, err = res.LookupTXT(ctx, "example.com")
+
+	dnsErr, ok := errors.AsType[*net.DNSError](err)
+	if !ok || !dnsErr.IsNotFound {
+		t.Fatalf("LookupTXT over IPv6 resolver must parse the empty response (IsNotFound), got: %v", err)
 	}
 }
 
-// serveOneEmptyResponse answers exactly one DNS query with a header-only
-// NOERROR response: the question is echoed back with zero answer records,
-// which every Lookup maps to "no records, no error".
-func serveOneEmptyResponse(ctx context.Context, conn net.PacketConn) {
+// echoOneDNSResponse answers exactly one DNS query by echoing it with the
+// QR bit set: same ID, same question, zero answers — a well-formed empty
+// NOERROR response the Go resolver accepts.
+func echoOneDNSResponse(conn net.PacketConn) {
 	buf := make([]byte, 512)
 
 	_ = conn.SetReadDeadline(time.Now().Add(3 * time.Second))
@@ -72,31 +74,8 @@ func serveOneEmptyResponse(ctx context.Context, conn net.PacketConn) {
 		return
 	}
 
-	query := buf[:n]
-
-	// Header (12 bytes): ID echoed, QR=1, RD copied; counts all zero
-	// except QDCOUNT=1 (the echoed question).
-	resp := make([]byte, 0, len(query))
-	resp = append(resp, query[0], query[1])
-	resp = append(resp, 0x80|(query[2]&0x01), 0x00) //nolint:gocritic // DNS header flags: QR=1 + RD bit copied
-
-	var counts [8]byte
-	binary.BigEndian.PutUint16(counts[0:], 1) // QDCOUNT
-	resp = append(resp, counts[:]...)
-
-	// Question section: copy until the terminating zero label plus the
-	// 4 type/class bytes.
-	i := 12
-	for i < len(query) {
-		if query[i] == 0 {
-			resp = append(resp, query[i:i+5]...)
-
-			break
-		}
-
-		resp = append(resp, query[i])
-		i++
-	}
+	resp := append([]byte{}, buf[:n]...)
+	resp[2] |= 0x80 // response bit
 
 	_ = conn.SetWriteDeadline(time.Now().Add(time.Second))
 
