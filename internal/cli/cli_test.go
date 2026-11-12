@@ -427,6 +427,61 @@ func TestScanInterruptedSummaryCountsScannedOnly(t *testing.T) {
 	}
 }
 
+// ctxSlowRes holds every TXT lookup until its context dies or the delay
+// elapses, honoring cancellation — the resolver shape a --max-runtime
+// budget test needs (unlike delayedRes, which sleeps ctx-blind).
+type ctxSlowRes struct {
+	*fakeRes
+
+	delay time.Duration
+}
+
+func (c ctxSlowRes) LookupTXT(ctx context.Context, host string) ([]string, error) {
+	select {
+	case <-ctx.Done():
+		// Grace hold: keep the worker pinned past the deadline so the
+		// feeder's parked select takes ctx.Done instead of racing the
+		// worker back to the queue.
+		time.Sleep(100 * time.Millisecond)
+
+		return nil, ctx.Err()
+	case <-time.After(c.delay):
+	}
+
+	return c.fakeRes.LookupTXT(ctx, host)
+}
+
+// TestScanMaxRuntimeBudgetExpiry pins E31's whole-run budget: when
+// --max-runtime expires mid-run, the in-flight domain reports timeout, the
+// unstarted one is interrupted (never scanned), and the summary counts
+// only what really ran.
+func TestScanMaxRuntimeBudgetExpiry(t *testing.T) {
+	t.Parallel()
+
+	stdout, stderr, err := runRes(t, &ctxSlowRes{fakeRes: &fakeRes{}, delay: 10 * time.Second}, "",
+		"scan", "--no-ranges", "--workers", "1", "--timeout", "30s",
+		"--max-runtime", "150ms", "--format", "jsonl", "slow.com", "never.com")
+	if err != nil {
+		t.Fatalf("budgeted scan must still finish the report: %v", err)
+	}
+
+	if !strings.Contains(stderr, "1 domains:") {
+		t.Errorf("summary must count only the scanned domain, got:\n%s", stderr)
+	}
+
+	if !strings.Contains(stderr, "timeout 1") {
+		t.Errorf("budget expiry must classify the in-flight domain as timeout, got:\n%s", stderr)
+	}
+
+	if !strings.Contains(stderr, "interrupted: 1 input domains were never scanned") {
+		t.Errorf("unstarted domain must be accounted as interrupted, got:\n%s", stderr)
+	}
+
+	if strings.Contains(stdout, "never.com") {
+		t.Errorf("never-started domain must not stream a line, got:\n%s", stdout)
+	}
+}
+
 func TestScanRejectsUnknownFilter(t *testing.T) {
 	t.Parallel()
 
