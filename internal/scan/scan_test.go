@@ -327,7 +327,8 @@ func TestRunMarksOnlyNeverReachedDomainsUnscanned(t *testing.T) {
 	}
 
 	// One worker: it enters slow.com's TXT lookup, signals, and holds there
-	// until the run dies — so never.example can never be fed to the pool.
+	// until the run dies (plus a grace period, so the feeder's parked
+	// select reliably takes ctx.Done) — never.example can never be fed.
 	var once sync.Once
 
 	res.onTXT = func(ctx context.Context, host string) {
@@ -338,6 +339,7 @@ func TestRunMarksOnlyNeverReachedDomainsUnscanned(t *testing.T) {
 		once.Do(func() {
 			close(started)
 			<-ctx.Done()
+			time.Sleep(100 * time.Millisecond)
 		})
 	}
 

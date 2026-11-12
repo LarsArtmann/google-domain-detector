@@ -260,6 +260,12 @@ type hangRes struct {
 
 	cancel context.CancelFunc
 	wait   *snapshotWriter
+	// holdAfterCancel keeps the worker inside the hung lookup for a grace
+	// period AFTER the run died, so the feeder's parked select reliably
+	// takes the ctx.Done branch instead of racing the worker back to the
+	// queue (which would scan the next domain and blur the placeholder
+	// accounting the caller is pinning).
+	holdAfterCancel time.Duration
 }
 
 func (h hangRes) LookupTXT(ctx context.Context, host string) ([]string, error) {
@@ -280,6 +286,10 @@ func (h hangRes) LookupTXT(ctx context.Context, host string) ([]string, error) {
 		}
 
 		<-ctx.Done()
+
+		if h.holdAfterCancel > 0 {
+			time.Sleep(h.holdAfterCancel)
+		}
 
 		return nil, ctx.Err()
 	}
@@ -388,7 +398,7 @@ func TestScanInterruptedSummaryCountsScannedOnly(t *testing.T) {
 		&stderr,
 		"test",
 		"",
-		&hangRes{fakeRes: &fakeRes{}, cancel: cancel},
+		&hangRes{fakeRes: &fakeRes{}, cancel: cancel, holdAfterCancel: 250 * time.Millisecond},
 		strings.NewReader(""),
 		false,
 		false,
@@ -398,8 +408,9 @@ func TestScanInterruptedSummaryCountsScannedOnly(t *testing.T) {
 	}
 
 	// One worker: it cancels the run the moment slow.com's TXT lookup
-	// begins, so never.com is still queued behind it — a placeholder, not
-	// a scan. The summary must count slow.com only.
+	// begins and stays pinned inside the lookup past the cancel, so
+	// never.com — still queued behind it — is a placeholder, not a scan.
+	// The summary must count slow.com only.
 	err = d.ExecuteWithArgs(ctx, []string{
 		"scan", "--no-ranges", "--workers", "1", "--format", "jsonl", "slow.com", "never.com",
 	})
