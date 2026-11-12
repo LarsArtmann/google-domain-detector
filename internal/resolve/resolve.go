@@ -29,20 +29,30 @@ func New() Resolver {
 
 // NewWithAddr returns a resolver that queries one DNS server directly
 // (host or host:port, port defaults to 53) instead of the system resolver —
-// for bulk scans that must not ride the local forwarding resolver.
+// for bulk scans that must not ride the local forwarding resolver. Bare
+// IPv6 addresses are bracketed; an already-bracketed host:port form passes
+// through unchanged (see resolverDialAddr).
 func NewWithAddr(addr string) Resolver {
-	if _, _, err := net.SplitHostPort(addr); err != nil {
-		addr = net.JoinHostPort(addr, "53")
-	}
-
 	return &netResolver{r: &net.Resolver{
 		PreferGo: true,
 		Dial: func(ctx context.Context, network, _ string) (net.Conn, error) {
 			var dialer net.Dialer
 
-			return dialer.DialContext(ctx, network, addr)
+			return dialer.DialContext(ctx, network, resolverDialAddr(addr))
 		},
 	}}
+}
+
+// resolverDialAddr normalizes a --resolver value into a dialable address.
+// net.SplitHostPort rejects a bare IPv6 literal (too many colons), which is
+// exactly the signal to bracket it with the default DNS port; bracketed
+// host:port forms already parse and pass through.
+func resolverDialAddr(addr string) string {
+	if _, _, err := net.SplitHostPort(addr); err != nil {
+		return net.JoinHostPort(addr, "53")
+	}
+
+	return addr
 }
 
 func (n *netResolver) LookupMX(ctx context.Context, host string) ([]*net.MX, error) {

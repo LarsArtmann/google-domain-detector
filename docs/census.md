@@ -112,6 +112,18 @@ operator decision, not an accounting default.
   event; provenance test pins it). Any detection-rule change MUST bump
   the ruleset before the next wave.
 
+### www-strip policy (decided 2026-11-12)
+
+`domain.Parse` always strips one leading `www.` label, so manifest lines
+like `www.edu.cn` scan as `edu.cn` — including when the stripped name IS
+a public suffix. Policy: **normalize and scan.** A hosted public-suffix
+apex has real DNS records (26 such cases in tranco1m-a scanned fine);
+skipping them would add a skip class for zero benefit. Consequence,
+handled: the gate's `--manifest` coverage check normalizes manifest
+lines the same way (lowercase, trailing dot, leading `www.`) before
+uniquing, so `www.foo.ch` + `foo.ch` in one manifest count as ONE target
+— matching the feeder's dedup — instead of a false coverage gap.
+
 ### Resume hazard (2026-11-12 wave-A post-mortem)
 
 `--resume latest` resolves to the most recently **started** run in the

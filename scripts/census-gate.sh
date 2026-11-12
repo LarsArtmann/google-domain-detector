@@ -86,7 +86,12 @@ coverage_check() {
 		exit 2
 	fi
 	local manifest_unique unparseable accounted gap
-	manifest_unique=$(grep -v '^[[:space:]]*$' "$manifest" | sort -u | wc -l)
+	# Normalize manifest lines the way domain.Parse does (lowercase, no
+	# trailing dot, no leading www.) before uniquing: a manifest carrying
+	# both www.foo.ch and foo.ch names ONE scan target, exactly like the
+	# feeder's dedup sees it (the www.<public-suffix> policy, 2026-11-12:
+	# normalize and scan — the stripped apex has real DNS evidence).
+	manifest_unique=$(grep -v '^[[:space:]]*$' "$manifest" | tr 'A-Z' 'a-z' | sed -E 's/\.$//; s/^www\.//' | sort -u | wc -l)
 	unparseable=$(sed -nE 's/^skipped ([0-9]+) unparseable.*/\1/p' "$file" | tail -1)
 	unparseable=${unparseable:-0}
 	# The scan's own accounting lines (2026-11-12): the summary counts only
@@ -100,7 +105,7 @@ coverage_check() {
 	accounted=$((total + unparseable + expect_skip))
 	if [ "$accounted" -ne "$manifest_unique" ]; then
 		gap=$((manifest_unique - accounted))
-		echo "census-gate: FAIL — coverage gap: manifest $manifest_unique vs scanned $total + unparseable $unparseable + expect-skip $expect_skip = $accounted (missing $gap)"
+		echo "census-gate: FAIL — coverage gap: manifest $manifest_unique (normalized) vs scanned $total + unparseable $unparseable + expect-skip $expect_skip = $accounted (delta $gap)"
 		if [ "$interrupted" -gt 0 ]; then
 			echo "census-gate: run was interrupted ($interrupted never scanned) — retry the out-dir (explicit --resume via run-id)"
 		fi
@@ -110,7 +115,7 @@ coverage_check() {
 		echo "census-gate: reconcile against the journal (domain_observed events by run_idx) before trusting this pass; see docs/census.md 'resume hazard'"
 		exit 4
 	fi
-	echo "census-gate: coverage PASS — manifest $manifest_unique = scanned $total + unparseable $unparseable + expect-skip $expect_skip"
+	echo "census-gate: coverage PASS — manifest $manifest_unique (normalized) = scanned $total + unparseable $unparseable + expect-skip $expect_skip"
 }
 
 summary_pattern='^[0-9]+ domains: workspace certain [0-9]+ / likely [0-9]+, gcp [0-9]+, errors [0-9]+'
