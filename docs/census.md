@@ -122,9 +122,10 @@ was "latest": run 01M755NSBKB09MXM0EB0001CZB scanned 97 265 of 99 996
 parseable domains (100 000 manifest − 4 unparseable). The health gate
 passed (unknown 1.53% < 2%) because coverage is not a health metric;
 the missing 2 731 were only found by reconciling run1.jsonl against
-the manifest (26 further inputs appear as www-stripped renames, e.g.
-`www.edu.cn` → `edu.cn`, so 97 265 outputs = 99 996 − 2 731 skips with
-26 rename offsets inside that). The 2 731 domains exist in the journal
+the manifest (input lines absent from the output: 2 761 = 2 731
+skipped + 4 unparseable + 26 scanned under www-stripped names, e.g.
+`www.edu.cn` → `edu.cn`, whose literal input lines also disappear).
+The 2 731 domains exist in the journal
 under soak3's run id with full evidence — coverage is recoverable by a
 patch scan (owner call, wave B is held anyway).
 
