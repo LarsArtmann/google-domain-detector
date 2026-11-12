@@ -466,7 +466,7 @@ func TestScanInterruptedSummaryCountsScannedOnly(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	d, err := BuildCLI(
+	dispatcher, err := BuildCLI(
 		io.Discard,
 		&stderr,
 		"test",
@@ -484,7 +484,7 @@ func TestScanInterruptedSummaryCountsScannedOnly(t *testing.T) {
 	// begins and stays pinned inside the lookup past the cancel, so
 	// never.com — still queued behind it — is a placeholder, not a scan.
 	// The summary must count slow.com only.
-	err = d.ExecuteWithArgs(ctx, []string{
+	err = dispatcher.ExecuteWithArgs(ctx, []string{
 		"scan", "--no-ranges", "--workers", "1", "--format", "jsonl", "slow.com", "never.com",
 	})
 	if err != nil {

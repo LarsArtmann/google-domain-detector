@@ -194,7 +194,10 @@ func TestScanTargetsResumeFullyObservedIsNoOp(t *testing.T) {
 func TestScanTargetsEmptyInputIsUsageError(t *testing.T) {
 	t.Parallel()
 
-	_, _, _, err := scanTargets(ScanFlags{}, nil, strings.NewReader(""), false, 0, nil, io.Discard)
+	feeder, chunk, last, err := scanTargets(ScanFlags{}, nil, strings.NewReader(""), false, 0, nil, io.Discard)
+	if feeder != nil || len(chunk) > 0 || last {
+		t.Errorf("empty input must yield a nil feeder and no chunk, got chunk=%d last=%t", len(chunk), last)
+	}
 
 	var exitErr *v5.ExitError
 	if !errors.As(err, &exitErr) || exitErr.ExitCode() != exitCodeUsage {

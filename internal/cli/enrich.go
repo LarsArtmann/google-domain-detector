@@ -40,7 +40,13 @@ var (
 
 // enrichColumns appended to every row: the normalized domain the verdicts
 // belong to (inputs may carry URLs or www forms) plus the verdicts.
-var enrichColumns = []string{"gdd_domain", "workspace", "gcp", "error"}
+func enrichColumns() []string {
+	return []string{"gdd_domain", "workspace", "gcp", "error"}
+}
+
+// csvFirstDataLine is the 1-based file line of the first data row: line 1
+// is the header, line 2 the first record.
+const csvFirstDataLine = 2
 
 // runEnrich streams the input CSV through the event store's read model and
 // writes it back with appended verdict columns — every original column and
@@ -57,18 +63,12 @@ func runEnrich(ctx context.Context, f EnrichFlags, stdin io.Reader, stdout, stde
 		return usageError(errEnrichNeedsCSV)
 	}
 
-	source := stdin
-
-	if f.Input != "-" {
-		file, err := os.Open(f.Input)
-		if err != nil {
-			return fmt.Errorf("open --input %s: %w", f.Input, err)
-		}
-
-		defer func() { _ = file.Close() }()
-
-		source = file
+	source, closeSource, err := openEnrichInput(f.Input, stdin)
+	if err != nil {
+		return err
 	}
+
+	defer func() { _ = closeSource() }()
 
 	reader := csv.NewReader(source)
 	reader.FieldsPerRecord = -1
@@ -93,32 +93,13 @@ func runEnrich(ctx context.Context, f EnrichFlags, stdin io.Reader, stdout, stde
 	writer := csv.NewWriter(stdout)
 	defer writer.Flush()
 
-	if err := writer.Write(append(slices.Clone(header), enrichColumns...)); err != nil {
+	if err := writer.Write(append(slices.Clone(header), enrichColumns()...)); err != nil {
 		return fmt.Errorf("write header: %w", err)
 	}
 
-	rows, enriched := 0, 0
-
-	for {
-		record, err := reader.Read()
-		if errors.Is(err, io.EOF) {
-			break
-		}
-
-		if err != nil {
-			return fmt.Errorf("read CSV row %d: %w", rows+2, err) // +2: 1-based row, past the header
-		}
-
-		rows++
-
-		verdict := enrichRow(ctx, sys, record, col)
-		if verdict.scanned {
-			enriched++
-		}
-
-		if err := writer.Write(append(slices.Clone(record), verdict.cells...)); err != nil {
-			return fmt.Errorf("write CSV row %d: %w", rows+1, err)
-		}
+	rows, enriched, err := enrichRows(ctx, sys, reader, writer, col)
+	if err != nil {
+		return err
 	}
 
 	if err := writer.Error(); err != nil {
@@ -134,6 +115,58 @@ func runEnrich(ctx context.Context, f EnrichFlags, stdin io.Reader, stdout, stde
 	)
 
 	return nil
+}
+
+// openEnrichInput resolves the --input value into a reader and its closer.
+func openEnrichInput(inputPath string, stdin io.Reader) (io.Reader, func() error, error) {
+	if inputPath == "-" {
+		return stdin, func() error { return nil }, nil
+	}
+
+	file, err := os.Open(inputPath)
+	if err != nil {
+		return nil, nil, fmt.Errorf("open --input %s: %w", inputPath, err)
+	}
+
+	return file, func() error { return file.Close() }, nil
+}
+
+// enrichRows streams every CSV record through the read model, appending the
+// verdict cells. It returns the row count and how many rows joined a
+// recorded observation; the caller flushes the writer.
+func enrichRows(
+	ctx context.Context,
+	sys *cqrs.System,
+	reader *csv.Reader,
+	writer *csv.Writer,
+	col int,
+) (int, int, error) {
+	rows, enriched := 0, 0
+	fileLine := csvFirstDataLine
+
+	for {
+		record, readErr := reader.Read()
+		if errors.Is(readErr, io.EOF) {
+			return rows, enriched, nil
+		}
+
+		if readErr != nil {
+			return 0, 0, fmt.Errorf("read CSV line %d: %w", fileLine, readErr)
+		}
+
+		rows++
+
+		verdict := enrichRow(ctx, sys, record, col)
+		if verdict.scanned {
+			enriched++
+		}
+
+		if writeErr := writer.Write(append(slices.Clone(record), verdict.cells...)); writeErr != nil {
+			return 0, 0, fmt.Errorf("write CSV line %d: %w", fileLine, writeErr)
+		}
+
+		fileLine++
+	}
 }
 
 // enrichVerdict is one row's appended cells; scanned reports whether the
