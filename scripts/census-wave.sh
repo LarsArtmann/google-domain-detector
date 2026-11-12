@@ -16,8 +16,8 @@
 set -uo pipefail
 
 if [ $# -lt 5 ]; then
-    echo "usage: $0 <gdd-binary> <store> <wave-id> <manifest> <out-dir> [workers] [timeout]" >&2
-    exit 2
+	echo "usage: $0 <gdd-binary> <store> <wave-id> <manifest> <out-dir> [workers] [timeout]" >&2
+	exit 2
 fi
 
 gdd_bin=$1
@@ -33,54 +33,57 @@ warn_pct=${GDD_WARN_PCT:-2}
 here=$(cd "$(dirname "$0")" && pwd)
 
 for f in "$gdd_bin" "$store" "$manifest"; do
-    if [ ! -e "$f" ]; then
-        echo "census-wave: no such path: $f" >&2
-        exit 2
-    fi
+	if [ ! -e "$f" ]; then
+		echo "census-wave: no such path: $f" >&2
+		exit 2
+	fi
 done
 
 log() { printf '%s %s\n' "$(date '+%F %T')" "$*" >>"$out_dir/monitor.log"; }
 
 snapshot() {
-    local snap_dir snap_log
-    snap_dir=$(dirname "$store")/snapshots
-    if snap_log=$("$here/census-snapshot.sh" "$store" "$snap_dir" "$wave-complete-$(date '+%Y%m%d-%H%M')" 2>&1); then
-        log "journal snapshot: $snap_log"
-    else
-        log "journal snapshot FAILED (journal remains the source of truth; re-run scripts/census-snapshot.sh manually): $snap_log"
-    fi
+	local snap_dir snap_log
+	snap_dir=$(dirname "$store")/snapshots
+	if snap_log=$("$here/census-snapshot.sh" "$store" "$snap_dir" "$wave-complete-$(date '+%Y%m%d-%H%M')" 2>&1); then
+		log "journal snapshot: $snap_log"
+	else
+		log "journal snapshot FAILED (journal remains the source of truth; re-run scripts/census-snapshot.sh manually): $snap_log"
+	fi
 }
 
 mkdir -p "$out_dir"
 : >"$out_dir/monitor.log"
 
 if pgrep -f 'gdd scan' >/dev/null 2>&1; then
-    log "REFUSED: another census scan is running (single-flight law, docs/census.md)"
-    exit 3
+	log "REFUSED: another census scan is running (single-flight law, docs/census.md)"
+	exit 3
 fi
 
 log "wave $wave pass 1 starting: workers=$workers timeout=$timeout_budget resolver=$resolver input=$manifest"
 
 progress() {
-    local total mixed unknown pct
-    total=$(wc -l <"$out_dir/run1.jsonl" 2>/dev/null || echo 0)
-    mixed=$(jq -r '.error_kind // "none"' "$out_dir/run1.jsonl" 2>/dev/null | sort | uniq -c | tr '\n' ';')
-    log "progress: $total scanned — $mixed"
-    if [ "$total" -gt 0 ] 2>/dev/null && awk -v w="$warn_pct" 'BEGIN { exit !(w > 0) }'; then
-        unknown=$(jq -r '.error_kind // "none"' "$out_dir/run1.jsonl" 2>/dev/null | grep -c -v -E '^(none|nxdomain)$')
-        pct=$(awk -v u="$unknown" -v t="$total" 'BEGIN { printf "%.2f", 100 * u / t }')
-        if awk -v p="$pct" -v w="$warn_pct" 'BEGIN { exit !(p > w) }'; then
-            log "WARNING: unknown rate ${pct}% above bar ${warn_pct}% at $total scanned — check unbound health (scripts/unbound.sh status) and error mix above"
-        fi
-    fi
+	local total mixed unknown pct
+	total=$(wc -l <"$out_dir/run1.jsonl" 2>/dev/null || echo 0)
+	mixed=$(jq -r '.error_kind // "none"' "$out_dir/run1.jsonl" 2>/dev/null | sort | uniq -c | tr '\n' ';')
+	log "progress: $total scanned — $mixed"
+	if [ "$total" -gt 0 ] 2>/dev/null && awk -v w="$warn_pct" 'BEGIN { exit !(w > 0) }'; then
+		unknown=$(jq -r '.error_kind // "none"' "$out_dir/run1.jsonl" 2>/dev/null | grep -c -v -E '^(none|nxdomain)$')
+		pct=$(awk -v u="$unknown" -v t="$total" 'BEGIN { printf "%.2f", 100 * u / t }')
+		if awk -v p="$pct" -v w="$warn_pct" 'BEGIN { exit !(p > w) }'; then
+			log "WARNING: unknown rate ${pct}% above bar ${warn_pct}% at $total scanned — check unbound health (scripts/unbound.sh status) and error mix above"
+		fi
+	fi
 }
-(while :; do sleep 1800; progress; done) &
+(while :; do
+	sleep 1800
+	progress
+done) &
 poller=$!
 
 "$gdd_bin" scan --no-ranges --workers "$workers" --timeout "$timeout_budget" \
-    --resolver "$resolver" --event-store "$store" --wave "$wave" \
-    --input "$manifest" --resume latest --format jsonl \
-    >"$out_dir/run1.jsonl" 2>"$out_dir/run1.stderr"
+	--resolver "$resolver" --event-store "$store" --wave "$wave" \
+	--input "$manifest" --resume latest --format jsonl \
+	>"$out_dir/run1.jsonl" 2>"$out_dir/run1.stderr"
 scan_rc=$?
 kill "$poller" 2>/dev/null
 log "wave $wave pass 1 finished: exit=$scan_rc"
@@ -90,12 +93,12 @@ grep -E '^[0-9]+ domains:' "$out_dir/run1.stderr" | tail -1 >>"$out_dir/monitor.
 gate_rc=$?
 
 if [ "$gate_rc" -ne 0 ]; then
-    log "pass-1 gate FAIL — running cleanup loop (E16)"
-    "$here/census-cleanup.sh" "$gdd_bin" "$store" "$wave" "$out_dir/run1.jsonl" >>"$out_dir/monitor.log" 2>&1
-    cleanup_rc=$?
-    log "cleanup loop exit=$cleanup_rc — residual gate verdict above; stable-SERVFAIL assessment (census-gate.sh --servfail-stable) is the operator's explicit call"
-    snapshot
-    exit "$cleanup_rc"
+	log "pass-1 gate FAIL — running cleanup loop (E16)"
+	"$here/census-cleanup.sh" "$gdd_bin" "$store" "$wave" "$out_dir/run1.jsonl" >>"$out_dir/monitor.log" 2>&1
+	cleanup_rc=$?
+	log "cleanup loop exit=$cleanup_rc — residual gate verdict above; stable-SERVFAIL assessment (census-gate.sh --servfail-stable) is the operator's explicit call"
+	snapshot
+	exit "$cleanup_rc"
 fi
 
 log "pass-1 gate PASS — wave $wave done (no cleanup needed)"

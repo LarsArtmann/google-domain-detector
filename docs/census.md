@@ -107,25 +107,25 @@ operator decision, not an accounting default.
 
 ### Wave ledger
 
-| Wave       | Ranks             | List  | Manifest sha256 (first 12) | Status  |
-| ---------- | ----------------- | ----- | -------------------------- | ------- |
+| Wave       | Ranks             | List  | Manifest sha256 (first 12) | Status                                                          |
+| ---------- | ----------------- | ----- | -------------------------- | --------------------------------------------------------------- |
 | tranco1m-a | 1–100 000         | 947N2 | b4450f660567               | in progress (w4 soaks 1–3 + pilot collision; main pass running) |
-| tranco1m-b | 100 001–500 000   | 947N2 | b6d5b3821c90               | pending |
-| tranco1m-c | 500 001–1 000 000 | 947N2 | b0317d71873a               | pending |
+| tranco1m-b | 100 001–500 000   | 947N2 | b6d5b3821c90               | pending                                                         |
+| tranco1m-c | 500 001–1 000 000 | 947N2 | b0317d71873a               | pending                                                         |
 
 ## Worker-pressure findings (E7/E9 ladder + 2026-11-11 soaks)
 
 Two resolver modes were measured, cold cache, 10s timeout, mixed-TLD
 Tranco slices (worst-case single-TLD .ch noted where it differs):
 
-| Mode           | Workers | dom/s   | unknown% | Gate     |
-| -------------- | ------- | ------- | -------- | -------- |
-| full recursion | 2       | 2.9     | 3.0%     | FAIL     |
-| full recursion | 4       | 1.2     | 19.5–24% | FAIL     |
-| full recursion | 8       | 0.7     | 20–22%   | FAIL     |
-| forwarder      | 4       | 3.7     | 0.5%     | PASS     |
-| forwarder      | 8       | 4.1     | 1.5%     | PASS     |
-| forwarder      | 16      | 1.9     | 65.5%    | FAIL     |
+| Mode           | Workers | dom/s | unknown% | Gate |
+| -------------- | ------- | ----- | -------- | ---- |
+| full recursion | 2       | 2.9   | 3.0%     | FAIL |
+| full recursion | 4       | 1.2   | 19.5–24% | FAIL |
+| full recursion | 8       | 0.7   | 20–22%   | FAIL |
+| forwarder      | 4       | 3.7   | 0.5%     | PASS |
+| forwarder      | 8       | 4.1   | 1.5%     | PASS |
+| forwarder      | 16      | 1.9   | 65.5%    | FAIL |
 
 The table above is ~50-second windows. **Sustained 30-minute soaks
 (2026-11-10/11, artifacts under

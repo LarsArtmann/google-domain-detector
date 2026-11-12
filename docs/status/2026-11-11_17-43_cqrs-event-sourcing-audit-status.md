@@ -71,38 +71,38 @@
 
 Impact: Critical/High/Medium/Low · Effort: S <30min, M 30min-2hr, L >2hr
 
-| # | Task | Impact | Effort | Category |
-|---|------|--------|--------|----------|
-| 1 | Confirm CI green on HEAD via `gh run list --limit 3` (or documented curl bypass) — release law requires CI green on the exact commit | High | S | Quality |
-| 2 | Re-run cqrs-lint over `internal/scanstore` after the buildflow binary is rebuilt (BuildFlow#56) to re-baseline E003/B005 as the complete finding set | High | S | Quality |
-| 3 | Live smoke the `--resume` path: scan with `--event-store`, re-run `--resume latest`, verify skip-set journal behavior end-to-end | High | S | Quality |
-| 4 | Live smoke `replay --since` in both table and jsonl modes on a two-run store; verify flip counts + ruleset-mismatch warning | High | S | Quality |
-| 5 | Read `sqliteengine/v4@v4.8.0` `MapUpdate` source; confirm nil-prev upsert directly (close §b-4 inference loop) | Medium | S | Quality |
-| 6 | Run `go test -race ./internal/scanstore/... ./internal/cli/...` once | Medium | S | Quality |
-| 7 | Annotate `docs/status/2026-11-10_00-36_library-audit-session-review.md` item 26 as superseded by AGENTS.md deliberate non-fixes (docs-health ANNOTATE, inline, non-destructive) | Medium | S | Documentation |
-| 8 | HARVEST this report's §(f) into TODO_LIST.md and route roadmap-grade items to ROADMAP.md (docs-health HARVEST) | High | S | Documentation |
-| 9 | Decide causation metadata: stamp `event.WithCommandCausality` in Recorder dispatches or document its absence as deliberate in AGENTS.md | Medium | S | Feature |
-| 10 | Decide actor metadata (`command.WithActor` system-actor "cli") or document deliberate absence | Medium | S | Feature |
-| 11 | Make the insert-fold keyType role discoverable in views.go (named helper or approved comment) — pending §g-2 | Medium | S | Cleanup |
-| 12 | Verify memory-engine and sqlite-engine fold dispatch share the task snapshot (one source read in `runtime_backend.go`) | Low | S | Quality |
-| 13 | Compare the repo's insert+update fold idiom against `example/goal-shaped-app` / COOKBOOK upsert patterns; link the canonical precedent if it exists | Low | S | Quality |
-| 14 | Exercise metaengine `Doctor()` diagnostics against a scanstore db (operator health readout; goal-shaped-app precedent) and decide whether to expose via CLI | Medium | M | Feature |
-| 15 | Declare `DomainConfig.Schema` upcasters when the first event payload evolution lands (schema v1 stamped today — the hook point exists) | Medium | M | Feature |
-| 16 | Schedule EventCatalog wiring for when the journal gains external consumers (F032 trigger: census T16 / CRM replay-deltas) | Low | L | Feature |
-| 17 | Verify FEATURES.md / STACK.md reflect the event-sourcing feature honestly (docs-health VERIFY on the scanstore entries) | Medium | S | Documentation |
-| 18 | Run `GDD_SOAK=1` 100k-event soak once post-audit for fresh confidence numbers (opt-in, exceeds CI budget — local only) | Low | M | Quality |
-| 19 | Pin the Recorder sequential-dispatch contract (journal-order stability) with an explicit test, so a future concurrent Recorder fails loudly | Medium | S | Quality |
-| 20 | Fix the 4 unused-`nolint`/`tagalign` warnings in `internal/cli` flagged by LSP (buildflow format once binary works) | Low | S | Cleanup |
-| 21 | When bumping go-cqrs-lite, re-verify `foldByEvent` last-fold-wins semantics before merging (pin: AGENTS.md gotcha cites metaengine v4.23.0) | High | S | Quality |
-| 22 | Add a scanstore README/doc block mapping the package to the go-cqrs-lite core loop (Command→Decider→Journal→Fold→Query) for new contributors | Low | S | Documentation |
-| 23 | Whole-TLD census T16: retire CRM script diff logic in favor of `replay`-based deltas (AGENTS.md downstream pointer; waiting on T16) | High | L | Feature |
-| 24 | Check whether `--event-store` should have a default path (UX: currently required for journaling; error message already guides) | Low | S | Feature |
-| 25 | Consider rejected-on-record: snapshots for run streams (3 events/stream — unnecessary; note prevents future re-litigation) | Low | S | Documentation |
-| 26 | Audit `docs/review/libs/go-cqrs-lite.md` consumer scorecard against this session's findings (utilization is high: system+metaengine+scenario+adapter all used canonically) | Low | S | Documentation |
-| 27 | Add the audit's live-round-trip command sequence to AGENTS.md Commands section as the canonical smoke recipe | Low | S | Documentation |
-| 28 | Sweep go-cqrs-lite modules for newer patches (v4.18.0 system / v4.23.0 metaengine — check for bugfix releases; go-ecosystem-upgrade skill owns the sweep) | Medium | M | Quality |
-| 29 | Cross-check the unbound-forwarder worker calibration (workers 4 / timeout 15s) note survives in scan docs before the next bulk run (operational gotcha from AGENTS.md) | Medium | S | Documentation |
-| 30 | Record this session's fold-pair lesson candidate in `crush-config` `references/lessons.md` **only if** the "documented linter findings ≠ fresh run" pattern recurs cross-project (per global AGENTS.md routing rule) | Low | S | Documentation |
+| #  | Task                                                                                                                                                                                                                 | Impact | Effort | Category      |
+| -- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ | ------ | ------------- |
+| 1  | Confirm CI green on HEAD via `gh run list --limit 3` (or documented curl bypass) — release law requires CI green on the exact commit                                                                                 | High   | S      | Quality       |
+| 2  | Re-run cqrs-lint over `internal/scanstore` after the buildflow binary is rebuilt (BuildFlow#56) to re-baseline E003/B005 as the complete finding set                                                                 | High   | S      | Quality       |
+| 3  | Live smoke the `--resume` path: scan with `--event-store`, re-run `--resume latest`, verify skip-set journal behavior end-to-end                                                                                     | High   | S      | Quality       |
+| 4  | Live smoke `replay --since` in both table and jsonl modes on a two-run store; verify flip counts + ruleset-mismatch warning                                                                                          | High   | S      | Quality       |
+| 5  | Read `sqliteengine/v4@v4.8.0` `MapUpdate` source; confirm nil-prev upsert directly (close §b-4 inference loop)                                                                                                       | Medium | S      | Quality       |
+| 6  | Run `go test -race ./internal/scanstore/... ./internal/cli/...` once                                                                                                                                                 | Medium | S      | Quality       |
+| 7  | Annotate `docs/status/2026-11-10_00-36_library-audit-session-review.md` item 26 as superseded by AGENTS.md deliberate non-fixes (docs-health ANNOTATE, inline, non-destructive)                                      | Medium | S      | Documentation |
+| 8  | HARVEST this report's §(f) into TODO_LIST.md and route roadmap-grade items to ROADMAP.md (docs-health HARVEST)                                                                                                       | High   | S      | Documentation |
+| 9  | Decide causation metadata: stamp `event.WithCommandCausality` in Recorder dispatches or document its absence as deliberate in AGENTS.md                                                                              | Medium | S      | Feature       |
+| 10 | Decide actor metadata (`command.WithActor` system-actor "cli") or document deliberate absence                                                                                                                        | Medium | S      | Feature       |
+| 11 | Make the insert-fold keyType role discoverable in views.go (named helper or approved comment) — pending §g-2                                                                                                         | Medium | S      | Cleanup       |
+| 12 | Verify memory-engine and sqlite-engine fold dispatch share the task snapshot (one source read in `runtime_backend.go`)                                                                                               | Low    | S      | Quality       |
+| 13 | Compare the repo's insert+update fold idiom against `example/goal-shaped-app` / COOKBOOK upsert patterns; link the canonical precedent if it exists                                                                  | Low    | S      | Quality       |
+| 14 | Exercise metaengine `Doctor()` diagnostics against a scanstore db (operator health readout; goal-shaped-app precedent) and decide whether to expose via CLI                                                          | Medium | M      | Feature       |
+| 15 | Declare `DomainConfig.Schema` upcasters when the first event payload evolution lands (schema v1 stamped today — the hook point exists)                                                                               | Medium | M      | Feature       |
+| 16 | Schedule EventCatalog wiring for when the journal gains external consumers (F032 trigger: census T16 / CRM replay-deltas)                                                                                            | Low    | L      | Feature       |
+| 17 | Verify FEATURES.md / STACK.md reflect the event-sourcing feature honestly (docs-health VERIFY on the scanstore entries)                                                                                              | Medium | S      | Documentation |
+| 18 | Run `GDD_SOAK=1` 100k-event soak once post-audit for fresh confidence numbers (opt-in, exceeds CI budget — local only)                                                                                               | Low    | M      | Quality       |
+| 19 | Pin the Recorder sequential-dispatch contract (journal-order stability) with an explicit test, so a future concurrent Recorder fails loudly                                                                          | Medium | S      | Quality       |
+| 20 | Fix the 4 unused-`nolint`/`tagalign` warnings in `internal/cli` flagged by LSP (buildflow format once binary works)                                                                                                  | Low    | S      | Cleanup       |
+| 21 | When bumping go-cqrs-lite, re-verify `foldByEvent` last-fold-wins semantics before merging (pin: AGENTS.md gotcha cites metaengine v4.23.0)                                                                          | High   | S      | Quality       |
+| 22 | Add a scanstore README/doc block mapping the package to the go-cqrs-lite core loop (Command→Decider→Journal→Fold→Query) for new contributors                                                                         | Low    | S      | Documentation |
+| 23 | Whole-TLD census T16: retire CRM script diff logic in favor of `replay`-based deltas (AGENTS.md downstream pointer; waiting on T16)                                                                                  | High   | L      | Feature       |
+| 24 | Check whether `--event-store` should have a default path (UX: currently required for journaling; error message already guides)                                                                                       | Low    | S      | Feature       |
+| 25 | Consider rejected-on-record: snapshots for run streams (3 events/stream — unnecessary; note prevents future re-litigation)                                                                                           | Low    | S      | Documentation |
+| 26 | Audit `docs/review/libs/go-cqrs-lite.md` consumer scorecard against this session's findings (utilization is high: system+metaengine+scenario+adapter all used canonically)                                           | Low    | S      | Documentation |
+| 27 | Add the audit's live-round-trip command sequence to AGENTS.md Commands section as the canonical smoke recipe                                                                                                         | Low    | S      | Documentation |
+| 28 | Sweep go-cqrs-lite modules for newer patches (v4.18.0 system / v4.23.0 metaengine — check for bugfix releases; go-ecosystem-upgrade skill owns the sweep)                                                            | Medium | M      | Quality       |
+| 29 | Cross-check the unbound-forwarder worker calibration (workers 4 / timeout 15s) note survives in scan docs before the next bulk run (operational gotcha from AGENTS.md)                                               | Medium | S      | Documentation |
+| 30 | Record this session's fold-pair lesson candidate in `crush-config` `references/lessons.md` **only if** the "documented linter findings ≠ fresh run" pattern recurs cross-project (per global AGENTS.md routing rule) | Low    | S      | Documentation |
 
 ## g) Questions I cannot answer myself
 
@@ -112,4 +112,4 @@ Impact: Critical/High/Medium/Low · Effort: S <30min, M 30min-2hr, L >2hr
 
 ---
 
-*Report generated per status-report skill. Not manually committed (harness: never commit without explicit request) — the auto-commit daemon will sweep it. §(f) is HARVEST-ready.*
+_Report generated per status-report skill. Not manually committed (harness: never commit without explicit request) — the auto-commit daemon will sweep it. §(f) is HARVEST-ready._

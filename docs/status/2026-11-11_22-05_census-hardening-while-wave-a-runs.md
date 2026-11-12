@@ -40,10 +40,10 @@ foreign-lane harvesting, local tarball per wave).
    `scripts/census-snapshot.sh` — sqlite online backup (WAL-consistent
    under load) → integrity_check → tar.gz + sha256 sidecar.
    Live-verified against the running journal (205 MB → 33 MB, restore
-   + row-count proof: meta_stream_log 72,510 rows). The wave runner
-   now auto-snapshots into `reports/census/snapshots/` on completion
-   (both exit paths, stub-tested). Wave A (old inode) gets a **manual**
-   snapshot at completion — see protocol below.
+   - row-count proof: meta_stream_log 72,510 rows). The wave runner
+     now auto-snapshots into `reports/census/snapshots/` on completion
+     (both exit paths, stub-tested). Wave A (old inode) gets a **manual**
+     snapshot at completion — see protocol below.
 5. **Outage-window CI runs eyeballed** (§f12): b22b6fc / c6dca0c /
    3b3ae41 / 92432b0 — all steps success, nothing skipped or masked.
 6. Soak cron verification (§f11) — see live state.

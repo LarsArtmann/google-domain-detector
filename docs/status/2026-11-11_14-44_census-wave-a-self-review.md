@@ -25,7 +25,7 @@ first real wave. This report covers this session only.
    `reports/census/README.md` + NOTES.md; census.db holds all three
    journal runs; T09 struck (docs-gates pre-flight SAFE, annotate PASS).
 3. **D3 servfail-stable refinement.** Stable-SERVFAIL = domain-side
-   broken delegation = *explained*, never silently: documented in
+   broken delegation = _explained_, never silently: documented in
    docs/census.md, encoded as explicit opt-in
    `census-gate.sh --servfail-stable`, self-tested both input modes,
    plain output byte-compatible with the archived expectations.
@@ -102,41 +102,41 @@ first real wave. This report covers this session only.
    break was a sibling's env-dependent test that the daemon mixed into
    the lineage, but MY push carried it and the AGENTS watch-habit
    exists exactly for this. The fix took 5 minutes once seen.
-   *Lesson: every push gets a run-watch before the next work block; if
+   _Lesson: every push gets a run-watch before the next work block; if
    GH is unreachable, the deferred-verification debt goes in the
-   session report IMMEDIATELY, not in a later section.*
+   session report IMMEDIATELY, not in a later section._
 2. **Wrote wall-clock times from an assumed internal clock.** NOTES
    said "02:05–02:35"; the artifacts said 08:22–08:52. Caught while
    writing the 12-35 report, corrected from file evidence.
-   *Lesson: never write a time into a record without reading it off
-   the artifact.*
+   _Lesson: never write a time into a record without reading it off
+   the artifact._
 3. **Nearly committed a false gotcha.** First AGENTS draft blamed the
    jq shim for "silently emitting 1 373 of 3 153 rows" — that was
    plain jq null-filtering (`select(.error_kind)` drops clean rows),
    NOT a shim bug. Caught on an honesty re-check before commit.
-   *Lesson: verify the MECHANISM of a claim before encoding it into
-   memory; "it surprised me" is not a diagnosis.*
+   _Lesson: verify the MECHANISM of a claim before encoding it into
+   memory; "it surprised me" is not a diagnosis._
 4. **Single-flight discipline existed only in my head until the
    collision.** I never ran `pgrep` before soak 2/3; the sibling's
    concurrent pilot contaminated soak 3's measurement (5.35% is an
    upper bound, decision made on noisier data than needed).
-   *Lesson: coordination rules go into the shared runbook BEFORE the
-   runs that need them.*
+   _Lesson: coordination rules go into the shared runbook BEFORE the
+   runs that need them._
 5. **First census-wave.sh design hung on a zombie race** (kill -0 on
    an unreaped dead child → one blind 30-min sleep). Caught by my own
    stub test, rewritten to foreground-scan + background-poller.
-   *Lesson: poller patterns around child processes need reaping
-   semantics thought through up front.*
+   _Lesson: poller patterns around child processes need reaping
+   semantics thought through up front._
 6. **census-slice.sh shipped with a pipefail SIGPIPE bug** (tr-then-
    head: head's early exit kills tr, exit 141 under pipefail). MY
-   script; a sibling found and fixed it. *Lesson: every script I
+   script; a sibling found and fixed it. _Lesson: every script I
    write under `set -euo pipefail` gets a pipefail-path test, not just
-   the happy path.*
+   the happy path._
 7. **Two stub-test harnesses were themselves buggy** (a stray
    placeholder line aborted run 1; the stale-path test lacked
    docs/review/libs and silently exercised the wrong exit). Both
    caught by reading outputs — but each burned a cycle.
-   *Lesson: test the test before trusting its red/green.*
+   _Lesson: test the test before trusting its red/green._
 
 ## e) WHAT WE SHOULD IMPROVE (systemic, from this session)
 
@@ -249,18 +249,18 @@ first real wave. This report covers this session only.
    ~7–8 days. Accept that, or fund an offsite resolver/VPS (even a
    small one on a datacenter path) to unblock higher worker counts?
    Wave A is already running at w4 and healthy — this decides waves
-   B/C, not the current run. *(Default if no answer: accept w4.)*
+   B/C, not the current run. _(Default if no answer: accept w4.)_
 2. **Cross-lane harvesting policy:** may I harvest/route OTHER
    sessions' status-report §f items into TODO_LIST when their lanes go
    quiet (docs-gates audit-all is red on 27 foreign items), or is
-   strict lane ownership worth the red gate? *(Default: leave foreign
-   lanes alone, keep flagging.)*
+   strict lane ownership worth the red gate? _(Default: leave foreign
+   lanes alone, keep flagging.)_
 3. **Census-journal backup destination:** census.db is the census's
    single copy (gitignored by design). Where should periodic snapshots
    go — another machine on the LAN (evo-x2?), an external drive, or
    nowhere (accept the risk)? I can build the snapshot routine; I
-   cannot pick the destination. *(Default: tarball snapshots next to
-   the db per completed wave, local-only.)*
+   cannot pick the destination. _(Default: tarball snapshots next to
+   the db per completed wave, local-only.)_
 
 ---
 

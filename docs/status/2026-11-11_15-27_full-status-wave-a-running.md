@@ -200,16 +200,16 @@ domains.
 
 1. **Census throughput spend:** accept ~7–8 days for the 1M at w4
    (current, healthy), or fund an offsite resolver/VPS to try unblocking
-   higher worker counts for waves B/C? *(Default: accept w4.)*
+   higher worker counts for waves B/C? _(Default: accept w4.)_
 2. **Cross-lane harvesting:** when sibling lanes go quiet with unharvested
    §f items (audit-all is red on 27 foreign items), may I harvest them
    into TODO_LIST, or is strict lane ownership worth the red gate?
-   *(Default: leave foreign lanes alone, keep flagging.)*
+   _(Default: leave foreign lanes alone, keep flagging.)_
 3. **Census-journal backup destination:** census.db is the census's
    single copy (gitignored by design). Snapshots to another LAN machine
    (evo-x2?), external drive, or local-only tarballs next to the db?
    I can build the routine; the destination is infrastructure I can't
-   pick. *(Default: local tarball per completed wave.)*
+   pick. _(Default: local tarball per completed wave.)_
 
 ---
 

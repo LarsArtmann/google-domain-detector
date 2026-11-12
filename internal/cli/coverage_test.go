@@ -238,8 +238,6 @@ func TestNewScanStreamModes(t *testing.T) {
 }
 
 func TestDoctorCheckRangesFeedFromCache(t *testing.T) {
-	//nolint:paralleltest // t.Setenv mutates process env: must not race other tests
-
 	cache := filepath.Join(t.TempDir(), "cloud.json")
 
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
@@ -256,14 +254,13 @@ func TestDoctorCheckRangesFeedFromCache(t *testing.T) {
 
 	t.Setenv("GDD_RANGES_URL", "http://127.0.0.1:1/unreachable")
 	t.Setenv("GDD_RANGES_CACHE", cache)
+
 	if err := checkRangesFeed(context.Background()); err != nil {
 		t.Errorf("readable cache must pass the feed probe: %v", err)
 	}
 }
 
 func TestDoctorCheckRangesFeedReportsFailure(t *testing.T) {
-	//nolint:paralleltest // t.Setenv mutates process env: must not race other tests
-
 	t.Setenv("GDD_RANGES_URL", "http://127.0.0.1:1/unreachable")
 	t.Setenv("GDD_RANGES_CACHE", filepath.Join(t.TempDir(), "absent", "cloud.json"))
 
