@@ -34,7 +34,6 @@ const (
 
 	// dnsRcodeNameError is the NXDOMAIN response code; rcode 0 is NOERROR.
 	dnsRcodeNameError = 3
-	dnsRcodeNoError   = 0
 
 	// DNS wire sizes: fixed header, question tail (qtype + qclass), root
 	// label terminator, and the RFC 1035 name/label limits.
@@ -149,20 +148,33 @@ func parseRcode(msg []byte, wantID uint16) (int, bool, error) {
 	return int(msg[3] & dnsRcodeMask), msg[2]&dnsFlagTC != 0, nil
 }
 
-// exchangeUDP sends query to addr over UDP and returns the response.
-func exchangeUDP(ctx context.Context, addr string, query []byte) ([]byte, error) {
+// dialDNS dials addr over network ("udp"/"tcp") with the scan deadline
+// bound. The caller owns closing the returned conn.
+func dialDNS(ctx context.Context, network, addr string) (net.Conn, error) {
 	var d net.Dialer
 
-	conn, err := d.DialContext(ctx, "udp", addr)
+	conn, err := d.DialContext(ctx, network, addr)
 	if err != nil {
-		return nil, fmt.Errorf("udp dial %s: %w", addr, err)
+		return nil, fmt.Errorf("%s dial %s: %w", network, addr, err)
+	}
+
+	if err := bindDeadline(ctx, conn); err != nil {
+		_ = conn.Close()
+
+		return nil, fmt.Errorf("%s deadline %s: %w", network, addr, err)
+	}
+
+	return conn, nil
+}
+
+// exchangeUDP sends query to addr over UDP and returns the response.
+func exchangeUDP(ctx context.Context, addr string, query []byte) ([]byte, error) {
+	conn, err := dialDNS(ctx, "udp", addr)
+	if err != nil {
+		return nil, err
 	}
 
 	defer func() { _ = conn.Close() }()
-
-	if err := bindDeadline(ctx, conn); err != nil {
-		return nil, fmt.Errorf("udp deadline %s: %w", addr, err)
-	}
 
 	if _, err := conn.Write(query); err != nil {
 		return nil, fmt.Errorf("udp write %s: %w", addr, err)
@@ -181,18 +193,12 @@ func exchangeUDP(ctx context.Context, addr string, query []byte) ([]byte, error)
 // exchangeTCP sends query to addr length-prefixed over TCP and returns
 // the response body.
 func exchangeTCP(ctx context.Context, addr string, query []byte) ([]byte, error) {
-	var d net.Dialer
-
-	conn, err := d.DialContext(ctx, "tcp", addr)
+	conn, err := dialDNS(ctx, "tcp", addr)
 	if err != nil {
-		return nil, fmt.Errorf("tcp dial %s: %w", addr, err)
+		return nil, err
 	}
 
 	defer func() { _ = conn.Close() }()
-
-	if err := bindDeadline(ctx, conn); err != nil {
-		return nil, fmt.Errorf("tcp deadline %s: %w", addr, err)
-	}
 
 	prefixed := make([]byte, 0, dnsLenPrefixLen+len(query))
 	prefixed = binary.BigEndian.AppendUint16(prefixed, uint16(len(query)))
