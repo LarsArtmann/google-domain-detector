@@ -188,12 +188,20 @@ which is paperwork only the account holder can sign:
       + a stall heartbeat inside census-wave.sh's poller (HEARTBEAT STALL
       log after 2 stagnant 30-min polls), folded in via new-inode install
       so the running wave kept the old code.
-- [ ] Triage the 14 cqrs-lint findings handed over at session start
-      (10-23 report §c1): A032 on `ResumeSource.RunID` + likely a NEW A032
-      on `SupersessionFinding.RunID` (needs the same journal-surface
-      ignore comment as `RunSummary`), F031 `ListRuns` unbounded Scan →
-      `WithLimit`, C015/C023 ignored Close errors in domains.go; E003/B005
-      stay deliberate non-fixes; then re-run `buildflow -s cqrs-lint`.
+- [x] Triage the 14 cqrs-lint findings handed over at session start
+      (10-23 report §c1) — done 2026-11-13 ~19:29, `buildflow -s
+      cqrs-lint` is 0 findings uncached: 2 real fixes (F031 `ListRuns`
+      now `WithLimit(0)` — Scan silently capped at 100 rows; C023
+      cli.go start-failure path reports `GracefulClose` errors to
+      stderr), 12 justified `//cqrs-lint:ignore(RULE)` suppressions
+      with rationale at the firing site (A032 journal-surface RunIDs,
+      B004 cqrs-gen overkill, B005/E003 per the deliberate non-fixes,
+      C013 views are UTC-only via `event.Instant`, C015/C023 read-only
+      input-file close, F005 v1-initial, F007 no at-least-once bus).
+      SupersessionFinding.RunID needs NO comment (A032 doesn't fire
+      there; a speculative one warns stale). Note: package-level
+      F005/F007 anchor to the alphabetically FIRST scanstore file —
+      cborsanitize.go since 16:42 — so its suppression lives there.
 - [x] Cross-check the supersession audit against reality — done
       2026-11-13 16:45: the audit ran mechanically on the live journal
       (after the decode repair): pilot 0 + soak3 0 + c4 10 + c5 15 = 25

@@ -1,4 +1,4 @@
-package scanstore //cqrs-lint:ignore(F005,F007) F005: schema v1 is the initial version, upcasters arrive with the first v2; F007: commands dispatch in-process, sequentially, single-flight (start/complete handlers are naturally idempotent) — no at-least-once bus delivery exists to dedupe
+package scanstore
 
 import (
 	"github.com/larsartmann/google-domain-detector/internal/classify"
