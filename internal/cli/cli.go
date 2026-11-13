@@ -673,7 +673,9 @@ func attachEventStore(
 
 	recorder := scanstore.NewRecorder(sys)
 	if err := recorder.StartScan(ctx, runID, resumedFrom, f.Wave, inputDomain, skipped, opts.Workers); err != nil {
-		_ = sys.GracefulClose(context.WithoutCancel(ctx))
+		if closeErr := sys.GracefulClose(context.WithoutCancel(ctx)); closeErr != nil {
+			_, _ = fmt.Fprintf(stderr, "warning: close event store after failed start: %v\n", closeErr)
+		}
 
 		return nil, fmt.Errorf("start run in event store: %w", err)
 	}

@@ -182,6 +182,17 @@ operator decision, not an accounting default.
   The poller logs a WARNING when the running unknown rate exceeds the
   D3 bar (env `GDD_WARN_PCT`, default `2` = percent; `0` disables). On
   completion (either path) it snapshots the journal (below).
+- Wave watchdog: every wave launches with an EXTERNAL detector detached
+  next to it — `setsid nohup scripts/census-watchdog.sh <out-dir>
+  >> <out-dir>/watchdog.log 2>&1 &`. It polls run1.jsonl growth (300 s);
+  3 stagnant polls with no "pass 1 finished" line = WEDGED runner (exit 1,
+  wave-A 2026-11-13 signature: scan done, gate/snapshot never ran) or DEAD
+  runner (exit 2), logged as a WATCHDOG ALARM into monitor.log. The
+  wrapper's own poller additionally logs HEARTBEAT STALL after 2 stagnant
+  30-min polls (belt to the watchdog's braces). Root cause of the 08:43
+  wedge: census-wave.sh edited on disk mid-run (inode offset shift →
+  syntax error at pass-1 completion) — never edit the wrapper or ANY
+  running bash script in place; build in /tmp and `install` over the path.
 - Gate coverage assertion: the runner always passes `--manifest` (and
   `--expect-skip` on retries, journal-derived), so a pass whose scanned
   - unparseable + expected skips do not reconcile with the manifest

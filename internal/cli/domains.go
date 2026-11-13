@@ -119,6 +119,7 @@ func (f *domainFeeder) drainStreamer(i int, chunk *[]domain.Domain) error {
 			f.foldSkipped(total, kept)
 
 			if closer := f.closers[i]; closer != nil {
+				//cqrs-lint:ignore(C015,C023) read-only --input file: EOF was already clean (streamer.Err checked), nothing buffered can be lost, and a close failure must not abort a whole-TLD scan mid-input
 				_ = closer.Close()
 			}
 

@@ -175,10 +175,13 @@ which is paperwork only the account holder can sign:
       90.7% (2026-11-13 batch, ~15 new tests; exposed 3 real bugs fixed:
       enrich buffered-write swallow, XDG_CACHE_HOME ignored in doctor's
       default cache, UDP/TCP same-port oracle-test race).
-- [ ] Wave watchdog + heartbeat file (§f16 of the 08-57 report): a checker
-      that alerts when the scan child died without the wrapper's completion
-      stages — the 2026-11-13 wrapper death was found by luck. BLOCKED until
-      wave B frees census-wave.sh (never edit the wrapper mid-run).
+- [x] Wave watchdog + heartbeat file (§f16 of the 08-57 report) — done
+      2026-11-13: scripts/census-watchdog.sh (EXTERNAL detector: stalled
+      run1.jsonl + no completion line → WEDGED=exit 1 / DEAD=exit 2 alarm
+      into monitor.log; all three verdicts branch-tested; live on wave B)
+      + a stall heartbeat inside census-wave.sh's poller (HEARTBEAT STALL
+      log after 2 stagnant 30-min polls), folded in via new-inode install
+      so the running wave kept the old code.
 - [ ] Triage the 14 cqrs-lint findings handed over at session start
       (10-23 report §c1): A032 on `ResumeSource.RunID` + likely a NEW A032
       on `SupersessionFinding.RunID` (needs the same journal-surface

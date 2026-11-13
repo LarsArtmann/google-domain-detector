@@ -205,6 +205,12 @@ first-party lib is considered.
   inode instead (`install -m 755 new old` — unlink+create): the running
   instance keeps the old inode and finishes on the old code. Used for
   census-wave.sh mid-wave-A (2026-11-11); verified by inode + pid checks.
+  SHARPENED (2026-11-13, mid-wave-B near-miss): the edit/write tools
+  rewrite the SAME inode — pointing them at a running bash script shifts
+  its pending byte offset instantly (caught via /proc/<pid>/fd/255 sharing
+  the path's inode). Recovery that worked: revert the edit to byte-identical
+  original (verify with `cmp` vs `git show HEAD:`), then build the real
+  change in /tmp and install it over the path (new inode).
 - **Census binary provenance = the embedded VCS stamp**, not `version`
   (which prints only "dev"): `go version -m <binary>` exposes
   `vcs.revision` + `vcs.modified` + toolchain — authoritative even when

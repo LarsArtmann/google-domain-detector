@@ -149,8 +149,20 @@ else
 	log "fresh pass: no --resume (immune to soak/pilot journal poisoning; docs/census.md 'resume hazard')"
 fi
 
+last_size=0
+stalled_polls=0
 progress() {
-	local total mixed unknown pct
+	local total mixed unknown pct cur
+	cur=$(stat -c %s "$out_dir/run1.jsonl" 2>/dev/null || echo 0)
+	if [ "$cur" -eq "$last_size" ]; then
+		stalled_polls=$((stalled_polls + 1))
+		if [ "$stalled_polls" -ge 2 ]; then
+			log "HEARTBEAT STALL: run1.jsonl unchanged across $stalled_polls polls ($((stalled_polls * 30)) min) — the 2026-11-13 wave-A wedge signature; check the runner pid and scripts/census-watchdog.sh"
+		fi
+	else
+		stalled_polls=0
+	fi
+	last_size=$cur
 	total=$(wc -l <"$out_dir/run1.jsonl" 2>/dev/null || echo 0)
 	mixed=$(jq -r '.error_kind // "none"' "$out_dir/run1.jsonl" 2>/dev/null | sort | uniq -c | tr '\n' ';')
 	log "progress: $total scanned — $mixed"
