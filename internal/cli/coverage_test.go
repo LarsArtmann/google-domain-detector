@@ -284,3 +284,119 @@ func TestDefaultRangesCacheIsUnderUserCacheDir(t *testing.T) {
 		t.Errorf("default cache = %q, want .../google-domain-detector/cloud.json", cache)
 	}
 }
+
+func TestScanOutputOptsBranches(t *testing.T) {
+	t.Parallel()
+
+	if _, _, _, err := scanOutputOpts(ScanFlags{Only: "bogus", Format: "table", Color: "auto"}); err == nil {
+		t.Error("unknown --only value must error")
+	}
+
+	var exitErr *v5.ExitError
+
+	_, _, _, err := scanOutputOpts(ScanFlags{Only: "all", Format: "nope", Color: "auto"})
+	if !errors.As(err, &exitErr) || exitErr.ExitCode() != exitCodeUsage {
+		t.Errorf("unknown --format must be a usage error, got: %v", err)
+	}
+
+	if _, _, _, err := scanOutputOpts(ScanFlags{Only: "all", Format: "table", Color: "nope"}); err == nil {
+		t.Error("unknown --color value must error")
+	}
+
+	filter, format, opts, err := scanOutputOpts(ScanFlags{Only: "gcp", Format: "csv", Color: "never"})
+	if err != nil || filter != render.FilterGCP || format != output.FormatCSV {
+		t.Errorf("good flags: filter=%v format=%v err=%v", filter, format, err)
+	}
+
+	if opts.ColorMode != output.ColorModeNever {
+		t.Errorf("ColorMode = %v, want ColorModeNever", opts.ColorMode)
+	}
+}
+
+func TestResolveResumeBranches(t *testing.T) {
+	t.Parallel()
+
+	src, err := resolveResume(context.Background(), ScanFlags{})
+	if src != nil || err != nil {
+		t.Errorf("no --resume must be a fresh run (nil, nil), got (%v, %v)", src, err)
+	}
+
+	if _, err = resolveResume(context.Background(), ScanFlags{Resume: "latest"}); v5.ExitCode(err) != exitCodeUsage {
+		t.Errorf("--resume without --event-store must be a usage error, got: %v", err)
+	}
+
+	store := filepath.Join(t.TempDir(), "scans.db")
+
+	_, err = resolveResume(context.Background(), ScanFlags{Resume: "nirvana", EventStore: store})
+	if err == nil || !strings.Contains(err.Error(), "no scan runs") {
+		t.Errorf("--resume on an empty store must fail with ErrNoRuns, got: %v", err)
+	}
+}
+
+func TestLoadRangesFetchFailureWithoutCache(t *testing.T) {
+	t.Parallel()
+
+	_, err := loadRanges(context.Background(), ScanFlags{
+		RangesURL: "http://127.0.0.1:1/unreachable",
+		CachePath: filepath.Join(t.TempDir(), "absent", "cloud.json"),
+	}, "test")
+	if err == nil {
+		t.Error("unreachable feed without cache must fail")
+	}
+}
+
+func TestLoadRangesDefaultCacheUnderXDGBundle(t *testing.T) {
+	cacheHome := t.TempDir()
+	t.Setenv("XDG_CACHE_HOME", cacheHome)
+
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		_, _ = w.Write([]byte(fixtureFeed))
+	}))
+	defer server.Close()
+
+	set, err := loadRanges(context.Background(), ScanFlags{RangesURL: server.URL}, "test")
+	if err != nil {
+		t.Fatalf("load via default cache path failed: %v", err)
+	}
+
+	if set == nil {
+		t.Fatal("expected a ranges set")
+	}
+
+	defaultPath, err := defaultRangesCache()
+	if err != nil {
+		t.Fatalf("default cache path: %v", err)
+	}
+
+	if !strings.HasPrefix(defaultPath, cacheHome) {
+		t.Errorf("default cache = %q, want under XDG_CACHE_HOME %q", defaultPath, cacheHome)
+	}
+}
+
+func TestReplayHelpers(t *testing.T) {
+	t.Parallel()
+
+	if got := provenanceSuffix("", ""); got != "" {
+		t.Errorf("empty provenance = %q, want empty", got)
+	}
+
+	if got := provenanceSuffix("w1", ""); got != " [wave w1]" {
+		t.Errorf("wave-only provenance = %q", got)
+	}
+
+	if got := provenanceSuffix("w1", classify.Ruleset("v1")); got != " [wave w1, ruleset v1]" {
+		t.Errorf("full provenance = %q", got)
+	}
+
+	if got := shortRunID("short"); got != "short" {
+		t.Errorf("short id must pass through, got %q", got)
+	}
+
+	if got := shortRunID("01M794ZEB4HYR5PM25XC000001"); got != "01M794ZEB4HY…" {
+		t.Errorf("long id must truncate, got %q", got)
+	}
+
+	if runSummary(scanstore.Replay{RunID: "absent"}) != nil {
+		t.Error("runSummary must return nil for an unknown run id")
+	}
+}

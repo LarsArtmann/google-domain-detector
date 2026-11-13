@@ -99,12 +99,13 @@ func checkRangesFeed(ctx context.Context) error {
 }
 
 // defaultRangesCache is the cache path scans read when no --ranges-cache
-// was passed.
+// was passed. os.UserCacheDir honors XDG_CACHE_HOME on Linux (and the
+// platform cache location elsewhere), which hardcoding ~/.cache ignored.
 func defaultRangesCache() (string, error) {
-	home, err := os.UserHomeDir()
+	cacheDir, err := os.UserCacheDir()
 	if err != nil {
 		return "", fmt.Errorf("resolve cache dir: %w", err)
 	}
 
-	return filepath.Join(home, ".cache", Name, "cloud.json"), nil
+	return filepath.Join(cacheDir, Name, "cloud.json"), nil
 }
