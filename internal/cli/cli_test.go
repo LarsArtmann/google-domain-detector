@@ -891,6 +891,121 @@ func TestReplaySinceReportsVerdictFlips(t *testing.T) {
 	}
 }
 
+// nxForRes scripts oracle NXDOMAIN answers for named hosts on top of a
+// base fakeRes; every other host keeps the base answers.
+type nxForRes struct {
+	fakeRes
+	nx map[string]bool
+}
+
+func (f *nxForRes) LookupExistence(_ context.Context, host string) (resolve.Existence, error) {
+	if f.nx[host] {
+		return resolve.NotExists, nil
+	}
+
+	return resolve.Exists, nil
+}
+
+// TestReplayAuditExcludedFindsPoisonedSupersessions drives the poison check
+// end to end: run 1 observes acme.com healthy and gone.example as a true
+// NX; run 2 re-observes acme.com as NX and never refreshes gone.example.
+// Excluding run 2 must name exactly acme.com; excluding run 1 must name
+// exactly gone.example; excluding both must list both in first-seen order.
+func TestReplayAuditExcludedFindsPoisonedSupersessions(t *testing.T) {
+	t.Parallel()
+
+	store := filepath.Join(t.TempDir(), "scans.db")
+
+	res1 := &nxForRes{fakeRes: *workspaceDomain(), nx: map[string]bool{"gone.example": true}}
+
+	_, firstErr, err := runRes(t, res1, "",
+		"scan", "--no-ranges", "--format", "json", "--event-store", store,
+		"acme.com", "gone.example")
+	if err != nil {
+		t.Fatalf("first scan failed: %v", err)
+	}
+
+	firstRun := recordedRunID(t, firstErr)
+
+	res2 := &nxForRes{fakeRes: *workspaceDomain(), nx: map[string]bool{"acme.com": true}}
+
+	_, secondErr, err := runRes(t, res2, "",
+		"scan", "--no-ranges", "--format", "json", "--event-store", store,
+		"acme.com")
+	if err != nil {
+		t.Fatalf("second scan failed: %v", err)
+	}
+
+	secondRun := recordedRunID(t, secondErr)
+
+	auditOut, auditErr, err := runRes(t, res2, "",
+		"replay", "--event-store", store, "--audit-excluded", secondRun, "--format", "json")
+	if err != nil {
+		t.Fatalf("audit excluding the poisoning run failed: %v", err)
+	}
+
+	if !strings.Contains(auditOut, "acme.com") || strings.Contains(auditOut, "gone.example") {
+		t.Errorf("audit excluding the poisoning run should name exactly acme.com, got: %q", auditOut)
+	}
+
+	if !strings.Contains(auditErr, "supersession audit: 1 of 2 domain(s)") ||
+		!strings.Contains(auditErr, secondRun+"=1") {
+		t.Errorf("audit stderr should carry the poison counts, got: %q", auditErr)
+	}
+
+	staleOut, _, err := runRes(t, res2, "",
+		"replay", "--event-store", store, "--audit-excluded", firstRun, "--format", "json")
+	if err != nil {
+		t.Fatalf("audit excluding the stale run failed: %v", err)
+	}
+
+	if !strings.Contains(staleOut, "gone.example") || strings.Contains(staleOut, "acme.com") {
+		t.Errorf("audit excluding the stale run should name exactly gone.example, got: %q", staleOut)
+	}
+
+	bothOut, bothErr, err := runRes(t, res2, "",
+		"replay", "--event-store", store, "--audit-excluded", firstRun+","+secondRun)
+	if err != nil {
+		t.Fatalf("audit excluding both runs failed: %v", err)
+	}
+
+	acmeAt := strings.Index(bothOut, "acme.com")
+	goneAt := strings.Index(bothOut, "gone.example")
+
+	if acmeAt < 0 || goneAt < 0 || acmeAt > goneAt {
+		t.Errorf("audit excluding both runs should list acme.com before gone.example (first-seen order), got: %q", bothOut)
+	}
+
+	if !strings.Contains(bothErr, "supersession audit: 2 of 2 domain(s)") {
+		t.Errorf("auditing both runs should poison every domain, got stderr: %q", bothErr)
+	}
+
+	jsonlOut, _, err := runRes(t, res2, "",
+		"replay", "--event-store", store, "--audit-excluded", firstRun+","+secondRun, "--format", "jsonl")
+	if err != nil {
+		t.Fatalf("streaming audit failed: %v", err)
+	}
+
+	if lines := strings.Count(strings.TrimSpace(jsonlOut), "\n") + 1; lines != 2 {
+		t.Errorf("streaming audit emitted %d lines, want one per poisoned domain", lines)
+	}
+
+	_, _, err = runRes(t, res2, "",
+		"replay", "--event-store", store, "--audit-excluded", secondRun, "--run", firstRun)
+	if err == nil {
+		t.Fatal("--audit-excluded with --run must fail")
+	}
+
+	if code := v5.ExitCode(err); code != 2 {
+		t.Errorf("--audit-excluded + --run exit code = %d, want 2 (usage error)", code)
+	}
+
+	if _, _, err = runRes(t, res2, "",
+		"replay", "--event-store", store, "--audit-excluded", "01NOPE"); err == nil {
+		t.Fatal("--audit-excluded with an unknown run ID must fail")
+	}
+}
+
 // recordedRunID extracts the run ID from a scan's stderr recording line.
 func recordedRunID(t *testing.T, scanErr string) string {
 	t.Helper()
