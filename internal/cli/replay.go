@@ -23,6 +23,7 @@ type ReplayFlags struct {
 	EventStore string `env:"EVENT_STORE" flag:"event-store" help:"SQLite event store written by scan --event-store"`
 	Run        string `flag:"run" help:"Rebuild this run ID (default: the most recent run)"`
 	Since      string `flag:"since" help:"Diff mode: report only domains whose verdict flipped since this run ID (the adoption/departure signal)"`
+	AuditExcluded string `flag:"audit-excluded" help:"Supersession audit: list every domain whose last journal observation comes from one of these comma-separated run IDs (the poison check; --run/--since/--only must be unset)"`
 	Format     string `default:"table" flag:"format" help:"Output format" values:"table,json,csv,tsv,markdown,yaml,toml,jsonl"`
 	Only       string `default:"all" flag:"only" help:"Report only matching domains" values:"all,workspace,gcp,google"`
 	Color      string `default:"auto" flag:"color" help:"Terminal colors for table output" values:"auto,always,never"`
@@ -67,6 +68,10 @@ func provenanceSuffix(wave string, ruleset classify.Ruleset) string {
 func runReplay(ctx context.Context, f ReplayFlags, stdout, stderr io.Writer) error {
 	if f.EventStore == "" {
 		return usageError(errEventStoreRequired)
+	}
+
+	if f.AuditExcluded != "" {
+		return runReplayAudit(ctx, f, stdout, stderr)
 	}
 
 	filter, err := render.ParseFilter(f.Only)
@@ -343,4 +348,117 @@ func warnRulesetMismatch(stderr io.Writer, from, to *scanstore.RunSummary) {
 			to.Ruleset,
 		)
 	}
+}
+
+// runReplayAudit is the --audit-excluded mode: the supersession poison
+// check. It walks the whole journal and reports the domains whose last-wins
+// observation derives from an excluded run, so a correction pass's
+// "everything superseded" claim is proven per domain instead of assumed.
+// Findings are data, not failure: the exit code stays 0 and gates assert
+// on the stderr count.
+func runReplayAudit(ctx context.Context, f ReplayFlags, stdout, stderr io.Writer) error {
+	if f.Run != "" || f.Since != "" || (f.Only != "" && f.Only != "all") {
+		return usageError(errors.New("--audit-excluded audits the whole journal; drop --run/--since/--only"))
+	}
+
+	excluded := parseRunList(f.AuditExcluded)
+	if len(excluded) == 0 {
+		return usageError(fmt.Errorf("--audit-excluded needs at least one run ID, got %q", f.AuditExcluded))
+	}
+
+	format, err := output.ParseFormat(f.Format)
+	if err != nil {
+		return err
+	}
+
+	colorMode, err := parseColorMode(f.Color)
+	if err != nil {
+		return err
+	}
+
+	sys, err := scanstore.Boot(ctx, f.EventStore)
+	if err != nil {
+		return fmt.Errorf("open event store %s: %w", f.EventStore, err)
+	}
+
+	defer func() { _ = sys.Close() }()
+
+	audit, err := scanstore.AuditSupersession(ctx, sys, excluded)
+	if err != nil {
+		if errors.Is(err, scanstore.ErrNoRuns) {
+			return fmt.Errorf("%s: %w", f.EventStore, err)
+		}
+
+		if errors.Is(err, scanstore.ErrUnknownRun) {
+			return fmt.Errorf("excluded run not found in %s: %w", f.EventStore, err)
+		}
+
+		return err
+	}
+
+	_, _ = fmt.Fprintf(stderr, "supersession audit: %d of %d domain(s) last observed by an excluded run%s\n",
+		len(audit.Findings), audit.TotalDomains, byRunSuffix(excluded, audit.Findings))
+
+	table := output.NewTable([]string{"Run", "Domain", "Error kind", "Error"})
+
+	for _, finding := range audit.Findings {
+		row := []string{finding.RunID, finding.Domain, string(finding.ErrKind), finding.Err}
+		if err := table.AddRowChecked(row); err != nil {
+			return fmt.Errorf("add audit row for %s: %w", finding.Domain, err)
+		}
+	}
+
+	table.SetFooter([]string{
+		fmt.Sprintf("%d poisoned of %d domain(s)", len(audit.Findings), audit.TotalDomains), "", "", "",
+	})
+
+	return output.RenderTable(table, format, output.RenderOptions{
+		Writer:    stdout,
+		Title:     "Supersession Audit",
+		ColorMode: colorMode,
+	})
+}
+
+// byRunSuffix summarizes the findings per excluded run in the order the
+// runs were asked for, so summary lines diff cleanly between audits.
+func byRunSuffix(excluded []string, findings []scanstore.SupersessionFinding) string {
+	if len(findings) == 0 {
+		return ""
+	}
+
+	counts := make(map[string]int, len(excluded))
+	for _, finding := range findings {
+		counts[finding.RunID]++
+	}
+
+	parts := make([]string, 0, len(excluded))
+	for _, runID := range excluded {
+		parts = append(parts, fmt.Sprintf("%s=%d", runID, counts[runID]))
+	}
+
+	return " (" + strings.Join(parts, ", ") + ")"
+}
+
+// parseRunList splits a comma-separated run-ID list: trimmed, empty parts
+// dropped, duplicates collapsed in first-seen order.
+func parseRunList(raw string) []string {
+	seen := make(map[string]struct{})
+
+	var runs []string
+
+	for _, part := range strings.Split(raw, ",") {
+		part = strings.TrimSpace(part)
+		if part == "" {
+			continue
+		}
+
+		if _, dup := seen[part]; dup {
+			continue
+		}
+
+		seen[part] = struct{}{}
+		runs = append(runs, part)
+	}
+
+	return runs
 }

@@ -21,8 +21,9 @@ func nxOn(domain string) classify.Result {
 // auditJournal journals the poison fixture into a fresh store at dsn: run A
 // observes adopt.example healthy and oldnx.example as NX; run B re-observes
 // adopt.example as NX (the poisoned supersession shape) and adds
-// later.example healthy. Journal first-seen domain order: adopt, oldnx,
-// later. Returns both run IDs.
+// later.example healthy, whose last observation is then also run B's, so
+// excluding run B poisons it too: poison is provenance, not verdict.
+// Journal first-seen domain order: adopt, oldnx, later. Returns both run IDs.
 func auditJournal(t *testing.T, ctx context.Context, dsn string) (string, string) {
 	t.Helper()
 
@@ -106,10 +107,11 @@ func TestAuditSupersessionLastObservationWins(t *testing.T) {
 
 	want := []scanstore.SupersessionFinding{
 		{Domain: "adopt.example", RunID: runB, ErrKind: classify.ErrorNXDomain, Err: "no such host"},
+		{Domain: "later.example", RunID: runB},
 	}
 
 	if !reflect.DeepEqual(audit.Findings, want) {
-		t.Errorf("excluding the poisoning run = %+v, want exactly adopt.example's run-B NX", audit.Findings)
+		t.Errorf("excluding the poisoning run = %+v, want adopt.example's NX plus later.example (both last seen in run B)", audit.Findings)
 	}
 
 	audit = mustAudit(t, ctx, reader, []string{runA})
@@ -125,10 +127,11 @@ func TestAuditSupersessionLastObservationWins(t *testing.T) {
 	want = []scanstore.SupersessionFinding{
 		{Domain: "adopt.example", RunID: runB, ErrKind: classify.ErrorNXDomain, Err: "no such host"},
 		{Domain: "oldnx.example", RunID: runA, ErrKind: classify.ErrorNXDomain, Err: "no such host"},
+		{Domain: "later.example", RunID: runB},
 	}
 
 	if !reflect.DeepEqual(audit.Findings, want) {
-		t.Errorf("excluding both runs = %+v, want both in first-seen domain order", audit.Findings)
+		t.Errorf("excluding both runs = %+v, want all three in first-seen domain order", audit.Findings)
 	}
 }
 
@@ -151,7 +154,7 @@ func TestAuditSupersessionRejectsUnknownRuns(t *testing.T) {
 	}
 
 	_, err := scanstore.AuditSupersession(ctx, reader, []string{runA, "01NOPE", runB})
-	if !errors.Is(err, scanstore.ErrUnknownRun) || !errors.Is(err, scanstore.ErrUnknownRun) {
+	if !errors.Is(err, scanstore.ErrUnknownRun) {
 		t.Errorf("mixed known/unknown runs error = %v, want ErrUnknownRun naming the miss", err)
 	}
 }
