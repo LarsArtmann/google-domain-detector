@@ -444,7 +444,11 @@ which is paperwork only the account holder can sign:
       Worktree removed, artifacts archived from /tmp.
 - [x] ErrNoRuns error naming (names the store path at both cli call
       sites) — done; eyeball the describe battery output now that
-      --resume/--wave exist (plan v3 E31) — still open.
+      --resume/--wave exist (plan v3 E31) — done at `9bf1adb`: every
+      command and flag current (scan carries resume/wave/max-runtime/
+      no-dkim, replay carries run/since/audit-excluded, all 9
+      subcommands present); `runs` has no --format, matching its open
+      row below.
 
 ## Harvested from the 10-11 v3-spine report
 
