@@ -210,6 +210,14 @@ which is paperwork only the account holder can sign:
       regenerated from the audit output verbatim.
 - [ ] `runs --format` support (jsonl with FULL run IDs — the truncated
       12-char table forced raw SQL during the poisonfix derivation).
+- [ ] file-size debt blocks a green full `buildflow` gate (9 files over
+      the 350-line cap, error severity, all pre-dating 2026-11-13):
+      cli_test.go 1763, cli.go 769, coverage_test.go 577,
+      scanstore_test.go 587, replay.go 489, scan_test.go 476,
+      ranges_test.go 356, render_test.go 357, scanstore.go 378.
+      Splitting = dedicated session (cli.go alone owns scan+replay+show
+      wiring); until then `--fail-on warning` or scoped `-s` runs stay
+      green, full mode fails the findings gate on these 9 only.
 - [x] AGENTS.md diet — done 2026-11-13: 349 → 222 lines (-36%); census
       war-stories (G4 numbers, negative-cache lesson, wedge narratives)
       moved to docs/census.md §"G4 journal capacity"; gotchas condensed

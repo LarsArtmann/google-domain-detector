@@ -159,9 +159,8 @@ dep set changes or a new first-party lib is considered.
   per domain per run and boots WITHOUT the projection host. Scan output
   preserves INPUT order, replay journal order — the e2e test compares
   parsed result SETS, never raw bytes.
-- cqrs-lint: findings dispositioned inline with rationale at their site
-  (2026-11-13, gate 0); package-level F005/F007 anchor to the
-  alphabetically FIRST scanstore file; stale suppressions warn.
+- cqrs-lint: findings dispositioned inline with rationale at their site;
+  F005/F007 anchor to the alphabetically FIRST scanstore file.
 - Event payloads use `event.Instant` (not `time.Time` — CBOR epoch
   encoding drops timezones, C013) and every `event.New` stamps
   `event.WithSchemaVersion(1)` (D013). New events must follow both.
@@ -190,9 +189,8 @@ dep set changes or a new first-party lib is considered.
   `curl --resolve api.github.com:443:<IP>` + token pattern; SSH pushes are
   unaffected.
 - BuildFlow's result cache replays FAILED step results verbatim — re-run
-  with `BUILDFLOW_NO_RESULT_CACHE=1 -s <step>` before diagnosing the code.
-  NEVER run two `-race ./...` suites concurrently on this host (phantom
-  failures — one verification lane at a time).
+  with `BUILDFLOW_NO_RESULT_CACHE=1 -s <step>`; never two concurrent
+  `-race ./...` lanes on this host (phantom failures).
 
 ## Git remotes
 
