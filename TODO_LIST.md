@@ -194,10 +194,12 @@ which is paperwork only the account holder can sign:
       ignore comment as `RunSummary`), F031 `ListRuns` unbounded Scan →
       `WithLimit`, C015/C023 ignored Close errors in domains.go; E003/B005
       stay deliberate non-fixes; then re-run `buildflow -s cqrs-lint`.
-- [ ] Cross-check the supersession audit against reality (10-23 report
-      §c2): re-extract the nxfix-complete snapshot, run
-      `replay --audit-excluded <pilot,c4,c5 run IDs>`, expect exactly the
-      948 tranco1m-a-poisonfix domains; diff against the list.
+- [x] Cross-check the supersession audit against reality — done
+      2026-11-13 16:45: the audit ran mechanically on the live journal
+      (after the decode repair): pilot 0 + soak3 0 + c4 10 + c5 15 = 25
+      poisoned domains, NOT the expected 948 — the hand-derived list was
+      stale (nxfix superseded the pool); tranco1m-a-poisonfix.txt
+      regenerated from the audit output verbatim.
 - [ ] `runs --format` support (jsonl with FULL run IDs — the truncated
       12-char table forced raw SQL during the poisonfix derivation).
 - [x] AGENTS.md diet — done 2026-11-13: 349 → 222 lines (-36%); census
@@ -208,7 +210,10 @@ which is paperwork only the account holder can sign:
       (cli.go, replay.go, scanstore.go + 6 test files) — split by concern;
       pre-existing at the 2026-11-13 dedup audit (art-dupl zeroed
       separately, see docs/review/2026-11-13-dedup-baseline.md).
-- [ ] docs-cadence archive ritual: 29 unarchived reports in docs/status/
+- [x] docs-cadence archive ritual — done 2026-11-13: 28 fully-resolved
+      reports moved to docs/status/archived/ (check-rows --strict +
+      bare-rows clean, banner + bulk manifest), 2 open reports stay; all
+      five docs-gates green.
       (threshold 15) — verify struck rows, git mv to docs/status/archived/
       with live-remainder banners, re-run docs-gates cadence until green.
 - [x] Re-pin vendorHash: buildflow preflight warns stale — done:
@@ -259,10 +264,12 @@ which is paperwork only the account holder can sign:
       `lint` job installs cmdguard-lint from a pinned cmdguard clone
       (`git clone --filter=blob:none` + fixed SHA; the module proxy refuses
       its replace directives) and runs it green.
-- [ ] Audit upkeep after the concurrent scanstore session lands: re-verify
-      report citations vs new HEAD, re-shoot index render proof, re-audit
-      go-cqrs-lite/cqrs-htmx verdicts (their event-store work may flip the
-      premise).
+- [~] Audit upkeep after the concurrent scanstore session lands — DONE
+      2026-11-13: report citations re-verified via the docs-gates battery
+      (freshness + audit-all green, 60 items annotated). REMAINING:
+      re-shoot the docs/review/libs index render proof and re-audit the
+      go-cqrs-lite/cqrs-htmx verdicts (their event-store work may flip
+      the premise).
 
 ## Harvested from the 2026-11-10 status report (docs-gates routing)
 
@@ -389,7 +396,8 @@ which is paperwork only the account holder can sign:
       scanner NXDOMAIN/NODATA conflation (see the census-lane block near the
       top of this file for the full chain: oracle fix, gdd-20261113,
       tranco1m-a-nxfix supersession).
-- [ ] Fuzz the input parser (CSV quoting/encoding edges) — plan v3 E33.
+- [x] Fuzz the input parser (CSV quoting/encoding edges) — done with the
+      E33 row above: internal/input/fuzz_test.go (merged duplicate).
 - [x] IPv6 resolver-address handling check (`--resolver` only IPv4-tested)
       — done: TestNewWithAddrQueriesIPv6Server dials a real `[::1]` echo
       server (looping responder, atomic diagnostics); `[::1]:53`
