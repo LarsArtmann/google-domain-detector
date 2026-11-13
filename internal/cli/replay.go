@@ -390,9 +390,13 @@ func runReplayAudit(ctx context.Context, f ReplayFlags, stdout, stderr io.Writer
 		}
 	}
 
-	table.SetFooter([]string{
-		fmt.Sprintf("%d poisoned of %d domain(s)", len(audit.Findings), audit.TotalDomains), "", "", "",
-	})
+	// Footer is a human decoration: data formats (csv/tsv/yaml/toml) must
+	// stay pure rows — go-output renders whatever is set, so gate it here.
+	if format == output.FormatTable || format == output.FormatMarkdown {
+		table.SetFooter([]string{
+			fmt.Sprintf("%d poisoned of %d domain(s)", len(audit.Findings), audit.TotalDomains), "", "", "",
+		})
+	}
 
 	return output.RenderTable(table, format, output.RenderOptions{
 		Writer:    stdout,

@@ -105,7 +105,11 @@ func runRuns(ctx context.Context, f RunsFlags, stdout, stderr io.Writer) error {
 		}
 	}
 
-	table.SetFooter([]string{fmt.Sprintf("%d run(s)", len(runs)), "", "", "", "", "", "", ""})
+	// Footer is a human decoration: data formats (csv/tsv/yaml/toml) must
+	// stay pure rows — go-output renders whatever is set, so gate it here.
+	if shortIDs {
+		table.SetFooter([]string{fmt.Sprintf("%d run(s)", len(runs)), "", "", "", "", "", "", ""})
+	}
 
 	renderOpts := output.RenderOptions{Writer: stdout, ColorMode: colorMode, Title: "Scan Runs"}
 
