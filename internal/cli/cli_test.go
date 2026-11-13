@@ -970,24 +970,26 @@ func TestReplayAuditExcludedFindsPoisonedSupersessions(t *testing.T) {
 	}
 
 	for line := range strings.SplitSeq(strings.TrimSpace(attribution), "\n") {
-		var finding struct {
-			Domain string `json:"Domain"`
-			Run    string `json:"Run"`
-		}
+		// The audit DTO's JSON keys are capitalized (render DTO contract);
+		// decode into a map so the test needs no tagged struct.
+		var finding map[string]any
 
 		if err := json.Unmarshal([]byte(line), &finding); err != nil {
 			t.Fatalf("audit line %q: %v", line, err)
 		}
 
-		want := map[string]string{"gone.example": firstRun, "acme.com": secondRun}[finding.Domain]
+		domain, _ := finding["Domain"].(string)
+		runID, _ := finding["Run"].(string)
+
+		want := map[string]string{"gone.example": firstRun, "acme.com": secondRun}[domain]
 		if want == "" {
-			t.Errorf("unexpected audit finding for %q", finding.Domain)
+			t.Errorf("unexpected audit finding for %q", domain)
 
 			continue
 		}
 
-		if finding.Run != want {
-			t.Errorf("audit attribution for %s = %s, want %s", finding.Domain, finding.Run, want)
+		if runID != want {
+			t.Errorf("audit attribution for %s = %s, want %s", domain, runID, want)
 		}
 	}
 
