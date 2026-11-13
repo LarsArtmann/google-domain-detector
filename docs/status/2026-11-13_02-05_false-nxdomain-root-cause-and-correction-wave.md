@@ -153,3 +153,16 @@ sustained load (22,136 domains, 0.95% pre-cleanup unknown, 4.0 dom/s →
 wave B ≈ 400k / 4.0 ≈ 28 h); scanner fixed; nxfix clean. Remaining per
 the standing decision: owner go. Wall-clock budget at this rate: B ≈ 28
 h, C ≈ 35 h (500k), total ≈ 2.6 days for the full 1M.
+
+## WAVE B LAUNCHED (appended 2026-11-13 08:50 CET)
+
+`tranco1m-b` (ranks 100,001–500,000, 400k domains) launched detached via
+census-wave.sh at 08:45: pre-flight TCP green, fresh pass (no --resume),
+w4/10s through the TCP-upstream forwarder, binary gdd-20261113. Early
+sanity: 96.4% clean at 549 scanned, ~4.6 dom/s → ETA ≈ 24–28 h; the
+wrapper's cleanup loop, coverage gate, and snapshot run on completion.
+All prior gating conditions green: scanner fix landed, nxfix clean,
+TCP path sustained-validated. Ledger updated; SIGINT-safe by design
+(explicit-retry resume via out-dir run-id). LESSON APPLIED: no edits to
+census-wave.sh (or any script) while its bash is running — the wave B
+runner must be left untouched until it exits.
