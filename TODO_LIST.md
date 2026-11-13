@@ -80,9 +80,11 @@ waves, manifests, unbound, pilot gates, reports, deltas.
   at launch: nxfix closed 0.42% residual + validated TCP path +
   owner go). C chains after B's gate.
 - [ ] T14 Unknown-cleanup loop per wave (<0.5% unknown).
-- [ ] T15 Census report (journal-derived) archived under reports/ — must
-      pin excluded runs (pilot 01M74VNNCJS6, forensics) and account for
-      the nxfix supersession (replay last-wins).
+- [~] T15 Census report (journal-derived) archived under reports/ —
+      WRITTEN: reports/census/REPORT.md (17-run inventory, excluded runs
+      pinned with full IDs + reasons, mechanical supersession audit
+      = 25 poisoned domains, hostile-TXT incident, wave tallies).
+      Final distribution section lands after wave C + poisonfix close.
 - [x] Census gate: manifest-unique-count assertion in scripts/census-gate.sh —
       done: --manifest/--expect-skip coverage check, exit 4 on gap; reproduces
       wave A's 2,731 exactly, would have caught the 90,834 fiction too.
