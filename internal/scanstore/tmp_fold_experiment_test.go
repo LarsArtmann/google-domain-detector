@@ -8,13 +8,14 @@ import (
 	"github.com/larsartmann/google-domain-detector/internal/classify"
 )
 
-func TestTmpFoldsVisibleWithoutHost(t *testing.T) {
-	ctx := context.Background()
-	store := filepath.Join(t.TempDir(), "s.db")
+func recordTwoRuns(t *testing.T, store string) {
+	t.Helper()
 
-	sys, err := Open(ctx, store)
+	ctx := context.Background()
+
+	sys, err := Boot(ctx, store)
 	if err != nil {
-		t.Fatalf("open: %v", err)
+		t.Fatalf("boot writer: %v", err)
 	}
 
 	rec := NewRecorder(sys)
@@ -31,10 +32,19 @@ func TestTmpFoldsVisibleWithoutHost(t *testing.T) {
 	if err := sys.GracefulClose(ctx); err != nil {
 		t.Fatalf("close: %v", err)
 	}
+}
+
+// Experiment A: record with the host NEVER started (Boot only). If folds
+// are pure dispatch-synchronous, ListRuns on a Boot-only reopen sees rows.
+func TestTmpRecordWithoutHostFoldsStillVisible(t *testing.T) {
+	ctx := context.Background()
+	store := filepath.Join(t.TempDir(), "s.db")
+
+	recordTwoRuns(t, store)
 
 	boot, err := Boot(ctx, store)
 	if err != nil {
-		t.Fatalf("boot: %v", err)
+		t.Fatalf("boot reader: %v", err)
 	}
 
 	defer func() { _ = boot.Close() }()
@@ -44,5 +54,40 @@ func TestTmpFoldsVisibleWithoutHost(t *testing.T) {
 		t.Fatalf("list: %v", err)
 	}
 
-	t.Logf("runs visible WITHOUT host started: %d", len(runs))
+	t.Logf("record-without-host: ListRuns saw %d run(s)", len(runs))
+
+	if len(runs) != 1 {
+		t.Errorf("folds should be dispatch-synchronous without any host, saw %d", len(runs))
+	}
+}
+
+// Experiment B: the production shape (Open = Boot + Start) reopened in a
+// tight loop — does an immediate ListRuns ever see ZERO runs?
+func TestTmpReopenWithStartRaceLoop(t *testing.T) {
+	ctx := context.Background()
+	store := filepath.Join(t.TempDir(), "s.db")
+
+	recordTwoRuns(t, store)
+
+	for i := range 60 {
+		sys, err := Open(ctx, store)
+		if err != nil {
+			t.Fatalf("open %d: %v", i, err)
+		}
+
+		runs, err := ListRuns(ctx, sys)
+		if err != nil {
+			_ = sys.Close()
+			t.Fatalf("list %d: %v", i, err)
+		}
+
+		if len(runs) == 0 {
+			_ = sys.Close()
+			t.Fatalf("iteration %d: ListRuns saw ZERO runs right after Open — race reproduced", i)
+		}
+
+		if err := sys.Close(); err != nil {
+			t.Fatalf("close %d: %v", i, err)
+		}
+	}
 }

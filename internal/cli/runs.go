@@ -49,6 +49,10 @@ func runRuns(ctx context.Context, f RunsFlags, stdout, stderr io.Writer) error {
 
 	defer func() { _ = sys.Close() }()
 
+	if err := scanstore.WaitProjectionsSettled(ctx, sys); err != nil {
+		return fmt.Errorf("event store %s: %w", f.EventStore, err)
+	}
+
 	runs, err := scanstore.ListRuns(ctx, sys)
 	if err != nil {
 		return err
