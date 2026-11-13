@@ -193,6 +193,13 @@ which is paperwork only the account holder can sign:
       12-char table forced raw SQL during the poisonfix derivation).
 - [ ] AGENTS.md diet: 308 → ≤220 lines (docs/agents-md-size gate
       warning); move census war-stories to census.md.
+- [ ] file-size-check debt: 9 files over the go-file-too-large gate
+      (cli.go, replay.go, scanstore.go + 6 test files) — split by concern;
+      pre-existing at the 2026-11-13 dedup audit (art-dupl zeroed
+      separately, see docs/review/2026-11-13-dedup-baseline.md).
+- [ ] docs-cadence archive ritual: 29 unarchived reports in docs/status/
+      (threshold 15) — verify struck rows, git mv to docs/status/archived/
+      with live-remainder banners, re-run docs-gates cadence until green.
 - [x] Re-pin vendorHash: buildflow preflight warns stale — done:
       `nix build` green at 5f8feb4 (post-go1.27.4-toolchain pin, no hash
       mismatch; the flake's vendorHash is current).

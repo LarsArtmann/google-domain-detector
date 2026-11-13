@@ -294,6 +294,7 @@ func TestScanOutputOptsBranches(t *testing.T) {
 	}
 
 	filter, format, _, err := scanOutputOpts(ScanFlags{Only: "all", Format: "nope", Color: "auto"})
+
 	exitErr, ok := errors.AsType[*v5.ExitError](err)
 	if !ok || exitErr.ExitCode() != exitCodeUsage {
 		t.Errorf("unknown --format must be a usage error, got: %v", err)
