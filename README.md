@@ -50,7 +50,10 @@ Input modes (combined freely, first-seen order, deduplicated):
 - `--input -` or piped stdin
 
 Unparseable entries are skipped and counted, never fatal — a 500-row lead
-list survives a garbage row.
+list survives a garbage row. `enrich` joins an event-sourced journal back
+onto your CSV (`enrich --event-store scans.db --input leads.csv`),
+appending the verdict columns while preserving every original column —
+the round trip for CRM pipelines, no DNS in the join.
 
 Formats: `--format table` (default), `json` (a JSON array carrying full
 evidence per domain — verdicts, confidence, every record), `jsonl` (one
@@ -66,7 +69,10 @@ system resolver (env `GDD_RESOLVER`). `scan --help` lists everything,
 the two external dependencies — that your resolver answers and the GCP
 range feed loads — before a bulk run wastes minutes discovering it the
 hard way, and interactive scans show live per-domain progress (pipes and
-`--format jsonl` stay clean for scripting).
+`--format jsonl` stay clean for scripting). Long runs can commit to a
+whole-run budget with `--max-runtime 2h30m` — at the deadline partial
+results still render, journal, and count; the stderr summary names how
+many domains never got their turn.
 
 Proven at bulk scale: the Tranco top-1M filtered to `.de`/`.ch`/`.uk`
 (~63k domains) scans in ~20 minutes at `--workers 24`.
@@ -156,9 +162,15 @@ reporting clean.
 go install github.com/larsartmann/google-domain-detector/cmd/google-domain-detector@latest
 ```
 
-Requires Go ≥ 1.27. Nix users get a hermetic build from the repo flake
-(`nix build`; the binary lands in `./result/bin/`). A Homebrew tap is
-planned post-tag.
+or via Homebrew:
+
+```bash
+brew install LarsArtmann/tap/google-domain-detector
+```
+
+Requires Go ≥ 1.27 (binary formula runs without it). Nix users get a
+hermetic build from the repo flake (`nix build`; the binary lands in
+`./result/bin/`).
 
 The range feed fetch identifies itself as
 `User-Agent: google-domain-detector/<version>` — a courtesy to Google's

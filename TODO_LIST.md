@@ -361,11 +361,14 @@ which is paperwork only the account holder can sign:
       — done: soak made opt-in (404dfed), gofmt drift fixed, CI green
       since; ci.yml now runs -timeout 20m and a nightly Soak workflow
       covers GDD_SOAK=1 (first dispatch run verified green).
-- [~] Pull the .ch zone via the public SWITCH TSIG keys and build the .ch
+- [x] Pull the .ch zone via the public SWITCH TSIG keys and build the .ch
   census input (docs/zone-data/switch-ch.md has the exact AXFR
-  command; once/24h limit) — AXFR pulled 2026-11-13 (ch.txt 1.44 GB,
-  TSIG key alongside); apex reduction (zone-ch.txt + MANIFEST.sha256)
-  in progress; pre-filter superseded by the existence oracle.
+  command; once/24h limit) — done 2026-11-13: AXFR pulled (ch.txt
+  1.44 GB, TSIG key alongside) and reduced to 2,660,632 unique
+  registrable apexes (zone-ch.txt, 43 MB, sha256 in MANIFEST.sha256;
+  validation: 0 non-apex lines, 0 uppercase). Scanning the input
+  waits for the Tranco waves to free the single-flight. Pre-filter
+  superseded by the existence oracle.
 - [x] crt.sh `.de` extractor rate-limit-aware scheduling — done:
       scripts/crtsh-daily.sh wrapper (24 h per-TLD guard is the contract,
       KEEP_COUNT rotation, plausibility floor: .de ≥ 100k rows else
@@ -421,8 +424,11 @@ which is paperwork only the account holder can sign:
 - [x] pkg.go.dev propagation spot-check (fetch the pkg page) once DNS
       is stable — done: page live at v0.1.0 with full README, MIT
       license, directories rendered.
-- [ ] Consumer propagation sweep for v0.1.0 (go-ecosystem-upgrade skill;
-      only relevant if external consumers exist — likely none yet).
+- [x] Consumer propagation sweep for v0.1.0 (go-ecosystem-upgrade skill;
+      only relevant if external consumers exist — likely none yet) — done
+      2026-11-13: GitHub code search for the module path = 32 hits, ALL
+      inside this repo; zero external Go consumers. The Kith CRM consumes
+      CLI outputs (CSV/JSON), not the module (pointer in AGENTS.md).
 - [x] `git worktree remove /tmp/gdd-pret7` after the E6 memory A/B
       finishes (sibling session's pre-T7 worktree) — done 2026-11-10.
 - [x] Unbound tuning experiment (threads/outgoing-range) before the E9
@@ -462,5 +468,8 @@ which is paperwork only the account holder can sign:
 - [x] cli package coverage 69% → 90+ — plan v3 E33 — merged into the
       E33 coverage row under the 13-27 harvest section (single owner).
 - [ ] asciinema/GIF for the README — with T14/README work (plan v3 E20).
-- [ ] Feed-freshness/UA integration note once the README install section
-      lands (plan v3 E20).
+- [x] Feed-freshness/UA integration note once the README install section
+      lands — done: the UA note lives in the Install section since the
+      README overhaul (2026-11-10), kept current through the 2026-11-13
+      polish (tap install added, enrich + --max-runtime documented).
+      plan v3 E20.
