@@ -134,8 +134,11 @@ which is paperwork only the account holder can sign:
       refuses ALL third-party zone access (no program, no fee, no
       contact; FAQ verbatim in docs/zone-data/denic-de.md). .de coverage
       = Tranco + crt.sh fallback only.
-- [ ] .uk (~10.5M): Nominet Data Access Agreement (DAA), free but requires
-      application + acceptance.
+- [~] .uk (~10.5M): Nominet zone access — DRAFT READY for owner review
+      (docs/zone-data/nominet-uk.md: it's the "Zone Files Access Licence"
+      now, terms verified 2026-11-10, free, draft email with [brackets]
+      for owner details). Sending the email + MiTek ID verification =
+      OWNER action; scanning follows the Files.com credentials.
 - [x] .ch (~2.4M): SWITCH zone file — ACTIONABLE NOW: public TSIG keys on
       zonedata.switch.ch, `dig -k ch_zonedata.key @zonedata.switch.ch …
       AXFR ch.` (once/24h; exact command in docs/zone-data/switch-ch.md);
