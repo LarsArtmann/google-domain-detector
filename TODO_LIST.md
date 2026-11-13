@@ -60,13 +60,14 @@ waves, manifests, unbound, pilot gates, reports, deltas.
       T11-poisonfix row below (supersession claims are per-domain;
       proven by replay --audit-excluded, never assumed).
 - [ ] T11-poisonfix Correction pass for the poisoned supersessions —
-      READY 2026-11-13, awaiting B's single-flight + owner go: input
-      list built from the snapshot journal
-      (reports/census/waves/tranco1m-a-poisonfix.txt, 948 domains =
-      6 c4/c5 NX ∪ 946 pilot NX; ledger row in docs/census.md with
-      derivation + sha256). After it runs,
-      `replay --audit-excluded <correction-run-ids>` must report 0
-      poisoned before wave-A data is declared trustworthy.
+      READY 2026-11-13 (shrunk by the supersession audit from 948 to
+      **25 domains** — nxfix superseded the pilot/soak3 pool: pilot 0,
+      soak3 0, c4 10, c5 15), awaiting B's single-flight + owner go:
+      input list = audit-derived
+      `replay --audit-excluded <pilot,soak3,c4,c5>` output
+      (reports/census/waves/tranco1m-a-poisonfix.txt). After it runs,
+      the same audit must report 0 poisoned before wave-A data is
+      declared trustworthy.
 - [x] Supersession audit as a tool (e2 of the 08-57 report) — done
       2026-11-13: `replay --audit-excluded ID1,ID2` lists every domain
       whose LAST journal observation comes from an excluded run

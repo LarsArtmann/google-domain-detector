@@ -235,6 +235,20 @@ first-party lib is considered.
 - `DomainObservedPayload` carries evidence only, never verdicts — verdicts
   are derived by `classify.Result` methods; duplicating them in events would
   be a split brain. Same rule for any new event payload.
+- **A hostile DNS record can poison journal decodability (2026-11-13,
+  wave B):** one .com's google-site-verification TXT carried raw
+  invalid-UTF-8 bytes; CBOR text strings must be valid UTF-8, so the
+  event decoded fine at write time and broke EVERY journal fold that
+  reached it (`corruption:event.decode_payload_failed`). Defense is
+  two-sided in `internal/scanstore/cborsanitize.go`: encode-side
+  `sanitizeObservedPayload` coerces all DNS-derived strings to valid
+  UTF-8 before `event.New` (evidence copied, never mutated — the slice
+  aliases the scan result other sinks read); decode-side
+  `decodeObserved` repairs a failed payload once by rewriting invalid
+  CBOR text strings in place (`sanitizeCBORText`, fixture-pinned to the
+  real poison event) — the journal stays append-only. If a NEW
+  payload-carrying event type appears, route its decode through the
+  repair wrapper.
 - Observation streams are per-domain (stable stream ID = domain name), so
   whole-TLD scale never bloats one stream; run streams hold only
   started/completed. Replay keeps the LAST observation per domain per run.
