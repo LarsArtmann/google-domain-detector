@@ -22,14 +22,16 @@ type oracleServer struct {
 func newOracleServer(t *testing.T, rcode int, truncated bool) *oracleServer {
 	t.Helper()
 
-	udpConn, err := net.ListenPacket("udp", "127.0.0.1:0")
+	var lc net.ListenConfig
+
+	udpConn, err := lc.ListenPacket(t.Context(), "udp", "127.0.0.1:0")
 	if err != nil {
 		t.Fatalf("udp listener: %v", err)
 	}
 
 	port := udpConn.LocalAddr().(*net.UDPAddr).Port
 
-	tcpListener, err := net.Listen("tcp", "127.0.0.1:"+strconv.Itoa(port))
+	tcpListener, err := lc.Listen(t.Context(), "tcp", "127.0.0.1:"+strconv.Itoa(port))
 	if err != nil {
 		_ = udpConn.Close()
 		t.Fatalf("tcp listener on same port: %v", err)
@@ -101,13 +103,13 @@ func (s *oracleServer) answerTCP(conn net.Conn, rcode int) {
 
 	var length [2]byte
 
-	if _, err := readFull(conn, length[:]); err != nil {
+	if err := readFull(conn, length[:]); err != nil {
 		return
 	}
 
-	query := make([]byte, int(length[0])<<8|int(length[1]))
+	query := make([]byte, int(length[0])<<8|int(length[1])) //nolint:makezero // exact-size wire buffer, filled by readFull
 
-	if _, err := readFull(conn, query); err != nil {
+	if err := readFull(conn, query); err != nil {
 		return
 	}
 
@@ -122,19 +124,19 @@ func (s *oracleServer) answerTCP(conn net.Conn, rcode int) {
 	_, _ = conn.Write(out)
 }
 
-func readFull(conn net.Conn, buf []byte) (int, error) {
+func readFull(conn net.Conn, buf []byte) error {
 	total := 0
 
 	for total < len(buf) {
 		n, err := conn.Read(buf[total:])
 		if err != nil {
-			return total, err
+			return err
 		}
 
 		total += n
 	}
 
-	return total, nil
+	return nil
 }
 
 func TestLookupExistenceVerdicts(t *testing.T) {

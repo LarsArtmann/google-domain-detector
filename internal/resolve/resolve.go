@@ -6,7 +6,6 @@ package resolve
 import (
 	"bufio"
 	"context"
-	"errors"
 	"fmt"
 	"net"
 	"os"
@@ -126,23 +125,6 @@ func (n *netResolver) LookupExistence(ctx context.Context, host string) (Existen
 		return NotExists, nil
 	default:
 		return Exists, transientRcodeErr(host, addr, rcode)
-	}
-}
-
-// wrapExistenceNetErr re-labels transport failures as temporary DNSError
-// values so the scan's timeout/servfail taxonomy recognizes them. Real
-// timeouts (context or conn) keep their identity via errors.Is.
-func wrapExistenceNetErr(err error, host, server string) error {
-	var dnsErr *net.DNSError
-	if errors.As(err, &dnsErr) {
-		return err
-	}
-
-	return &net.DNSError{
-		Err:         err.Error(),
-		Name:        host,
-		Server:      server,
-		IsTemporary: true,
 	}
 }
 

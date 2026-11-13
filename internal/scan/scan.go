@@ -141,8 +141,8 @@ func fillUnrunResults(ctx context.Context, results []classify.Result, domains []
 // normal fact, never an error — Go conflates the two into one IsNotFound
 // error, which stamped every live no-MX domain as NXDOMAIN-dead until the
 // oracle split them (2026-11-13 census finding).
-func ScanDomain(ctx context.Context, res resolve.Resolver, d domain.Domain, opts Options) classify.Result {
-	apex := d.String()
+func ScanDomain(ctx context.Context, res resolve.Resolver, dom domain.Domain, opts Options) classify.Result {
+	apex := dom.String()
 	result := classify.Result{Domain: apex}
 
 	existence, err := res.LookupExistence(ctx, apex)
@@ -160,7 +160,7 @@ func ScanDomain(ctx context.Context, res resolve.Resolver, d domain.Domain, opts
 		// and probe on — cached sub-lookups may still yield evidence, and a
 		// partial failure with evidence is a normal result (AGENTS.md).
 		lookupErr = firstErr(lookupErr, probeApexRecords(ctx, res, apex, opts, &result))
-		lookupErr = firstErr(lookupErr, probeHosts(ctx, res, d, opts, &result))
+		lookupErr = firstErr(lookupErr, probeHosts(ctx, res, dom, opts, &result))
 
 		if len(result.Evidences) == 0 {
 			result.Err = lookupErr.Error()
@@ -179,7 +179,7 @@ func ScanDomain(ctx context.Context, res resolve.Resolver, d domain.Domain, opts
 
 	// The name exists: record-type absence below is a fact, not a failure.
 	lookupErr := probeApexRecords(ctx, res, apex, opts, &result)
-	lookupErr = firstErr(lookupErr, probeHosts(ctx, res, d, opts, &result))
+	lookupErr = firstErr(lookupErr, probeHosts(ctx, res, dom, opts, &result))
 
 	if lookupErr != nil && len(result.Evidences) == 0 {
 		result.Err = lookupErr.Error()
@@ -256,13 +256,13 @@ func isRecordAbsence(err error) bool {
 func probeHosts(
 	ctx context.Context,
 	res resolve.Resolver,
-	d domain.Domain,
+	dom domain.Domain,
 	opts Options,
 	result *classify.Result,
 ) error {
 	var lookupErr error
 
-	for _, host := range d.Hosts() {
+	for _, host := range dom.Hosts() {
 		if target, err := res.LookupCNAME(ctx, host); err == nil {
 			result.Evidences = append(result.Evidences, classify.ClassifyCNAME(host, target)...)
 		}
