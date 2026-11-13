@@ -73,7 +73,7 @@ snapshot() {
 mkdir -p "$out_dir"
 : >"$out_dir/monitor.log"
 
-if pgrep -f 'gdd scan' >/dev/null 2>&1; then
+if pgrep -f 'gdd[^ ]* scan' >/dev/null 2>&1; then
 	log "REFUSED: another census scan is running (single-flight law, docs/census.md)"
 	exit 3
 fi

@@ -173,7 +173,10 @@ first-party lib is considered.
 - **Census single-flight law (2026-11-11):** ONE `gdd scan` at a time —
   concurrent scans share the forwarder on 127.0.0.1:5353 and poison each
   other's unknown-rate measurements (proven: pilot + soak collision,
-  docs/census.md). Check `pgrep -f 'gdd scan'` before launching; waves
+  docs/census.md). Check `pgrep -f 'gdd[^ ]* scan'` before launching
+  (the pattern must tolerate dated binaries like `gdd-20261113` — a
+  literal `gdd scan` matches nothing for them and silently breaks the
+  guard); waves
   run via `scripts/census-wave.sh` (detached, gate + cleanup built in,
   auto-snapshots the journal into `reports/census/snapshots/` on
   completion; poller warns above the D3 bar via `GDD_WARN_PCT`).

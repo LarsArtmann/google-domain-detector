@@ -285,8 +285,9 @@ first-pass residue is ≤5%: cleanup-territory, not pathology.
 **Single-flight law: ONE census scan at a time.** Concurrent scans
 share 127.0.0.1:5353 and poison each other's measurements — proven
 2026-11-11 09:33 (a pilot and a soak ran concurrently; both showed
-inflated unknowns). Before launching: `pgrep -f 'gdd scan'` must be
-empty, and the wave lane owns long runs. Bulk scans also NEVER use the
+inflated unknowns). Before launching: `pgrep -f 'gdd[^ ]* scan'` must be
+empty (the pattern tolerates dated binaries like `gdd-20261113`), and the
+wave lane owns long runs. Bulk scans also NEVER use the
 system resolver directly — a 2026-11-11 pilot accidentally did (its
 observations went through 127.0.0.1:53 and are excluded from census
 accounting as protocol-contaminated).
