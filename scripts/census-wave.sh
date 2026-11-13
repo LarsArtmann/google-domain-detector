@@ -13,6 +13,12 @@
 # env: GDD_RESOLVER (127.0.0.1:5353), GDD_CLEANUP_BAR_PCT (0.5),
 #   GDD_WARN_PCT (2) — mid-pass unknown-rate WARNING threshold (D3 bar;
 #   2 = percent). Set GDD_WARN_PCT=0 to disable the warning.
+#   GDD_NO_PREFLIGHT=1 skips the upstream pre-flight (test harnesses
+#   only; never for production waves).
+# exit: 0 wave done/gate pass · 3 single-flight refusal · 4 coverage gap
+#   · 5 pre-flight failure (upstream or forwarder dead — see docs/census.md
+#   "outage fallback" before relaunching; never reuse a cache that ran
+#   while upstream was dead)
 #
 # Resume policy (2026-11-12, wave-A post-mortem): a FRESH out-dir never
 # passes --resume — `--resume latest` silently skips whatever the latest
@@ -67,6 +73,51 @@ mkdir -p "$out_dir"
 if pgrep -f 'gdd scan' >/dev/null 2>&1; then
 	log "REFUSED: another census scan is running (single-flight law, docs/census.md)"
 	exit 3
+fi
+
+# Real-upstream pre-flight (2026-11-12 UDP:53 outage lesson): a forwarder
+# answering from cache proves NOTHING about upstream health — during the
+# outage `unbound.sh status` was green while every fresh recursion died and
+# the wave burned hours on fabricated SERVFAILs. Two direct upstream probes
+# and one forwarder probe must all return a DNS status before any pass may
+# start. SERVFAIL counts as failure: an upstream that answers but refuses
+# is as useless for a census as a dead one.
+preflight() {
+	local upstream status resolver_host resolver_port
+	if [ "${GDD_NO_PREFLIGHT:-0}" = "1" ]; then
+		log "pre-flight SKIPPED via GDD_NO_PREFLIGHT=1 (operator override — never for production waves)"
+		return 0
+	fi
+	for upstream in 9.9.9.9 1.1.1.1; do
+		status=$(dig +time=3 +tries=1 "@$upstream" google.com A 2>/dev/null | grep -oE 'status: (NOERROR|NXDOMAIN)' | head -1)
+		if [ -z "$status" ]; then
+			log "pre-flight FAIL: upstream $upstream unresponsive on UDP:53 — outbound DNS outage suspected. Do NOT launch; if switching to the TCP forwarder (docs/census.md 'outage fallback'), restart it fresh and never reuse a cache that ran while upstream was dead."
+			return 1
+		fi
+		log "pre-flight: upstream $upstream OK ($status)"
+	done
+	# dig wants "@host -p port", not "@host:port" — split GDD_RESOLVER
+	# (bare host, host:port, or [v6]:port) before probing.
+	resolver_host=$resolver
+	resolver_port=53
+	if [[ $resolver =~ ^\[(.+)\]:([0-9]+)$ ]]; then
+		resolver_host=${BASH_REMATCH[1]}
+		resolver_port=${BASH_REMATCH[2]}
+	elif [[ $resolver =~ ^([^:]+):([0-9]+)$ ]]; then
+		resolver_host=${BASH_REMATCH[1]}
+		resolver_port=${BASH_REMATCH[2]}
+	fi
+	status=$(dig +time=3 +tries=1 "@$resolver_host" -p "$resolver_port" google.com A 2>/dev/null | grep -oE 'status: NOERROR' | head -1)
+	if [ -z "$status" ]; then
+		log "pre-flight FAIL: forwarder $resolver unresponsive — check scripts/unbound.sh status and restart the forwarder before any wave."
+		return 1
+	fi
+	log "pre-flight: forwarder $resolver OK ($status)"
+	return 0
+}
+
+if ! preflight; then
+	exit 5
 fi
 
 log "wave $wave pass 1 starting: workers=$workers timeout=$timeout_budget resolver=$resolver input=$manifest"
