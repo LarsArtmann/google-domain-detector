@@ -49,6 +49,7 @@ func TestFormatEnumsMatchRegistry(t *testing.T) {
 		{"ScanFlags", formatValuesTag[ScanFlags]()},
 		{"ReplayFlags", formatValuesTag[ReplayFlags]()},
 		{"ShowFlags", formatValuesTag[ShowFlags]()},
+		{"RunsFlags", formatValuesTag[RunsFlags]()},
 	} {
 		if tc.tag == "" {
 			t.Fatalf("%s has no --format values tag", tc.typeName)
