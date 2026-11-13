@@ -8,6 +8,7 @@ T11-partial, T5 analysis) — interrupted mid-verification; **re-checked today
 ## Scope line — verified vs not verified
 
 **Verified today, with commands:**
+
 - `go build ./...` exit 0; `go test ./... -count=1 -short` — all 8 packages
   ok (scanstore 0.39s incl. the streaming tests).
 - `git status -sb` → `## master...origin/master`, clean and NOT ahead:
@@ -20,6 +21,7 @@ T11-partial, T5 analysis) — interrupted mid-verification; **re-checked today
   (`docs/planning/2026-11-10_09-21_unified-execution-v3-ship-then-census.md`).
 
 **NOT verified / lost:**
+
 - The clean T5 rerun (launched 2026-11-10 ~02:10, `--resolver 9.9.9.9`)
   and the before/after memory A/B (`/tmp/gdd` old binary on the 50k list):
   background jobs died with the session restart; `/tmp/t5-clean.*` and
@@ -38,7 +40,7 @@ T11-partial, T5 analysis) — interrupted mid-verification; **re-checked today
    stream; `--only` filter applied per streamed line. Tests:
    slow-domain-lands-LAST (proves streaming vs buffering) and
    cancel-mid-stream (completed domain keeps its line, hung domain reports
-   `canceled`). Semantic finding pinned: a parent *deadline* expiry
+   `canceled`). Semantic finding pinned: a parent _deadline_ expiry
    classifies as `timeout` (indistinguishable from per-domain timeout —
    correct); real Ctrl-C (explicit cancel) reports `canceled`.
 2. **T8 — streaming end to end.** `input.Streamer` (lazy plain/CSV mode

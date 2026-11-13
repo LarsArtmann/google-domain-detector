@@ -178,16 +178,16 @@ observed of theirs; it pauses mid-list for owner instructions.
    artifacts), and the systemd timer fired into the same wrong root at
    04:48. I diagnosed this at ~02:48 (alien-dir listing) but was
    interrupted before the one-line fix (`$here/..`, not `$here/../..`)
-   + artifact relocation + timer-impact check. Making it worse: my
-   first debug loop tested the glob and redirect against the CANONICAL
-   path (both "worked") instead of the script's actual path string —
-   three debug rounds chasing a ghost before listing the alien dir.
+   - artifact relocation + timer-impact check. Making it worse: my
+     first debug loop tested the glob and redirect against the CANONICAL
+     path (both "worked") instead of the script's actual path string —
+     three debug rounds chasing a ghost before listing the alien dir.
 2. **Published-release-note ghost-newline chase.** I edited the live
    v0.1.0 release body THREE times chasing a ±1-byte diff that was
    entirely `--jq`'s appended newline. The correct tool (raw `gh api`
-   + python JSON parse) was step four. The body ended byte-identical
-   (verified), but a docs-only rehearsal should never have mutated the
-   published artifact three times to learn its own measurement bug.
+   - python JSON parse) was step four. The body ended byte-identical
+     (verified), but a docs-only rehearsal should never have mutated the
+     published artifact three times to learn its own measurement bug.
 3. **The nxfix wave runner is WEDGED and I watched it without acting.**
    The scan itself finished 03:25 (run 01M7969W0M73G7SKHTQ4000001
    recorded; 22,136 domains: 309 certain + 70 likely workspace, 214

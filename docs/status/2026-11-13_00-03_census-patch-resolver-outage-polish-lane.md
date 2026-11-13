@@ -30,7 +30,7 @@ gate remains blocked by BuildFlow#56).
    The stale 2026-11-10 todo list was replaced with the live 31-item list
    (T1–T12 marked complete, census + polish lanes opened).
 2. **go-ndjson evaluation (owner question, answered with evidence).**
-   NOT worth adopting: this repo only *writes* ndjson
+   NOT worth adopting: this repo only _writes_ ndjson
    (`render.JSONLStream`/`encodeJSONLLine`); nothing anywhere reads it
    back (`rg` over all Go sources: zero read paths; consumers are jq/CRM
    scripts). go-ndjson is a reader with format auto-detection — a
@@ -70,67 +70,67 @@ gate remains blocked by BuildFlow#56).
      so this protects future zone-pull inputs without changing current
      accounting.
 6. **www-strip policy decided + documented.** Normalize-and-scan, even
-     when the stripped name IS a public suffix (`www.edu.cn` → `edu.cn`,
-     26 cases in wave A scanned fine; a hosted suffix apex has real DNS
-     evidence). Recorded as a `### www-strip policy` section in
-     docs/census.md with the gate consequence.
+   when the stripped name IS a public suffix (`www.edu.cn` → `edu.cn`,
+   26 cases in wave A scanned fine; a hosted suffix apex has real DNS
+   evidence). Recorded as a `### www-strip policy` section in
+   docs/census.md with the gate consequence.
 7. **IPv6 resolver handling proven (E31 row).** `resolverDialAddr`
-     extracted (bare v6 literals bracketed, bracketed host:port passes
-     through) + 7-case table test + a REAL end-to-end v6 test: one-shot
-     DNS responder on `[::1]:<port>`, real query through
-     `NewWithAddr`, asserts the parsed empty-response DNSError. Two
-     discoveries on the way: Go maps a NOERROR/0-answer TXT response to
-     `IsNotFound` (not nil,nil); this host runs a live resolver on
-     `[::1]:53` (my first test accidentally queried it and got REAL
-     example.com TXT records — proof the v6 dial path works).
+   extracted (bare v6 literals bracketed, bracketed host:port passes
+   through) + 7-case table test + a REAL end-to-end v6 test: one-shot
+   DNS responder on `[::1]:<port>`, real query through
+   `NewWithAddr`, asserts the parsed empty-response DNSError. Two
+   discoveries on the way: Go maps a NOERROR/0-answer TXT response to
+   `IsNotFound` (not nil,nil); this host runs a live resolver on
+   `[::1]:53` (my first test accidentally queried it and got REAL
+   example.com TXT records — proof the v6 dial path works).
 8. **TXT truncation investigation CLOSED with live evidence.**
-     cloudflare.com's 2 539-byte TXT response (the "cannot unmarshal"
-     class suspect) parses cleanly through the healthy forwarder — full
-     SPF + site-verification evidence, zero errors. The historical
-     errors were resolver-distress artifacts (same family as the
-     lying-NXDOMAIN finding), not a truncation bug. Row closes.
+   cloudflare.com's 2 539-byte TXT response (the "cannot unmarshal"
+   class suspect) parses cleanly through the healthy forwarder — full
+   SPF + site-verification evidence, zero errors. The historical
+   errors were resolver-distress artifacts (same family as the
+   lying-NXDOMAIN finding), not a truncation bug. Row closes.
 9. **scan --max-runtime whole-run budget (E31 core).** Deadline on the
-     entire run (feeding, scanning, recording); expiry classifies
-     in-flight as timeout, unstarted as interrupted — composes with the
-     accounting fix. Pinned by `TestScanMaxRuntimeBudgetExpiry`
-     (ctx-aware slow resolver, stability-tested).
+   entire run (feeding, scanning, recording); expiry classifies
+   in-flight as timeout, unstarted as interrupted — composes with the
+   accounting fix. Pinned by `TestScanMaxRuntimeBudgetExpiry`
+   (ctx-aware slow resolver, stability-tested).
 10. **T16 delta query VERIFIED LIVE (row was already implemented by a
-     prior session — `replay --since` + FlipDiff).** Ran it on the real
-     census journal: wave-A final vs the 2026-11-10 poisoned full run =
-     **4 flips** (withgoogle.com, bsky.app, opendns.com… — resolver-
-     distress false negatives correctly detected in the healthy run),
-     8.7 s wall, correct stderr tallies. Row closes as
-     done-by-prior-session + verified-now.
+    prior session — `replay --since` + FlipDiff).** Ran it on the real
+    census journal: wave-A final vs the 2026-11-10 poisoned full run =
+    **4 flips** (withgoogle.com, bsky.app, opendns.com… — resolver-
+    distress false negatives correctly detected in the healthy run),
+    8.7 s wall, correct stderr tallies. Row closes as
+    done-by-prior-session + verified-now.
 11. **enrich command (census T18 / E29, journal-backed).** Streams a
-     lead CSV through the read model, preserves every original column
-     and row, appends `gdd_domain,workspace,gcp,error`. Unparseable
-     cells and never-scanned domains keep their rows with explanatory
-     error values (enrichment never drops rows); the header join reuses
-     a newly exported `input.HeaderColumn` (one owner for the
-     domain-column convention). Two tests (join semantics + usage
-     contract exit 2).
+    lead CSV through the read model, preserves every original column
+    and row, appends `gdd_domain,workspace,gcp,error`. Unparseable
+    cells and never-scanned domains keep their rows with explanatory
+    error values (enrichment never drops rows); the header join reuses
+    a newly exported `input.HeaderColumn` (one owner for the
+    domain-column convention). Two tests (join semantics + usage
+    contract exit 2).
 12. **Census binary gdd-20261112 built + provenance.** Clean-tree build:
-     `vcs.revision=308c32d` (= HEAD at build), `vcs.modified=false` —
-     first fully-clean census build; sha256 + behavior deltas recorded
-     in reports/census/unbound/PROVENANCE.md (detection rules UNCHANGED,
-     Ruleset v1-2026-11-10 — no ruleset bump required or taken).
+    `vcs.revision=308c32d` (= HEAD at build), `vcs.modified=false` —
+    first fully-clean census build; sha256 + behavior deltas recorded
+    in reports/census/unbound/PROVENANCE.md (detection rules UNCHANGED,
+    Ruleset v1-2026-11-10 — no ruleset bump required or taken).
 13. **Wave-A patch wave EXECUTED end-to-end.** Manifest derived from
-     soak3.jsonl (`jq .domain | sort -u`): **exactly 2 731 domains** —
-     matches the gate's gap to the domain. Frozen as
-     `tranco1m-a-patch.txt` + sha256 into MANIFEST.sha256. Launched
-     detached via census-wave.sh (fresh pass, no --resume, w4/10s,
-     forwarder). Pass 1 + 3 cleanup rounds ran; journal snapshotted
-     (`tranco1m-a-patch-complete-20261112-2353.tar.gz`, 349 MB db,
-     56 MB tar + sha256 sidecar).
+    soak3.jsonl (`jq .domain | sort -u`): **exactly 2 731 domains** —
+    matches the gate's gap to the domain. Frozen as
+    `tranco1m-a-patch.txt` + sha256 into MANIFEST.sha256. Launched
+    detached via census-wave.sh (fresh pass, no --resume, w4/10s,
+    forwarder). Pass 1 + 3 cleanup rounds ran; journal snapshotted
+    (`tranco1m-a-patch-complete-20261112-2353.tar.gz`, 349 MB db,
+    56 MB tar + sha256 sidecar).
 14. **Lint-to-zero (E24).** 28 findings → **0** (`golangci-lint run`
-     exit clean). Flag-struct tags rewritten per the in-repo policy
-     (alphabetical, unpadded, validate-first) with the documented
-     golines nolints restored to their original standalone-comment form;
-     cyclop resolved by extracting `applyRunBudget`/
-     `reportInputAccounting` (runScan) and `openEnrichInput`/
-     `enrichRows` (runEnrich); `enrichColumns` global → func; magic CSV
-     line offset → `csvFirstDataLine` const; test findings fixed with
-     assertive forms.
+    exit clean). Flag-struct tags rewritten per the in-repo policy
+    (alphabetical, unpadded, validate-first) with the documented
+    golines nolints restored to their original standalone-comment form;
+    cyclop resolved by extracting `applyRunBudget`/
+    `reportInputAccounting` (runScan) and `openEnrichInput`/
+    `enrichRows` (runEnrich); `enrichColumns` global → func; magic CSV
+    line offset → `csvFirstDataLine` const; test findings fixed with
+    assertive forms.
 
 ## b) PARTIALLY DONE
 

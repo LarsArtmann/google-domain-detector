@@ -38,12 +38,18 @@ while [ $# -gt 0 ]; do
 		shift
 		;;
 	--manifest)
-		[ $# -ge 2 ] || { echo "census-gate: --manifest needs a file" >&2; exit 2; }
+		[ $# -ge 2 ] || {
+			echo "census-gate: --manifest needs a file" >&2
+			exit 2
+		}
 		manifest=$2
 		shift 2
 		;;
 	--expect-skip)
-		[ $# -ge 2 ] || { echo "census-gate: --expect-skip needs a count" >&2; exit 2; }
+		[ $# -ge 2 ] || {
+			echo "census-gate: --expect-skip needs a count" >&2
+			exit 2
+		}
 		expect_skip=$2
 		shift 2
 		;;

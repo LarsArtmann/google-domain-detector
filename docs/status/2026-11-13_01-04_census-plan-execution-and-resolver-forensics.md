@@ -1,8 +1,8 @@
 # Status Report — Census plan execution: scanstore review, ruleset stamps, resolver forensics
 
 > **2026-11-13 resolution (post-fix annotation):** this report's central
-> forensic claim — that the false NXDOMAINs were the *forwarder
-> fabricating wrong authoritative answers under burst load* — is
+> forensic claim — that the false NXDOMAINs were the _forwarder
+> fabricating wrong authoritative answers under burst load_ — is
 > **FALSIFIED**. The root cause was scanner-side: Go's resolver maps both
 > NXDOMAIN and NODATA ("name exists, no such record") to the same
 > IsNotFound error, and the scanner treated it as domain death. The
@@ -179,27 +179,28 @@ land the provenance stamps, then forensics on a poisoned pilot gate.
    survives the parent before declaring the job started.
 
 ## f) Up to 50 next things (ranked; items the sibling lane already
+
 owns are marked)
 
 1. Post-outage cleanup round for wave A + nxdomain-bucket re-verify
    (sibling lane, in their list).
 2. Fresh 5k pilot gate through the TCP-fallback config; only PASS
    launches the next wave (B, post-cleanup).
-5. T15 census report (journal-derived, per-TLD, coverage table,
+3. T15 census report (journal-derived, per-TLD, coverage table,
    archived under reports/census/ + CHANGELOG row).
-6. Journal-integrity pass: flag runs whose NXDOMAIN fraction is
+4. Journal-integrity pass: flag runs whose NXDOMAIN fraction is
    anomalous (pilot 01M74VNN…, interrupted 01M74QS4…) so reports
    exclude or re-scan them.
-7. Gate: `--verify-nxdomain N` sampling mode (dig @9.9.9.9 cross-check
+5. Gate: `--verify-nxdomain N` sampling mode (dig @9.9.9.9 cross-check
    inside census-gate.sh).
-8. Push the 3 unpushed commits + watch first CI run (sibling lane).
-9. T22 cli coverage → 90%.
-10. audit-freshness.sh (version-pin guard).
-11. T17 daily delta timer; T19 journal-only stats; T20 lead scoring.
-12. E22 re-audit: go-cqrs-lite + cqrs-htmx premise flip.
-13. BuildFlow#56 fleet rebuild (owner approval).
-14. FEATURES.md refresh (census tooling, delta, tap, soak).
-15. Post-census journal-compaction decision.
+6. Push the 3 unpushed commits + watch first CI run (sibling lane).
+7. T22 cli coverage → 90%.
+8. audit-freshness.sh (version-pin guard).
+9. T17 daily delta timer; T19 journal-only stats; T20 lead scoring.
+10. E22 re-audit: go-cqrs-lite + cqrs-htmx premise flip.
+11. BuildFlow#56 fleet rebuild (owner approval).
+12. FEATURES.md refresh (census tooling, delta, tap, soak).
+13. Post-census journal-compaction decision.
 
 ## g) Questions I cannot answer myself
 

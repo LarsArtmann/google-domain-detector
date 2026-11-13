@@ -24,7 +24,7 @@ pull_tld() {
 	newest=$(ls -t "$data_dir/$tld"-crtsh-*.txt 2>/dev/null | head -1 || true)
 
 	if [ -n "$newest" ]; then
-		age_hours=$(( ($(date +%s) - $(stat -c %Y "$newest")) / 3600 ))
+		age_hours=$((($(date +%s) - $(stat -c %Y "$newest")) / 3600))
 		if [ "$age_hours" -lt "$min_age_hours" ]; then
 			log "$tld: skip — newest artifact $newest is ${age_hours}h old (< ${min_age_hours}h rate limit)"
 			return 0

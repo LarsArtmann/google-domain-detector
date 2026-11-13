@@ -279,10 +279,10 @@ which is paperwork only the account holder can sign:
       pulling `.de` fallback inputs; DENIC refuses all third-party zone
       access so crt.sh is the only `.de` path.
 - [x] Re-verify the nxdomain bucket via a FRESH-cache resolver (unbound,
-  census E7) — CLOSED by root cause 2026-11-13: not cache at all —
-  scanner NXDOMAIN/NODATA conflation (see the census-lane block near the
-  top of this file for the full chain: oracle fix, gdd-20261113,
-  tranco1m-a-nxfix supersession).
+      census E7) — CLOSED by root cause 2026-11-13: not cache at all —
+      scanner NXDOMAIN/NODATA conflation (see the census-lane block near the
+      top of this file for the full chain: oracle fix, gdd-20261113,
+      tranco1m-a-nxfix supersession).
 - [ ] Fuzz the input parser (CSV quoting/encoding edges) — plan v3 E33.
 - [ ] IPv6 resolver-address handling check (`--resolver` only IPv4-tested)
       — plan v3 E31.

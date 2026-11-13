@@ -8,11 +8,11 @@ gate thresholds live in [census.md](census.md).
 
 ## TL;DR
 
-| Scale | Resolver | Workers / timeout |
-| ----- | -------- | ----------------- |
-| Up to a few hundred domains | system default is fine | 8 / 5s |
-| Thousands and above | local unbound forwarder (below) | 4 / 10s |
-| Census / whole-TLD, or after any UDP trouble | TCP-upstream forwarder variant | 4 / 10s |
+| Scale                                        | Resolver                        | Workers / timeout |
+| -------------------------------------------- | ------------------------------- | ----------------- |
+| Up to a few hundred domains                  | system default is fine          | 8 / 5s            |
+| Thousands and above                          | local unbound forwarder (below) | 4 / 10s           |
+| Census / whole-TLD, or after any UDP trouble | TCP-upstream forwarder variant  | 4 / 10s           |
 
 ## What goes wrong, in order of scale
 

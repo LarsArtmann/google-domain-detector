@@ -53,11 +53,11 @@ shut, and documented. Wave B remains HELD for owner go.
    likewise wrong (real single-source skip was 2,731, union overlap
    6,611). census.md wave ledger now carries the true numbers.
 6. **Docs/TODO.** census.md: resume-hazard section + runner/gate bullets
-   + ledger row. TODO_LIST: T11 struck, T11-patch + T12–T13 rows (held),
-   gate-assertion row done, input-lane www-strip row + cli-lane
-   resume-observability row (both sibling, fresh:skip-marked). 04-15
-   report §b2/§f3 annotated RESOLVED inline. AGENTS.md gotcha added.
-   docs/status/README.md re-indexed (Nov 11–12 rows were missing).
+   - ledger row. TODO_LIST: T11 struck, T11-patch + T12–T13 rows (held),
+     gate-assertion row done, input-lane www-strip row + cli-lane
+     resume-observability row (both sibling, fresh:skip-marked). 04-15
+     report §b2/§f3 annotated RESOLVED inline. AGENTS.md gotcha added.
+     docs/status/README.md re-indexed (Nov 11–12 rows were missing).
 7. **CI/soak:** CI green on de9a968 and 7f5aa10; nightly Soak 03:17Z
    green.
 

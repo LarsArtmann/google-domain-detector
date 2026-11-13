@@ -49,7 +49,7 @@ jobs:
         with:
           # go1.27.4 = the go.mod toolchain pin; govulncheck must scan a
           # stdlib with GO-2026-6859 fixed (present through 1.27.3)
-          go-version: '1.27.4'
+          go-version: "1.27.4"
           cache: true
 
       - name: golangci-lint
