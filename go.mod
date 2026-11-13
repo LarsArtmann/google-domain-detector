@@ -2,6 +2,8 @@ module github.com/larsartmann/google-domain-detector
 
 go 1.27.2
 
+toolchain go1.27.4
+
 require (
 	github.com/larsartmann/cmdguard/v5 v5.1.0
 	github.com/larsartmann/go-atomic-write v0.6.2
