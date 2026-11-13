@@ -73,10 +73,11 @@ waves, manifests, unbound, pilot gates, reports, deltas.
       (scanstore.AuditSupersession; all --format renderers; findings
       exit 0 with stderr counts; unknown run IDs fail). Would have
       caught §d2/d3 before docs claimed closure.
-- [ ] T12–T13 Waves B (100–500k), C (500k–1M) with pilot gates — launch
-      gated on tranco1m-a-nxfix completing clean + a 5k pilot PASS
-      through the TCP-upstream forwarder, then owner go (standing
-      2026-11-11 decision).
+- [~] T12–T13 Waves B (100–500k), C (500k–1M) with pilot gates — B
+      RUNNING since 2026-11-13 08:45 (gdd-20261113 existence-oracle
+      binary, TCP-upstream forwarder 127.0.0.1:5354, w4/10s; gates green
+      at launch: nxfix closed 0.42% residual + validated TCP path +
+      owner go). C chains after B's gate.
 - [ ] T14 Unknown-cleanup loop per wave (<0.5% unknown).
 - [ ] T15 Census report (journal-derived) archived under reports/ — must
       pin excluded runs (pilot 01M74VNNCJS6, forensics) and account for
@@ -84,33 +85,43 @@ waves, manifests, unbound, pilot gates, reports, deltas.
 - [x] Census gate: manifest-unique-count assertion in scripts/census-gate.sh —
       done: --manifest/--expect-skip coverage check, exit 4 on gap; reproduces
       wave A's 2,731 exactly, would have caught the 90,834 fiction too.
-- [ ] T16 Delta query: verdict flips between runs (the sales signal).
+- [x] T16 Delta query: verdict flips between runs (the sales signal) —
+      done: `replay --since <run-id>` flip-diff mode (adoption/departure
+      signal; errored lookups = unknowns, never departures) +
+      `--audit-excluded` supersession audit (internal/scanstore/delta.go).
 
 ## Detection coverage
 
 - [ ] Input lane: www-strip normalizes www.<public-suffix> inputs (26 in
       tranco1m-a, e.g. www.edu.cn) to bare public suffixes (edu.cn) and scans
       them; decide skip-vs-scan policy. <!-- fresh:skip sibling-scoped pending owner policy -->
-- [ ] Scan should print resume-skip accounting ("N domains skipped as
+- [x] Scan should print resume-skip accounting ("N domains skipped as
       already observed in run X") so coverage gaps are visible at the
-      source, not only at the gate. <!-- fresh:skip sibling-scoped pending owner policy -->
+      source, not only at the gate — done: `resume: skipped %d input
+      domains already observed in run %s` on the stderr summary
+      (internal/cli/cli.go:344). <!-- fresh:skip sibling-scoped pending owner policy -->
 
 - [x] Batch retry (once) for transient resolver failures — done:
       retryResolver in internal/scan (transient only, NXDOMAIN never
       retried), commit 49b87fc.
-- [ ] Own recursive resolver guidance for whole-zone scale (unbound/knot) —
-      public resolvers throttle bulk scanners; results stay ~11 % unknown
-      otherwise (see reports/2026-11-09-tranco-de-ch-uk). = census T05.
+- [x] Own recursive resolver guidance for whole-zone scale (unbound/knot) —
+      done: docs/resolvers.md (throttling ladder, forwarder w4/10s sweet
+      spot, TCP-upstream variant for blocked UDP paths, lifecycle scripts,
+      verdict-truth law: bulk runs only through a fresh-cache forwarder).
+      = census T05.
 - [x] `--jsonl` streaming output for very large batches (render results as
       they complete instead of after the whole run) — done: render
       JSONLStream + scan/replay streaming paths.
 - [x] Resume/checkpointing for multi-hour runs — done differently: the
       event journal IS the checkpoint (`--resume ID|latest` skips observed
       domains, links runs via scan.started), commit 3674285.
-- [ ] Consider CAA/other record classes only if a real fingerprint emerges —
-      do not add speculative probes.
-- [ ] Optional CSV enrichment mode: emit the input CSV with appended
-      workspace/gcp columns, preserving all original columns. = census T18.
+- [x] Consider CAA/other record classes only if a real fingerprint emerges —
+      PARKED in ROADMAP.md (CAA watch, T27): no speculative probes in
+      classify until a real fingerprint justifies them.
+- [x] Optional CSV enrichment mode: emit the input CSV with appended
+      workspace/gcp columns, preserving all original columns — done:
+      `enrich` subcommand (internal/cli/enrich.go; explicit Flush+Error
+      check so buffered-write failures never pass silently). = census T18.
 
 ## Whole-TLD coverage (the "all active .de/.ch/.uk" goal)
 
@@ -128,14 +139,17 @@ which is paperwork only the account holder can sign:
       zonedata.switch.ch, `dig -k ch_zonedata.key @zonedata.switch.ch …
       AXFR ch.` (once/24h; exact command in docs/zone-data/switch-ch.md);
       no owner paperwork. Follow-up task below (harvested 07-46).
-- [ ] Pre-filter before scanning at that scale: a cheap single-A-record
-      existence pass (or NXDOMAIN pre-sweep) would drop the parked share and
-      cut scan volume several-fold.
-- [ ] Memory: buffered formats (table/json/csv) still materialize the full
+- [x] Pre-filter before scanning at that scale — SUPERSEDED 2026-11-13 by
+      the in-scan existence oracle: resolve.LookupExistence asks rcode-level
+      existence inside the scan itself; a separate pre-filter pass would
+      duplicate it. Zone inputs still shrink scan volume (harvest rows
+      above).
+- [x] Memory: buffered formats (table/json/csv) still materialize the full
       report — fine at 100k domains, not at 30M. Bulk guidance: use
       `--format jsonl` (streams per result; input already chunks at 4096;
       50k-domain smoke = 40 MiB RSS flat). The original "input loads fully
       into RAM" concern is landed-fixed via the streaming feeder.
+      Measured A/B table: reports/2026-11-10-e6-memory-ab/README.md.
 
 ## Operational
 
@@ -149,13 +163,18 @@ which is paperwork only the account holder can sign:
 - [x] nix run .#release wiring check — resolved: the flake exposes no
       release app (default/fmt/lint/test only); the release path is tag +
       GitHub Release per the go-release skill. Nothing to wire.
-- [ ] Interrupted-run stderr summary counts synthetic canceled fills as
-      scanned domains — a SIGINT'd run prints an N-domains line covering
-      the whole input while the journal correctly records only real
-      observations (census soaks 1–3, NOTES.md); fix the summary to
-      report scanned-only plus an interrupted-unscanned count. cli lane.
-- [ ] Input-parser fuzzing (E33; §f32 of the 08-57 report).
-- [ ] cli coverage 69% → 90% (E33; §f33 of the 08-57 report).
+- [x] Interrupted-run stderr summary counts synthetic canceled fills as
+      scanned domains — done: the summary now reports real scanned counts
+      plus `interrupted: %d input domains were never scanned (canceled
+      before their turn)` (internal/cli/cli.go:306); the journal stays
+      the truth source.
+- [x] Input-parser fuzzing (E33; §f32 of the 08-57 report) — done:
+      internal/input/fuzz_test.go (seed corpus incl. CSV quoting/encoding
+      edges); fuzzing runs clean.
+- [x] cli coverage 69% → 90% (E33; §f33 of the 08-57 report) — done:
+      90.7% (2026-11-13 batch, ~15 new tests; exposed 3 real bugs fixed:
+      enrich buffered-write swallow, XDG_CACHE_HOME ignored in doctor's
+      default cache, UDP/TCP same-port oracle-test race).
 - [ ] Wave watchdog + heartbeat file (§f16 of the 08-57 report): a checker
       that alerts when the scan child died without the wrapper's completion
       stages — the 2026-11-13 wrapper death was found by luck. BLOCKED until
@@ -185,9 +204,11 @@ which is paperwork only the account holder can sign:
       median 10 — a memo layer may have stopped eliminating I/O).
 - [ ] `incoming/outgoing-num-tcp` contention measurement post-B
       (are 150 ever contended at w8? → NOTES.md).
-- [ ] Retract-note dry run — documentation-only emergency procedure for
-      poisoning a published release note; rehearse once so the real
-      path is known cold. go-release lane.
+- [x] Retract-note dry run — documentation-only emergency procedure for
+      poisoning a published release note; rehearsed 2026-11-13: both paths
+      (A notes-only `gh release edit`, B retract directive + republish)
+      rehearsed and written up cold in docs/release-recovery.md.
+      go-release lane.
 
 ## Library audit follow-ups (2026-11-10, plan: docs/planning/2026-11-10_00-50_*)
 
@@ -214,7 +235,10 @@ which is paperwork only the account holder can sign:
       — done: `--format` kept, `-o` rejected (global flag + CLI-object
       resolution breaks per-command flag structs and the test seam; unix
       `-o` reads as output file). STACK.md decision log, plan v2 T1.
-- [ ] cmdguard-lint as a CI step (expected zero findings).
+- [x] cmdguard-lint as a CI step (expected zero findings) — done: ci.yml
+      `lint` job installs cmdguard-lint from a pinned cmdguard clone
+      (`git clone --filter=blob:none` + fixed SHA; the module proxy refuses
+      its replace directives) and runs it green.
 - [ ] Audit upkeep after the concurrent scanstore session lands: re-verify
       report citations vs new HEAD, re-shoot index render proof, re-audit
       go-cqrs-lite/cqrs-htmx verdicts (their event-store work may flip the
@@ -247,7 +271,8 @@ which is paperwork only the account holder can sign:
 - [x] AGENTS.md: add the "reports are point-in-time @ commit" caveat next
       to the audit section — done: added above the Library audit section
       (2026-11-10).
-- [ ] `go mod tidy` sweep after the other session's feature stabilizes.
+- [x] `go mod tidy` sweep after the other session's feature stabilizes —
+      done 2026-11-13: `go mod tidy` clean (zero go.mod/go.sum diff).
 
 ## Scanstore session follow-ups (docs/status/2026-11-10_01-12_*)
 
@@ -264,15 +289,22 @@ which is paperwork only the account holder can sign:
       special-case — done: render's init installs DTO renderers for json +
       jsonl over serialization's generic ones; renderResults dispatches via
       output.RenderUnknown (E26).
-- [ ] Lint-cleanup pass: pre-existing golangci warnings (err113,
-      wrapcheck, varnamelen, tagalign, cyclop) to zero — plan v3 E24
-      (gate G5: after sibling cli/render lane lands).
+- [x] Lint-cleanup pass: pre-existing golangci warnings (err113,
+      wrapcheck, varnamelen, tagalign, cyclop) to zero — done: `golangci-lint
+      run` = 0 issues (2026-11-13); the CI lint job holds the line. plan
+      v3 E24.
 - [x] docs/status index (README) so status reports are discoverable —
       done: docs/status/README.md table (newest first) + cross-report
       truth notes (E1 negative-cache finding, flaky-test closure).
-- [ ] Version-freshness guard: CI/docs step flagging reports whose pinned
-      lib released a newer tag.
-- [ ] TimeoutMiddleware whole-run budget for huge inputs — plan v3 E31.
+- [x] Version-freshness guard: CI/docs step flagging reports whose pinned
+      lib released a newer tag — done: scripts/lib-freshness.sh in the CI
+      lint job (audits every audit-pinned version vs latest upstream tag via
+      `go list -m -versions`; live-verified: cmdguard v5.1.0, go-output
+      v0.38.7 fresh).
+- [x] TimeoutMiddleware whole-run budget for huge inputs — done:
+      `--max-runtime` flag (applyRunBudget, plan v3 E31): aborts the run at
+      the budget, partial results still render, journal, and count;
+      interrupted-unscanned summary line reports the gap.
 - [ ] Consider output.FormatsForShape to auto-generate the flag values
       enum from registered formats — plan v3 E27.
 
@@ -318,22 +350,28 @@ which is paperwork only the account holder can sign:
       — done: soak made opt-in (404dfed), gofmt drift fixed, CI green
       since; ci.yml now runs -timeout 20m and a nightly Soak workflow
       covers GDD_SOAK=1 (first dispatch run verified green).
-- [ ] Pull the .ch zone via the public SWITCH TSIG keys and build the .ch
+- [~] Pull the .ch zone via the public SWITCH TSIG keys and build the .ch
       census input (docs/zone-data/switch-ch.md has the exact AXFR
-      command; once/24h limit) — feeds the pre-filter (plan v3 E28).
-- [ ] crt.sh `.de` extractor rate-limit-aware scheduling — honor the
-      documented crt.sh limits (once/day per TLD,
-      scripts/crtsh-extract.sh, zone-inputs in docs/census.md) when
-      pulling `.de` fallback inputs; DENIC refuses all third-party zone
-      access so crt.sh is the only `.de` path.
+      command; once/24h limit) — AXFR pulled 2026-11-13 (ch.txt 1.44 GB,
+      TSIG key alongside); apex reduction (zone-ch.txt + MANIFEST.sha256)
+      in progress; pre-filter superseded by the existence oracle.
+- [x] crt.sh `.de` extractor rate-limit-aware scheduling — done:
+      scripts/crtsh-daily.sh wrapper (24 h per-TLD guard is the contract,
+      KEEP_COUNT rotation, plausibility floor: .de ≥ 100k rows else
+      artifact rejected) + systemd user timer (04:37 + 20m jitter,
+      Persistent). Wrong-root bug fixed 2026-11-13 (AGENTS.md gotcha);
+      first legit verification = the next 04:37 timer run landing in-repo.
 - [x] Re-verify the nxdomain bucket via a FRESH-cache resolver (unbound,
       census E7) — CLOSED by root cause 2026-11-13: not cache at all —
       scanner NXDOMAIN/NODATA conflation (see the census-lane block near the
       top of this file for the full chain: oracle fix, gdd-20261113,
       tranco1m-a-nxfix supersession).
 - [ ] Fuzz the input parser (CSV quoting/encoding edges) — plan v3 E33.
-- [ ] IPv6 resolver-address handling check (`--resolver` only IPv4-tested)
-      — plan v3 E31.
+- [x] IPv6 resolver-address handling check (`--resolver` only IPv4-tested)
+      — done: TestNewWithAddrQueriesIPv6Server dials a real `[::1]` echo
+      server (looping responder, atomic diagnostics); `[::1]:53`
+      live-resolver gotcha in AGENTS.md; wave preflight splits bracketed
+      IPv6 host:port correctly.
 - [ ] TXT truncation investigation (cloudflare "cannot unmarshal" class).
 - [x] vendorHash.nix extraction — resolved-as-deliberate-non-fix:
       buildflow's nix-hash-fix already owns hash updates; a separate
@@ -386,8 +424,8 @@ which is paperwork only the account holder can sign:
 - [x] Add `gh run list` to the session-start checklist so CI status on
       recent pushes is seen immediately (the red-on-tag lesson) —
       adopted in project AGENTS.md (Gotchas).
-- [ ] E33 cli package coverage 69% → 90% (§f29 of this report; also
-      06-09 §f28) — test batches per coverage gap list.
+- [x] E33 cli package coverage 69% → 90% (§f29 of this report; also
+      06-09 §f28) — merged into the E33 row above; done at 90.7%.
 
 ## Harvested from the 01-12 and 06-09 reports (docs-gates audit-all)
 
@@ -407,7 +445,9 @@ which is paperwork only the account holder can sign:
       (06-09 §f14).
 - [x] SWITCH terms (.ch) — done: verified terms + public TSIG access in
       docs/zone-data/switch-ch.md (report 07-46).
-- [ ] golangci-lint + govulncheck CI steps — plan v3 E25 (06-09 §f29).
+- [x] golangci-lint + govulncheck CI steps — done: ci.yml `lint` job
+      (golangci-lint-action v9.3.0 with v2.15.0 + govulncheck@v1.9.0);
+      first run green 2026-11-13. plan v3 E25 (06-09 §f29).
 - [x] cli package coverage 69% → 90+ — plan v3 E33 — merged into the
       E33 coverage row under the 13-27 harvest section (single owner).
 - [ ] asciinema/GIF for the README — with T14/README work (plan v3 E20).
