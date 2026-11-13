@@ -83,6 +83,29 @@ first-party lib is considered.
 
 ## Gotchas
 
+- **Go's resolver conflates NXDOMAIN and NODATA into one `IsNotFound`
+  error** — "no such host" for both an authoritative NXDOMAIN and an
+  empty NOERROR, indistinguishable via the public API (Go 1.27 source:
+  both construct `errNoSuchHost`). Any code that reads `IsNotFound` as
+  "the domain is dead" stamps every live no-MX/no-evidence domain as
+  NXDOMAIN — the 2026-11-13 census bug (~90% of wave A's 22,010 NX
+  verdicts false; windowsupdate.com-class domains). Name existence MUST
+  go through `resolve.LookupExistence` (rcode-level oracle); below an
+  Exists verdict, sub-lookup IsNotFound is ordinary record absence, never
+  an error (`scan.go` `isRecordAbsence`).
+- **DNS-over-TCP cannot be forced via Go's Dial callback** — the resolver
+  frames messages by the network string IT passed in; overriding udp→tcp
+  inside Dial sends unprefixed data. TCP transport to the resolver needs
+  a hand-rolled wire client (which the existence oracle is) or a
+  TCP-only listener the resolver reaches via its own TC-flag retry. The
+  census TCP-upstream unbound variant (`scripts/unbound-tcp.conf`) keeps
+  the client hop UDP and moves only unbound→upstream to TCP.
+- **Failed-lookup error strings lie about the port**: DNSError.Server
+  shows the resolv.conf address ("127.0.0.1:53") even when the scan's
+  Dial rewrite sent the query to `--resolver 127.0.0.1:5353/5354` —
+  `internal/resolve` discards Go's passed address (`_`) and dials its
+  own. Never diagnose "the scan used the system resolver" from the error
+  string; that caused a false protocol-contamination panic (2026-11-13).
 - **metaengine dispatches ONE fold per (query, event type) — last registered
   wins** (`foldByEvent` overwrite, planner.go in metaengine v4.23.0). The
   observations query in `views.go` registers an insert-shaped AND an

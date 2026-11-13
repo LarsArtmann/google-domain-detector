@@ -21,40 +21,67 @@ scripts/unbound.sh start     # also: stop | status | restart
   worker-pressure measurements (see `reports/census/unbound/NOTES.md`).
 - Never runs as root, never becomes the system resolver (census guard 5).
 
-### Two measured UDP defects and the TCP-upstream variant (2026-11-13)
+### The false-NXDOMAIN root cause and the TCP-upstream variant (2026-11-13)
 
-The UDP forwarder path has two independent, measured failure modes; both
-are reasons the census default moves to the TCP-upstream variant:
+Two independent findings, only one of which was ever a resolver defect:
 
-1. **NXDOMAIN fabrication under census load.** During the 2026-11-10
-   pilot and the 2026-11-13 patch cleanup round 4, live domains got
-   NXDOMAIN-classified verdicts through the UDP forwarder (12/12 sampled
-   false, verified by direct `dig @9.9.9.9` — see
-   `docs/status/2026-11-13_01-04_census-plan-execution-and-resolver-forensics.md`).
-   Worker-count independent (seen at w8 and w2). Smoking gun in the
-   unbound log: `cannot increase max open fds from 65536 to 131566 —
-   continuing with less udp ports: 4065` — the outgoing UDP port pool
-   (unbound's UPSTREAM query pool) is starved by the user-scoped fd
-   limit, and under starvation the forwarder path returns wrong
-   authoritative-looking negatives. False NXDOMAINs are the worst census
-   error class: NXDOMAIN counts as domain truth, so they would
-   permanently pollute the census.
+1. **Scanner-side NODATA/NXDOMAIN conflation (THE root cause — fixed).**
+   Go's resolver maps "name does not exist" (rcode NXDOMAIN) AND "name
+   exists but has no such record" (NODATA) into the SAME `DNSError` with
+   `IsNotFound` — indistinguishable through the public API (verified
+   against the Go 1.27 toolchain source: both paths construct
+   `errNoSuchHost`). `scan.ScanDomain` treated any `IsNotFound` from the
+   apex TXT/MX/NS probes as an NXDOMAIN verdict, so EVERY live domain
+   with no MX record and no Google-relevant evidence (no SPF, no
+   google-site-verification, no googledomains.com NS, no Google CNAME)
+   was stamped `error_kind=nxdomain` — deterministic, worker-count
+   independent, and permanent (NX is domain truth, never retried).
+   Evidence chain: patch cleanup round 4 produced 6 NXDOMAIN verdicts
+   that `dig @9.9.9.9` answered NOERROR (3 proven to have live A
+   records); they reproduced IDENTICALLY through a fresh-cache
+   TCP-upstream instance in isolation — ruling out any resolver path —
+   and a pure-stdlib probe showed the MX lookup itself returning
+   IsNotFound while TXT succeeded. 27 of 30 sampled wave-A "NXDOMAIN"
+   domains are alive at Quad9 (windowsupdate.com, aliexpress.us,
+   pp.ua, linodeobjects.com): the wave-A NX bucket (22,010 domains,
+   22.6%) is ~90% false. The earlier "the forwarder fabricates
+   NXDOMAINs under load" theory (status report 01-04 §) is FALSIFIED —
+   the falsifying experiment and the fix are in
+   `docs/status/2026-11-13_*` (existence-oracle session).
+   **Fix (2026-11-13):** `resolve.LookupExistence` — a minimal DNS wire
+   client (A query, header rcode, TC→TCP fallback) that returns
+   Exists/NotExists/error with NODATA mapped to Exists; ScanDomain
+   consults it FIRST (NotExists = true NXDOMAIN, short-circuit) and
+   treats sub-lookup IsNotFound as ordinary record absence. Detection
+   rules unchanged, ruleset still v1. **Correction wave
+   `tranco1m-a-nxfix`** re-scans the poisoned NX bucket
+   (22,136 domains = wave A's 22,010 + the patch wave's 126, disjoint)
+   under the fixed scanner; replay last-wins superseds the false
+   verdicts.
 2. **Host-level outbound UDP:53 outage (2026-11-12 23:24–23:45).**
    Every fresh UDP recursion died (`dig @9.9.9.9` = no servers
    reachable) while TCP:53 and ICMP kept working; a wave launched into
-   that window fabricated ~3 450 garbage observations. The negative
-   entries OUTLIVE the distress (see AGENTS.md "distressed resolver"
-   gotcha).
+   that window fabricated ~3,450 garbage observations (SERVFAIL-class —
+   correctable, unlike false NX).
 
-**Mitigation: `scripts/unbound-tcp.conf` — TCP-upstream forwarding on
-`127.0.0.1:5354`** (`tcp-upstream: yes`: the unbound → upstream hop is
-TCP end to end, connection-scoped, no UDP-port-pool surface; the
+Operational note, no proven causation: the unbound log warns
+`cannot increase max open fds from 65536 to 131566 — continuing with
+less udp ports: 4065` (the 8192 outgoing-range wants more fds than the
+user-scoped ulimit allows). It was suspected in the NX fabrication
+theory above; with that theory falsified it remains just a capacity
+warning.
+
+**Outage mitigation: `scripts/unbound-tcp.conf` — TCP-upstream
+forwarding on `127.0.0.1:5354`** (`tcp-upstream: yes`: the unbound →
+upstream hop is TCP end to end, immune to a UDP-only outage; the
 scanner → unbound hop stays loopback UDP — Go's resolver can't do
 DNS-over-TCP via its Dial callback without breaking framing, so
-scanner-side TCP is not an option). Cost: wall-clock — per-query
-upstream connections are slower than UDP; a fresh 5k pilot through this
-config measures the throughput and is the launch gate for any wave on
-it. Usage (per-instance lifecycle, never bare nohup):
+scanner-side TCP is not an option). Verified end-to-end 2026-11-13
+(gdd doctor 4/4 through 5354; the six former false-NX specimens scan
+clean through it). Cost: wall-clock — per-query upstream connections
+are slower than UDP; a fresh 5k pilot through this config measures the
+throughput and is the launch gate for any wave on it. Usage
+(per-instance lifecycle, never bare nohup):
 
 ```bash
 GDD_UNBOUND_CONF=scripts/unbound-tcp.conf scripts/unbound.sh start   # also: status | stop | restart
@@ -78,7 +105,12 @@ negative-cache entries outlive their cause by tens of minutes.
 ## Error semantics (D3 tail, decided 2026-11-10)
 
 - **NXDOMAIN is domain truth** — an authoritative "this name does not
-  exist". Counted in coverage; never retried (owner default D1).
+  exist". Counted in coverage; never retried (owner default D1). Since
+  2026-11-13 an NXDOMAIN verdict comes ONLY from the existence oracle
+  (rcode-level) — Go's `IsNotFound` additionally covers NODATA ("name
+  exists, no such record"), which is NOT domain truth; a no-MX live
+  domain must scan clean, not die (see "false-NXDOMAIN root cause"
+  above).
 - **timeout / SERVFAIL / canceled / other are tool-environment states** —
   they say nothing about the domain. Excluded from coverage claims,
   retried by cleanup loops, and never scaled past (the pilot gate fails

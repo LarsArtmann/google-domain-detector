@@ -34,6 +34,7 @@ func newOracleServer(t *testing.T, rcode int, truncated bool) *oracleServer {
 	tcpListener, err := lc.Listen(t.Context(), "tcp", "127.0.0.1:"+strconv.Itoa(port))
 	if err != nil {
 		_ = udpConn.Close()
+
 		t.Fatalf("tcp listener on same port: %v", err)
 	}
 
@@ -107,7 +108,8 @@ func (s *oracleServer) answerTCP(conn net.Conn, rcode int) {
 		return
 	}
 
-	query := make([]byte, int(length[0])<<8|int(length[1])) //nolint:makezero // exact-size wire buffer, filled by readFull
+	//nolint:makezero // exact-size wire buffer, filled by readFull
+	query := make([]byte, int(length[0])<<8|int(length[1]))
 
 	if err := readFull(conn, query); err != nil {
 		return
@@ -165,6 +167,7 @@ func TestLookupExistenceVerdicts(t *testing.T) {
 
 			ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 			got, err := res.LookupExistence(ctx, "example.com")
+
 			cancel()
 
 			if tc.wantErr {

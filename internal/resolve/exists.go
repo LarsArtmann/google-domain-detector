@@ -26,7 +26,8 @@ const (
 	dnsFlagTC byte = 0x02 // truncation (header byte 2, read back)
 	dnsFlagQR byte = 0x80 // response (header byte 2, read back)
 
-	dnsFlagZero byte = 0x00 // header byte 3: opcode 0, rcode 0, no RA/AD/CD
+	dnsFlagZero  byte = 0x00 // header byte 3: opcode 0, rcode 0, no RA/AD/CD
+	dnsRootLabel byte = 0x00 // wire-format name terminator
 
 	dnsQTypeA   uint16 = 1 // A
 	dnsQClassIN uint16 = 1 // IN
@@ -118,7 +119,7 @@ func encodeQName(host string) ([]byte, error) {
 		return nil, fmt.Errorf("%w: %q", errNameTooLong, host)
 	}
 
-	return append(qname, 0x00), nil
+	return append(qname, dnsRootLabel), nil
 }
 
 func trimTrailingDot(host string) string {
@@ -207,7 +208,8 @@ func exchangeTCP(ctx context.Context, addr string, query []byte) ([]byte, error)
 		return nil, fmt.Errorf("tcp length read %s: %w", addr, err)
 	}
 
-	body := make([]byte, binary.BigEndian.Uint16(length[:])) //nolint:makezero // exact-size wire buffer, filled by ReadFull
+	//nolint:makezero // exact-size wire buffer, filled by ReadFull
+	body := make([]byte, binary.BigEndian.Uint16(length[:]))
 
 	if _, err := io.ReadFull(conn, body); err != nil {
 		return nil, fmt.Errorf("tcp body read %s: %w", addr, err)

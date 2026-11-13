@@ -6,6 +6,7 @@ package resolve
 import (
 	"bufio"
 	"context"
+	"errors"
 	"fmt"
 	"net"
 	"os"
@@ -128,6 +129,10 @@ func (n *netResolver) LookupExistence(ctx context.Context, host string) (Existen
 	}
 }
 
+// errNoNameserver means /etc/resolv.conf carries no usable nameserver
+// line for the default-resolver oracle.
+var errNoNameserver = errors.New("no nameserver line in /etc/resolv.conf")
+
 // firstSystemNameserver returns the first nameserver from /etc/resolv.conf
 // (lazy — only consulted by resolvers built with New(); the census always
 // pins an explicit --resolver).
@@ -147,7 +152,7 @@ func firstSystemNameserver() (string, error) {
 		}
 	}
 
-	return "", fmt.Errorf("no --resolver given and no nameserver line in /etc/resolv.conf")
+	return "", fmt.Errorf("no --resolver given and %w", errNoNameserver)
 }
 
 // resolverDialAddr normalizes a --resolver value into a dialable address.
