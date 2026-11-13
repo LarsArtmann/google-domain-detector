@@ -195,7 +195,7 @@ TimeoutMiddleware, FormatsForShape (=T23), error taxonomy (DONE via T10).
 16. T20 lint cleanup to zero (~30 warnings incl. my new err113s).
 17. T21 cmdguard-lint CI step.
 18. T23 registry-derived format enum (FormatsForShape).
-~~19. T24 NXDOMAIN pre-sweep (after T9 + G4).~~ superseded — the in-scan existence oracle (resolve.LookupExistence, 2026-11-13) replaces any pre-sweep
+19. ~~T24 NXDOMAIN pre-sweep (after T9 + G4).~~ superseded — the in-scan existence oracle (resolve.LookupExistence, 2026-11-13) replaces any pre-sweep
 20. T25 CSV enrichment.
 21. T26 scoped error-family exit codes (75/65).
 22. T27 infra long-tail (TimeoutMiddleware, describe contract test,

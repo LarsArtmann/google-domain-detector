@@ -229,9 +229,9 @@ was fixed before this report (build green at write time).
 5. gocognit `runScan` 38: extract resume-skip, event-store-attach,
    render phases.
 6. gocognit `domainFeeder.next` 30: extract per-streamer drain loop.
-~~7. gocognit `TestQueryReadModelsRoundTrip` 30: table/subtest split.~~ done at 399385a (golangci-lint driven to zero)
-~~8. wsl_v5 ×7 (doctor_test ×3, render_test ×2, render.go, doctor.go).~~ done at 399385a (golangci-lint driven to zero)
-~~9. embeddedstructfieldcheck cli_test:257.~~ done at 399385a (golangci-lint driven to zero)
+7. ~~gocognit `TestQueryReadModelsRoundTrip` 30: table/subtest split.~~ done at 399385a (golangci-lint driven to zero)
+8. ~~wsl_v5 ×7 (doctor_test ×3, render_test ×2, render.go, doctor.go).~~ done at 399385a (golangci-lint driven to zero)
+9. ~~embeddedstructfieldcheck cli_test:257.~~ done at 399385a (golangci-lint driven to zero)
 10. makezero scan.go:47 / cli_test:659 (verify FP vs real after format).
 11. Final `buildflow format` + authoritative findings run → 0 remaining
     or documented nolint set.
@@ -246,7 +246,7 @@ was fixed before this report (build green at write time).
 19. Owner infra: rebuild buildflow binary for the 1.27.2 floor
     (BuildFlow#56) — unblocks pre-commit hook + buildflow-format lint
     steps (§g3).
-~~20. E22: verified-at headers on the 22 status reports.~~ won't implement — mechanized by the docs-gates freshness gate (extracted 2026-11-03) which flags stale pinned versions mechanically
+20. ~~E22: verified-at headers on the 22 status reports.~~ won't implement — mechanized by the docs-gates freshness gate (extracted 2026-11-03) which flags stale pinned versions mechanically
 21. E22: cqrs-htmx/go-cqrs-lite re-audit cycle.
 22. E33: CLI coverage 69→90% (targeted cli.go tests).
 23. E33: input-parser fuzz target (CSV quoting edges).

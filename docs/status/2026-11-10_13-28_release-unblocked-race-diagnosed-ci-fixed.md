@@ -174,8 +174,8 @@ VmHWM capture both
 24. E13 wave A (1–100k; 63k resume-skips) + gate + cleanup
 25. E14 wave B (100k–500k) + gate
 26. E15 wave C (500k–1M) + gate → census complete
-27. E16 per-wave unknown-cleanup loop < 0.5%
-~~28. E17/E18 census summary reports~~ routed — T15: reports/census/REPORT.md (2026-11-13, wave-A-through-nxfix inventory)
+27. ~~E16 per-wave unknown-cleanup loop < 0.5%~~ done at 0cb1ce1 (scripts/census-cleanup.sh, runs inside census-wave.sh on gate FAIL)
+28. ~~E17/E18 census summary reports~~ routed — reports/census/REPORT.md (T15 census report, 2026-11-13)
 29. E23 SWITCH .ch public-TSIG zone pull (actionable now)
 30. E28 pre-filter feed (once/24h Google-domains list)
 
@@ -188,8 +188,8 @@ VmHWM capture both
 36. E31 TimeoutMiddleware whole-run budget; IPv6 --resolver check;
 vendorHash.nix extraction; ErrNoRuns store-path naming
 37. E33 cli coverage 69→90%; input-parser fuzz (CSV quoting edges)
-38. TXT truncation investigation (cloudflare unmarshal class)
-~~39. asciinema/GIF for README (E20)~~ routed — TODO_LIST row "asciinema demo / GIF for the README" (with the README polish work)
+38. ~~TXT truncation investigation (cloudflare unmarshal class)~~ routed — the TODO_LIST TXT-truncation row (cloudflare cannot-unmarshal class)
+39. ~~asciinema/GIF for README (E20)~~ routed — the TODO_LIST asciinema-demo row (with the README polish work)
 40. Consider GoReleaser cross-platform binaries for future releases
 41. docs/status report → harvest blocks upkeep (E22 audit cycle)
 

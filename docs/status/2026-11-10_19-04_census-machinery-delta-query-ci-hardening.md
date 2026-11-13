@@ -208,7 +208,7 @@ tail (f1/f3/f42–f45, tap, soak workflow, E22 headers, TODO truth pass).
 19. E28 --pre-filter A-existence sweep + volume measurement.
 20. E29 CSV enrichment (journal-backed column append).
 21. E32 daily delta timer (Tranco refresh + new-domain diff vs journal).
-~~22. E32 journal-only stats; delete the ad-hoc JSON path; parity check.~~ done at f38d7ae, 29135c6 (T16 delta query in scanstore/delta.go; runs ledger reads the journal; no ad-hoc stats script remains)
+22. ~~E32 journal-only stats; delete the ad-hoc JSON path; parity check.~~ done at f38d7ae, 29135c6 (T16 delta query in scanstore/delta.go; runs ledger reads the journal; no ad-hoc stats script remains)
 23. E32 lead scoring v1 (workspace-certain × gcp × Tranco rank).
 24. GoReleaser wiring so future releases ship binaries (tap stays
     source-build until then).

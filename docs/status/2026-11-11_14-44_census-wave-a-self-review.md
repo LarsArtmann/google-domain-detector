@@ -210,7 +210,7 @@ first real wave. This report covers this session only.
     (their own §b).
 22. Harvest/route the sales-lane 19-27 report's 18 unharvested §f
     items (or their session does; docs-gates audit-all red on it).
-~~23. Harvest the E24 reports' 8 unharvested items (same class).~~ docs-health pass 2026-11-13: the 19-08 report's lint items annotated this sweep (done at 399385a / superseded / won't)
+23. ~~Harvest the E24 reports' 8 unharvested items (same class).~~ docs-health pass 2026-11-13: the 19-08 report's lint items annotated this sweep (done at 399385a / superseded / won't)
 24. Retract-note dry run (row routed; go-release lane).
 25. IPv6 `--resolver` address handling check (E31 row; needs a v6
     capable resolver to test against).

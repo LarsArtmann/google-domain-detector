@@ -166,7 +166,7 @@ headless Chromium render (palette/structure verified programmatically).
 6. `WithEnvPrefix("GDD_")` + shorten env tags (S).
 7. `RecoveryMiddleware` on the CLI (S).
 8. `--color auto|always|never` flag via `ParseColorMode`/`RenderOptions.ColorMode` (S).
-~~9. `Table.SetFooter` summary row ("N domains · M workspace · K gcp") (S).~~ done at f1411a9, b07de82 (go-output T11/E19)
+9. ~~`Table.SetFooter` summary row ("N domains · M workspace · K gcp") (S).~~ done at f1411a9, b07de82 (go-output T11/E19)
 10. `AddRowChecked` for the 5-column invariant (S).
 11. `RenderOptions.Title` for markdown/html (S).
 12. nom live progress during scan (M).
@@ -198,7 +198,7 @@ headless Chromium render (palette/structure verified programmatically).
 32. Harvest section (f) items 1–18 into TODO_LIST.md (docs-health HARVEST).
 33. Update STACK.md when opportunities 1–2 are implemented.
 34. Consider a docs/status index (README) so status reports are discoverable.
-~~35. Record the audit in CHANGELOG.md (user-facing: new docs section).~~ done at 47d74ba-era CHANGELOG entry (docs/review/libs/ index, 2026-11-10)
+35. ~~Record the audit in CHANGELOG.md (user-facing: new docs section).~~ done at 47d74ba-era CHANGELOG entry (docs/review/libs/ index, 2026-11-10)
 36. AGENTS.md: add the "reports are point-in-time @ commit" caveat next to the audit section.
 
 **Nice-to-haves from the lib research (free wins noticed):**

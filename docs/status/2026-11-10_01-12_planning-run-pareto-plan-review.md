@@ -155,7 +155,7 @@ Detection coverage; annotated 2026-11-10 because tokens went generic).
 
 **Tail:**
 22. T22: registry-derived enum, drift-proof (45m)
-~~23. T23: NXDOMAIN pre-sweep (90m)~~ superseded — the in-scan existence oracle (resolve.LookupExistence, 2026-11-13) replaces any pre-sweep
+23. ~~T23: NXDOMAIN pre-sweep (90m)~~ superseded — the in-scan existence oracle (resolve.LookupExistence, 2026-11-13) replaces any pre-sweep
 24. T24: CSV enrichment (60m)
 25. T25: error-family exit codes (30m)
 26. T26: infra bundle (vendorHash.nix, describe test, freshness guard,
