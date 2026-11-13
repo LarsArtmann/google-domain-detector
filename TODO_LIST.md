@@ -39,13 +39,31 @@ waves, manifests, unbound, pilot gates, reports, deltas.
       (97,265 scanned, unknown 1.53% < 2%), coverage gap 2,731 resume-skipped
       domains (soak3 poisoning, docs/census.md "Resume hazard"); patch scan
       pending owner go.
-- [ ] T11-patch Wave-A coverage: scan the 2,731 resume-skipped domains
-      (input recoverable via journal run 01M74VTPD4FZ vs manifest) — held
-      with wave B for owner instruction.
-- [ ] T12–T13 Waves B (100–500k), C (500k–1M) with pilot gates — held for
-      owner go; wrapper now fresh-pass + explicit-retry (no --resume latest).
+- [x] T11-patch Wave-A coverage: scan the 2,731 resume-skipped domains —
+      done 2026-11-12/13 (sibling): pass 1 + 5 cleanup rounds, residual
+      15/2,731; final twist: the 6 residual "NXDOMAIN" verdicts were
+      scanner NODATA-conflation artifacts (3 proven live at Quad9),
+      superseded by tranco1m-a-nxfix (see the nxdomain-bucket row below).
+- [x] Re-verify the nxdomain bucket via a FRESH-cache resolver — CLOSED
+      by root cause 2026-11-13: the bucket was never stale-cache lies —
+      Go's resolver conflates NXDOMAIN and NODATA into one IsNotFound
+      error, and the scanner treated it as domain death (~90% of wave
+      A's 22,010 NX verdicts false; windowsupdate.com-class domains
+      alive at Quad9). Fixed: resolve.LookupExistence oracle (rcode
+      level) + NODATA-is-absence semantics in scan (commit 7b45a1b,
+      binary gdd-20261113, provenance recorded). Correction wave
+      tranco1m-a-nxfix re-scans all 22,136 affected domains (disjoint:
+      wave A's 22,010 + patch's 126) through the TCP-upstream
+      forwarder; post-fix NX verdicts 12/12 confirmed true at Quad9;
+      replay last-wins supersedes the false verdicts.
+- [ ] T12–T13 Waves B (100–500k), C (500k–1M) with pilot gates — launch
+      gated on tranco1m-a-nxfix completing clean + a 5k pilot PASS
+      through the TCP-upstream forwarder, then owner go (standing
+      2026-11-11 decision).
 - [ ] T14 Unknown-cleanup loop per wave (<0.5% unknown).
-- [ ] T15 Census report (journal-derived) archived under reports/.
+- [ ] T15 Census report (journal-derived) archived under reports/ — must
+      pin excluded runs (pilot 01M74VNNCJS6, forensics) and account for
+      the nxfix supersession (replay last-wins).
 - [x] Census gate: manifest-unique-count assertion in scripts/census-gate.sh —
       done: --manifest/--expect-skip coverage check, exit 4 on gap; reproduces
       wave A's 2,731 exactly, would have caught the 90,834 fiction too.
@@ -260,12 +278,11 @@ which is paperwork only the account holder can sign:
       scripts/crtsh-extract.sh, zone-inputs in docs/census.md) when
       pulling `.de` fallback inputs; DENIC refuses all third-party zone
       access so crt.sh is the only `.de` path.
-- [~] Re-verify the nxdomain bucket via a FRESH-cache resolver (unbound,
-  census E7) before quoting any coverage number — the E1 replication
-  found stale negative-cache lies at ~92% of the sampled bucket; D3's
-  tail bar is only assessable on unbound-backed runs. (plan v3 E7/E10
-  feed this.) — in progress: the 7,204-recovery run covers exactly
-  this bucket (incl. the 1,235 lying-NXDOMAIN victims).
+- [x] Re-verify the nxdomain bucket via a FRESH-cache resolver (unbound,
+  census E7) — CLOSED by root cause 2026-11-13: not cache at all —
+  scanner NXDOMAIN/NODATA conflation (see the census-lane block near the
+  top of this file for the full chain: oracle fix, gdd-20261113,
+  tranco1m-a-nxfix supersession).
 - [ ] Fuzz the input parser (CSV quoting/encoding edges) — plan v3 E33.
 - [ ] IPv6 resolver-address handling check (`--resolver` only IPv4-tested)
       — plan v3 E31.
