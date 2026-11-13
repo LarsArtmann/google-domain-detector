@@ -150,7 +150,7 @@ func ScanDomain(ctx context.Context, res resolve.Resolver, dom domain.Domain, op
 		if dnsErr, ok := errors.AsType[*net.DNSError](err); ok && dnsErr.IsNotFound {
 			markNXDomain(&result, err.Error())
 
-			return result
+			return sanitizeResult(result)
 		}
 
 		// The oracle could not get an answer (timeout, SERVFAIL): assume
@@ -164,7 +164,7 @@ func ScanDomain(ctx context.Context, res resolve.Resolver, dom domain.Domain, op
 	if existence == resolve.NotExists {
 		markNXDomain(&result, "resolver answered NXDOMAIN for "+apex)
 
-		return result
+		return sanitizeResult(result)
 	}
 
 	// The name exists (or the oracle was inconclusive): record-type absence
@@ -174,7 +174,7 @@ func ScanDomain(ctx context.Context, res resolve.Resolver, dom domain.Domain, op
 
 	noteLookupError(&result, lookupErr)
 
-	return result
+	return sanitizeResult(result)
 }
 
 // markNXDomain stamps the result as a dead domain: the name does not exist
