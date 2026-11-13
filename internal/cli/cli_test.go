@@ -948,14 +948,47 @@ func TestReplayAuditExcludedFindsPoisonedSupersessions(t *testing.T) {
 		t.Fatalf("audit excluding both runs failed: %v", err)
 	}
 
+	// Findings are ordered by first-seen JOURNAL order (completion order,
+	// per the scan ordering contract) — which domain an racy oracle answers
+	// first is not deterministic, so assert the attribution, not the order.
 	acmeAt := strings.Index(bothOut, "acme.com")
 	goneAt := strings.Index(bothOut, "gone.example")
 
-	if acmeAt < 0 || goneAt < 0 || acmeAt > goneAt {
+	if acmeAt < 0 || goneAt < 0 {
 		t.Errorf(
-			"audit excluding both runs should list acme.com before gone.example (first-seen order), got: %q",
+			"audit excluding both runs should name both poisoned domains, got: %q",
 			bothOut,
 		)
+	}
+
+	// The attribution IS deterministic: gone.example's last observation is
+	// the first run's true NX, acme.com's is the second run's poison.
+	attribution, _, err := runRes(t, workspaceDomain(), "",
+		"replay", "--event-store", store, "--audit-excluded", firstRun+","+secondRun, "--format", "jsonl")
+	if err != nil {
+		t.Fatalf("streaming audit for attribution failed: %v", err)
+	}
+
+	for line := range strings.SplitSeq(strings.TrimSpace(attribution), "\n") {
+		var finding struct {
+			Domain string `json:"Domain"`
+			Run    string `json:"Run"`
+		}
+
+		if err := json.Unmarshal([]byte(line), &finding); err != nil {
+			t.Fatalf("audit line %q: %v", line, err)
+		}
+
+		want := map[string]string{"gone.example": firstRun, "acme.com": secondRun}[finding.Domain]
+		if want == "" {
+			t.Errorf("unexpected audit finding for %q", finding.Domain)
+
+			continue
+		}
+
+		if finding.Run != want {
+			t.Errorf("audit attribution for %s = %s, want %s", finding.Domain, finding.Run, want)
+		}
 	}
 
 	if !strings.Contains(bothErr, "supersession audit: 2 of 2 domain(s)") {
