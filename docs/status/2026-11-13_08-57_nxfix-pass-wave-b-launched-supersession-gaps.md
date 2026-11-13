@@ -254,7 +254,7 @@ confirmation. All falsified claims are annotated where they live.
 
 **Tooling hardening (census ops)**
 14. Immutable per-wave script copy in census-wave.sh (e1).
-15. Supersession-coverage audit mode in replay/gate (e2).
+~~15. Supersession-coverage audit mode in replay/gate (e2).~~ done at 081354f, 347ad96 (replay --audit-excluded; first mechanical run 2026-11-13 shrank poisonfix 948→25)
 16. Wave watchdog + heartbeat file (e3).
 17. `gdd doctor` as a census-wave.sh pre-flight stage (e4).
 18. Rule in census.md: diagnostic scans use throwaway event-stores (e5).
@@ -284,7 +284,7 @@ lane) — worth a dedicated session.
 30. Audit-report freshness sweep (version-freshness guard row).
 31. `go mod tidy` sweep + govulncheck (E25 row).
 32. Input-parser fuzzing (E33).
-33. cli coverage 69% → 90% (E33).
+~~33. cli coverage 69% → 90% (E33).~~ done at f169854 (90.7% cli coverage)
 34. cmdguard-lint + golangci + govulncheck CI steps (E25).
 35. Own-resolver guidance doc + buffered-format bulk note.
 36. README polish: asciinema/GIF + feed-freshness note (E20).

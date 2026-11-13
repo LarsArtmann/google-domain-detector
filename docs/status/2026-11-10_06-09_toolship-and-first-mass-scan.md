@@ -267,7 +267,7 @@ hooks across affected repos.
 37. FEATURES.md + ROADMAP.md (docs-health BUILD).
 38. docs-health HARVEST of this report's (f) into TODO_LIST/ROADMAP —
 pending until the other session settles.
-39. asciinema/GIF for the README.
+~~39. asciinema/GIF for the README.~~ routed — TODO_LIST row "asciinema demo / GIF for the README" (with the README polish work)
 40. Example report directory with a sanitized sample output.
 41. `describe` output test (contract pin) once version stabilizes.
 42. `-race` in CI (currently plain `go test -race` — keep, but pin Go

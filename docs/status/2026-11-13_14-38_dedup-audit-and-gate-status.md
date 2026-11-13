@@ -114,7 +114,7 @@ Legend: [S] session-new · [T] pre-existing TODO_LIST · [G] gate debt
 
 **My session's loose ends**
 10. [S] Restart gopls / flush stale diagnostics (scan.go:241, input.go:204) and re-triage from clean cache
-11. [S] Investigate `resolve.go:147` scannererr — is the bufio.Scanner missing `Err()` check a silent-truncation bug?
+~~11. [S] Investigate `resolve.go:147` scannererr — is the bufio.Scanner missing `Err()` check a silent-truncation bug?~~ docs-health pass 2026-11-13: scanner.Err() check added to firstSystemNameserver (read errors surface instead of silently reporting errNoNameserver)
 12. [S] Explain the panic stack trace in buildflow's go-test logs (cli_test.go:679 / cmdguard middleware) — deliberate panic-path test or real?
 13. [S] Run `gh run list --limit 3`; confirm CI green on the daemon-swept commits (release law: no tagging without it)
 14. [S] Review `git log` for today's daemon bundles; list which commits mix unrelated work
@@ -137,7 +137,7 @@ Legend: [S] session-new · [T] pre-existing TODO_LIST · [G] gate debt
 
 **Pre-existing TODO items visible this session**
 29. [T] T15: census report (journal-derived) archived under reports/
-30. [T] `runs --format` jsonl with FULL run IDs
+~~30. [T] `runs --format` jsonl with FULL run IDs~~ routed — TODO_LIST row "`runs --format` support (jsonl with FULL run IDs)"
 31. [T] Poller: per-rank-band unknown-rate expectations (calibrate on wave B vs wave A)
 32. [T] `--audit-excluded`: accept wave NAMES in addition to run IDs
 33. [T] io-history-ratchet: `--profile-io` investigation (56 files vs median 10)

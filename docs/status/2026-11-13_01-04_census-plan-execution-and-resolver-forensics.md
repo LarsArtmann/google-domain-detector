@@ -184,7 +184,7 @@ owns are marked)
 
 1. Post-outage cleanup round for wave A + nxdomain-bucket re-verify
    (sibling lane, in their list).
-2. Fresh 5k pilot gate through the TCP-fallback config; only PASS
+~~2. Fresh 5k pilot gate through the TCP-fallback config; only PASS~~ done at ae05f57 (wave B launched on the TCP-validated path, 2026-11-13)
    launches the next wave (B, post-cleanup).
 3. T15 census report (journal-derived, per-TLD, coverage table,
    archived under reports/census/ + CHANGELOG row).
@@ -194,7 +194,7 @@ owns are marked)
 5. Gate: `--verify-nxdomain N` sampling mode (dig @9.9.9.9 cross-check
    inside census-gate.sh).
 6. Push the 3 unpushed commits + watch first CI run (sibling lane).
-7. T22 cli coverage → 90%.
+~~7. T22 cli coverage → 90%.~~ done at f169854 (90.7% cli coverage, E33)
 8. audit-freshness.sh (version-pin guard).
 9. T17 daily delta timer; T19 journal-only stats; T20 lead scoring.
 10. E22 re-audit: go-cqrs-lite + cqrs-htmx premise flip.

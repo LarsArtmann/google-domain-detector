@@ -262,15 +262,15 @@ only after the toolchain-skew phantom has a pin or a rebuilt binary.
 19. servfail-stable semantics into census-gate.sh + docs/census.md.
 20. E32 daily delta timer / lead scoring.
 21. scripts/audit-freshness.sh (E31.4 comparing script).
-22. crtsh-extract fixtures: committed-corpus variant.
+~~22. crtsh-extract fixtures: committed-corpus variant.~~ won't implement — the committed fixture + the 2026-11-13 plausibility guard cover the mechanism; a second corpus adds no pinned coverage
 
 **Quality/infra backlog (either lane, low urgency):**
 23. E28 --pre-filter.
 24. .ch SWITCH AXFR pull.
 25. IPv6 resolver behavior check.
 26. TXT truncation investigation.
-27. asciinema demo.
-28. GoReleaser binaries.
+~~27. asciinema demo.~~ routed — TODO_LIST row "asciinema demo/GIF for the README" (with the README polish work)
+~~28. GoReleaser binaries.~~ routed — ROADMAP (release automation beyond the nix + homebrew-tap paths)
 29. Consumer propagation sweep for v0.1.0.
 30. TimeoutMiddleware (cqrs lane).
 31. Read-your-writes projection guarantee design pass (e5 above).

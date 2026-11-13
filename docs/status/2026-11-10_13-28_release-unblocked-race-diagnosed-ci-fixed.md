@@ -189,7 +189,7 @@ VmHWM capture both
 vendorHash.nix extraction; ErrNoRuns store-path naming
 37. E33 cli coverage 69→90%; input-parser fuzz (CSV quoting edges)
 38. TXT truncation investigation (cloudflare unmarshal class)
-39. asciinema/GIF for README (E20)
+~~39. asciinema/GIF for README (E20)~~ routed — TODO_LIST row "asciinema demo / GIF for the README" (with the README polish work)
 40. Consider GoReleaser cross-platform binaries for future releases
 41. docs/status report → harvest blocks upkeep (E22 audit cycle)
 

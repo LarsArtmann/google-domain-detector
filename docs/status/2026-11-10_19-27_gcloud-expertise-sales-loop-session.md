@@ -135,19 +135,19 @@ companies → outreach list with evidence attached (the session's missed idea, m
 27. Draft proposal + SOW templates (scope, price, liability).
 ~~28. Consulting contract template (or lawyer-reviewed boilerplate).~~ routed — the owner's sales lane (crm/docs/sales/ playbook), not this repo's TODO
 29. Set up a booking link + simple tracking sheet (sends → replies → calls → proposals → paid).
-30. Decide invoicing setup for EU solo services (self-invoice; MOR applies to products, not services).
+~~30. Decide invoicing setup for EU solo services (self-invoice; MOR applies to products, not services).~~ routed — the owner's sales lane (crm/docs/sales/), not this repo's TODO
 
 **Assets (Steps 4–5):**
 31. One-page offer page for the flagship wedge (offer-page skill) once offer + phrase bank exist.
 32. Portfolio/demo page with 3 receipts (website-launch skill).
-33. 60-second demo video of a concrete GCP fix (product-launch-video skill).
+~~33. 60-second demo video of a concrete GCP fix (product-launch-video skill).~~ routed — the owner's sales lane (product-launch-video flow lives outside this repo)
 34. LinkedIn profile rewritten in ICP vocabulary (positioning output, not buzzwords).
 35. GitHub profile README as a sales asset (proof ladder in one screen).
 36. Publish 1 technical post/week × 6 weeks (build-in-public cadence).
 
 **Community & compounding channels:**
 37. Find and join the local GDG Cloud chapter; attend twice before pitching a talk.
-38. Propose one talk to the chapter organizer (topic = flagship wedge offer).
+~~38. Propose one talk to the chapter organizer (topic = flagship wedge offer).~~ routed — the owner's sales lane (crm/docs/sales/), not this repo's TODO
 39. Pick ONE online community where ICP buyers gather; answer 3 threads/week for a month.
 40. Set a weekly saved search for trigger job posts (GCP + cost/migration/K8s).
 41. After the first ~100 researched sends: measure replies, kill or double the channel — one channel

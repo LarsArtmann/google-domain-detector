@@ -32,6 +32,7 @@ inventory in [FEATURES](FEATURES.md).
   resolver from the census to be worth prototyping.
 - **IPv6 resolver-address handling** for `--resolver` (only IPv4-tested so
   far — TODO_LIST harvest row).
+- **GoReleaser binaries** — cross-platform release binaries beyond the nix + Homebrew-tap paths (E28 idea, 2026-11-11).
 - **Homebrew tap** — post-tag distribution; formula via goreleaser or
   manual homebrew-tap repo (TODO_LIST Operational row).
 - **Verdict-flip alerting** (daily digest of delta-query output) — after

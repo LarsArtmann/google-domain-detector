@@ -473,7 +473,7 @@ which is paperwork only the account holder can sign:
       first run green 2026-11-13. plan v3 E25 (06-09 §f29).
 - [x] cli package coverage 69% → 90+ — plan v3 E33 — merged into the
       E33 coverage row under the 13-27 harvest section (single owner).
-- [ ] asciinema/GIF for the README — with T14/README work (plan v3 E20).
+- [ ] asciinema demo / GIF for the README — with T14/README work (plan v3 E20).
 - [x] Feed-freshness/UA integration note once the README install section
       lands — done: the UA note lives in the Install section since the
       README overhaul (2026-11-10), kept current through the 2026-11-13
