@@ -362,13 +362,13 @@ which is paperwork only the account holder can sign:
       since; ci.yml now runs -timeout 20m and a nightly Soak workflow
       covers GDD_SOAK=1 (first dispatch run verified green).
 - [x] Pull the .ch zone via the public SWITCH TSIG keys and build the .ch
-  census input (docs/zone-data/switch-ch.md has the exact AXFR
-  command; once/24h limit) — done 2026-11-13: AXFR pulled (ch.txt
-  1.44 GB, TSIG key alongside) and reduced to 2,660,632 unique
-  registrable apexes (zone-ch.txt, 43 MB, sha256 in MANIFEST.sha256;
-  validation: 0 non-apex lines, 0 uppercase). Scanning the input
-  waits for the Tranco waves to free the single-flight. Pre-filter
-  superseded by the existence oracle.
+      census input (docs/zone-data/switch-ch.md has the exact AXFR
+      command; once/24h limit) — done 2026-11-13: AXFR pulled (ch.txt
+      1.44 GB, TSIG key alongside) and reduced to 2,660,632 unique
+      registrable apexes (zone-ch.txt, 43 MB, sha256 in MANIFEST.sha256;
+      validation: 0 non-apex lines, 0 uppercase). Scanning the input
+      waits for the Tranco waves to free the single-flight. Pre-filter
+      superseded by the existence oracle.
 - [x] crt.sh `.de` extractor rate-limit-aware scheduling — done:
       scripts/crtsh-daily.sh wrapper (24 h per-TLD guard is the contract,
       KEEP_COUNT rotation, plausibility floor: .de ≥ 100k rows else
