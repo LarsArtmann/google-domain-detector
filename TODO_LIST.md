@@ -424,6 +424,12 @@ which is paperwork only the account holder can sign:
       buildflow's nix-hash-fix already owns hash updates; a separate
       vendorHash.nix adds indirection with zero behavior gain (decided
       2026-11-10).
+- [ ] BuildFlow#56 fleet fix (owner approval gate): buildflow binaries
+      built with go1.27.0 cannot load this module's `go 1.27.2` floor
+      (embedded analyzers fail: samber-linter toolchain.skew, test-compile
+      stale_toolchain) — the pre-commit hook stays unusable and commits
+      run --no-verify until the installed buildflow binary is rebuilt
+      with a newer toolchain (BuildFlow#56). Verify via direct gate runs.
 - [ ] GPG signing policy decision for agent commits (toolship §f44) —
       owner decision.
 
