@@ -1,5 +1,21 @@
 # Status Report — Census plan execution: scanstore review, ruleset stamps, resolver forensics
 
+> **2026-11-13 resolution (post-fix annotation):** this report's central
+> forensic claim — that the false NXDOMAINs were the *forwarder
+> fabricating wrong authoritative answers under burst load* — is
+> **FALSIFIED**. The root cause was scanner-side: Go's resolver maps both
+> NXDOMAIN and NODATA ("name exists, no such record") to the same
+> IsNotFound error, and the scanner treated it as domain death. The
+> falsifying experiment (same 6 false-NX verdicts reproduced through a
+> fresh-cache TCP-upstream instance in isolation, then all 6 clean after
+> the existence-oracle fix) and the fix are in `docs/census.md` ("false-
+> NXDOMAIN root cause") and the existence-oracle session report. The
+> "transient, resolves via unbound minutes later" observation was a
+> misreading: the sampled digs queried A records, the scanner's fatal
+> lookup was MX — the discrepancy was deterministic, not transient.
+> Wave A's 22,010-domain NX bucket was ~90% false and is being
+> superseded by the tranco1m-a-nxfix correction wave.
+
 **Written:** 2026-11-13 01:04 CET · **Session scope:** execute the
 2026-11-10 06:18 Tranco top-1M census plan (T01–T29) in a repo where
 parallel sessions were actively shipping the same plan. This session
