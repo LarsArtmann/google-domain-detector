@@ -181,6 +181,10 @@ which is paperwork only the account holder can sign:
 - [ ] Poller: per-rank-band unknown-rate expectations (calibrate on
       wave B's ~2.8% pass-1 vs wave A's 1.53%).
 - [ ] `--audit-excluded`: accept wave NAMES in addition to run IDs.
+- [ ] io-history-ratchet: `--profile-io` investigation (56 files vs
+      median 10 — a memo layer may have stopped eliminating I/O).
+- [ ] `incoming/outgoing-num-tcp` contention measurement post-B
+      (are 150 ever contended at w8? → NOTES.md).
 - [ ] Retract-note dry run — documentation-only emergency procedure for
       poisoning a published release note; rehearse once so the real
       path is known cold. go-release lane.
