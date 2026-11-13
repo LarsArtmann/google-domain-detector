@@ -101,6 +101,7 @@ Also fucked up (process, not code):
 Legend: [S] session-new · [T] pre-existing TODO_LIST · [G] gate debt
 
 **Dedup follow-ups**
+
 1. [S] Judge the 5 test-file clone groups buildflow's art-dupl step surfaced (read each; extract/accept/exclude)
 2. [S] Wire the accepted-4 baseline as a mechanical gate (fail when art-dupl shows ≠ 4 judgment-worthy groups)
 3. [S] Reconcile standalone art-dupl excludes vs buildflow art-dupl step includes (tooling split brain)
@@ -168,6 +169,6 @@ Legend: [S] session-new · [T] pre-existing TODO_LIST · [G] gate debt
 
 ---
 
-*Point-in-time snapshot @ 2026-11-13 14:38 CET. Section (f) items marked [S] are candidates for TODO_LIST harvest on your instruction; [T]/[G] items already live in TODO_LIST or were added this session (file-size debt, archive ritual).*
+_Point-in-time snapshot @ 2026-11-13 14:38 CET. Section (f) items marked [S] are candidates for TODO_LIST harvest on your instruction; [T]/[G] items already live in TODO_LIST or were added this session (file-size debt, archive ritual)._
 
 **WAITING FOR INSTRUCTIONS.**
