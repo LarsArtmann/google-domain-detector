@@ -164,7 +164,7 @@ is designed but untested); SQLite journal behavior at whole-TLD scale
    run X) — crash recovery for multi-hour runs.
 3. `show <domain>` command reading `observation_views` (de-ghost the read
    models; per-domain history).
-4. ~~`runs` command listing runs + counts from `run_views`.~~ done at b07de82, f1411a9 (`runs` command + ledger, E26-era)
+4. ~~`runs` command listing runs + counts from `run_views`.~~ done at `b07de82`, `f1411a9` (`runs` command + ledger, E26-era)
 5. Error taxonomy in Counts (nxdomain/timeout/servfail breakdown).
 6. Sink retry/backoff instead of drop-after-first-error.
 7. Diagnose the 10× bulk slowdown (local stub resolver vs `--resolver
@@ -179,7 +179,7 @@ is designed but untested); SQLite journal behavior at whole-TLD scale
 15. Widen `--format` enum to yaml/toml/jsonl.
 16. go-atomic-write adoption in `ranges.writeCache` (+STACK.md row).
 17. `--color auto|always|never` via go-output ColorMode.
-18. ~~Table.SetFooter summary row (N domains · M workspace · K gcp).~~ done at f1411a9, b07de82 (go-output T11/E19)
+18. ~~Table.SetFooter summary row (N domains · M workspace · K gcp).~~ done at `f1411a9`, `b07de82` (go-output T11/E19)
 19. `validate:"min=1,max=512"` on Workers.
 20. WithDoctorCheck preflight (resolver + ranges feed).
 21. WithEnvPrefix("GDD_") + shortened env tags.

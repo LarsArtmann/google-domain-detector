@@ -268,9 +268,9 @@ only after the toolchain-skew phantom has a pin or a rebuilt binary.
 23. E28 --pre-filter.
 24. .ch SWITCH AXFR pull.
 25. IPv6 resolver behavior check.
-26. ~~TXT truncation investigation.~~ routed — TODO_LIST row "TXT truncation investigation (cloudflare "cannot unmarshal" class)"
-27. ~~asciinema demo.~~ routed — TODO_LIST row "asciinema demo/GIF for the README" (with the README polish work)
-28. ~~GoReleaser binaries.~~ routed — ROADMAP (release automation beyond the nix + homebrew-tap paths)
+26. TXT truncation investigation. routed — the TODO_LIST TXT-truncation row (open there)
+27. asciinema demo. routed — the TODO_LIST asciinema-demo row (open there)
+28. GoReleaser binaries. routed — the ROADMAP GoReleaser-binaries row (open there)
 29. Consumer propagation sweep for v0.1.0.
 30. TimeoutMiddleware (cqrs lane).
 31. Read-your-writes projection guarantee design pass (e5 above).

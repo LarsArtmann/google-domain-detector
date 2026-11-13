@@ -162,8 +162,8 @@ lane, per owner request. Live state embedded at the bottom.
    BEFORE E17 quotes denominators; correct census.md wave ledger.
 5. Diagnose the 26 public-suffix rows end-to-end (which manifest lines
    normalize to edu.cn etc.); file input-lane TODO row (token: www-strip).
-6. ~~Add manifest-unique-count assertion to census-gate.sh (see e7).~~ done at 8604fd2 (census-gate --manifest/--expect-skip, exit 4 on gap; reproduced wave A's 2,731 exactly)
-7. ~~E17 census report after wave C (pin excluded pilot `01M74VNNCJS6`).~~ routed — reports/census/REPORT.md (T15, 2026-11-13; pins excluded pilot 01M74VNNCJS6; final distribution after wave C)
+6. ~~Add manifest-unique-count assertion to census-gate.sh (see e7).~~ done at `8604fd2` (census-gate --manifest/--expect-skip, exit 4 on gap; reproduced wave A's 2,731 exactly)
+7. E17 census report after wave C (pin excluded pilot `01M74VNNCJS6`). routed — the T15 census report reports/census/REPORT.md (2026-11-13; pins the excluded pilot; final distribution after wave C)
 8. Wave C launch after B (T13).
 9. 7 s vs 10 s timeout soak (§f13) — only between waves or after C.
 10. w2 sustained soak (§f14) — only if a wave drifts above bar.

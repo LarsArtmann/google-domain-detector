@@ -97,16 +97,16 @@ byte-identical to HEAD `e1f5160`). The honest nearest-miss, written down so it c
 
 **Unblock (needs §g answers):**
 
-1. ~~Answer the 3 intake questions in §g.~~ routed — the owner's sales lane (crm/docs/sales/ playbook), not this repo's TODO
-2. ~~Define what "GCP expertise" is being sold as: which 1–2 of {cost optimization, migration,~~ routed — the owner's sales lane (crm/docs/sales/ playbook), not this repo's TODO
+1. ~~Answer the 3 intake questions in §g.~~ won't implement — the owner's sales lane (crm/docs/sales/ playbook), outside this repo's TODO
+2. ~~Define what "GCP expertise" is being sold as: which 1–2 of {cost optimization, migration,~~ won't implement — the owner's sales lane (crm/docs/sales/ playbook), outside this repo's TODO
    Go-on-GCP development, event-sourcing architecture, Nix/GitOps on GCP, SRE}.
 3. Decide target market scope (local/EU/global) and working language.
 4. Set weekly hours budget for sales vs building, and a minimum engagement size.
 
 **Positioning & offer (skill Steps 1–3):**
-5. ~~Write the one-paragraph positioning statement (Dunford 5 steps).~~ routed — the owner's sales lane (crm/docs/sales/ playbook), not this repo's TODO
-6. ~~Narrow the ICP until a page can say "for <specific segment>".~~ routed — the owner's sales lane (crm/docs/sales/ playbook), not this repo's TODO
-7. ~~Review-mine GCP consulting marketplaces for pain words → phrase bank.~~ routed — the owner's sales lane (crm/docs/sales/ playbook), not this repo's TODO
+5. ~~Write the one-paragraph positioning statement (Dunford 5 steps).~~ won't implement — the owner's sales lane (crm/docs/sales/ playbook), outside this repo's TODO
+6. ~~Narrow the ICP until a page can say "for <specific segment>".~~ won't implement — the owner's sales lane (crm/docs/sales/ playbook), outside this repo's TODO
+7. ~~Review-mine GCP consulting marketplaces for pain words → phrase bank.~~ won't implement — the owner's sales lane (crm/docs/sales/ playbook), outside this repo's TODO
 8. Interview 5 ICP members with Mom-Test rules (past behavior only).
 9. Design 3 wedge offers (fixed scope, fixed price): e.g. GCP cost audit, GKE→Cloud Run migration
 sprint, Go backend accelerator.
@@ -116,38 +116,38 @@ sprint, Go backend accelerator.
 13. Decide GDE (Google Developer Expert) eligibility check — worth a calendar block.
 
 **Prospecting list (Step 6, cold-outreach):**
-14. ~~Build the 50-name list, trigger-qualified (job posts mentioning GCP + cost/migration/K8s).~~ routed — the owner's sales lane (crm/docs/sales/ playbook), not this repo's TODO
+14. ~~Build the 50-name list, trigger-qualified (job posts mentioning GCP + cost/migration/K8s).~~ won't implement — the owner's sales lane (crm/docs/sales/ playbook), outside this repo's TODO
 15. Wire google-domain-detector as a prospecting funnel: scan a TLD/city-cohort → GCP-running
 companies → outreach list with evidence attached (the session's missed idea, made concrete).
-16. ~~Package "scan + 1-page GCP-usage report" as a free lead magnet for warm prospects.~~ routed — the owner's sales lane (crm/docs/sales/ playbook), not this repo's TODO
-17. ~~Warm-network list first: 20 former colleagues/past clients, ranked by trust.~~ routed — the owner's sales lane (crm/docs/sales/ playbook), not this repo's TODO
+16. ~~Package "scan + 1-page GCP-usage report" as a free lead magnet for warm prospects.~~ won't implement — the owner's sales lane (crm/docs/sales/ playbook), outside this repo's TODO
+17. ~~Warm-network list first: 20 former colleagues/past clients, ranked by trust.~~ won't implement — the owner's sales lane (crm/docs/sales/ playbook), outside this repo's TODO
 18. Send the first 10 warm emails (not blasts — researched, 3–5 sentences, one ask).
-19. ~~Draft the 3-touch sequence per wedge offer (day 0 / day 4–5 / day 10 breakup).~~ routed — the owner's sales lane (crm/docs/sales/ playbook), not this repo's TODO
-20. ~~Identify 3 dev agencies to white-label for; draft their pitch.~~ routed — the owner's sales lane (crm/docs/sales/ playbook), not this repo's TODO
-21. ~~Check subcontractor routes into GCP services partners (directory as buyer list, not just mine).~~ routed — the owner's sales lane (crm/docs/sales/ playbook), not this repo's TODO
-22. ~~Evaluate marketplace fallbacks (vetted talent networks) — admission effort vs first-revenue speed.~~ routed — the owner's sales lane (crm/docs/sales/ playbook), not this repo's TODO
+19. ~~Draft the 3-touch sequence per wedge offer (day 0 / day 4–5 / day 10 breakup).~~ won't implement — the owner's sales lane (crm/docs/sales/ playbook), outside this repo's TODO
+20. ~~Identify 3 dev agencies to white-label for; draft their pitch.~~ won't implement — the owner's sales lane (crm/docs/sales/ playbook), outside this repo's TODO
+21. ~~Check subcontractor routes into GCP services partners (directory as buyer list, not just mine).~~ won't implement — the owner's sales lane (crm/docs/sales/ playbook), outside this repo's TODO
+22. ~~Evaluate marketplace fallbacks (vetted talent networks) — admission effort vs first-revenue speed.~~ won't implement — the owner's sales lane (crm/docs/sales/ playbook), outside this repo's TODO
 23. Verify GDPR stance for B2B cold outreach in the target country (identity, opt-out, volume floor).
 24. Confirm SPF/DKIM/DMARC on the sending domain before the first batch.
 
 **Conversation & close tooling:**
-25. ~~Write the Mom-Test discovery-call script (diagnose, never pitch).~~ routed — the owner's sales lane (crm/docs/sales/ playbook), not this repo's TODO
+25. ~~Write the Mom-Test discovery-call script (diagnose, never pitch).~~ won't implement — the owner's sales lane (crm/docs/sales/ playbook), outside this repo's TODO
 26. Write the "10-minute demo" walkthrough for each wedge offer.
-27. ~~Draft proposal + SOW templates (scope, price, liability).~~ routed — the owner's sales lane (crm/docs/sales/ playbook), not this repo's TODO
-28. ~~Consulting contract template (or lawyer-reviewed boilerplate).~~ routed — the owner's sales lane (crm/docs/sales/ playbook), not this repo's TODO
-29. ~~Set up a booking link + simple tracking sheet (sends → replies → calls → proposals → paid).~~ routed — the owner's sales lane (crm/docs/sales/ playbook), not this repo's TODO
-30. ~~Decide invoicing setup for EU solo services (self-invoice; MOR applies to products, not services).~~ routed — the owner's sales lane (crm/docs/sales/), not this repo's TODO
+27. ~~Draft proposal + SOW templates (scope, price, liability).~~ won't implement — the owner's sales lane (crm/docs/sales/ playbook), outside this repo's TODO
+28. ~~Consulting contract template (or lawyer-reviewed boilerplate).~~ won't implement — the owner's sales lane (crm/docs/sales/ playbook), outside this repo's TODO
+29. ~~Set up a booking link + simple tracking sheet (sends → replies → calls → proposals → paid).~~ won't implement — the owner's sales lane (crm/docs/sales/ playbook), outside this repo's TODO
+30. ~~Decide invoicing setup for EU solo services (self-invoice; MOR applies to products, not services).~~ won't implement — the owner's sales lane (crm/docs/sales/), outside this repo's TODO
 
 **Assets (Steps 4–5):**
 31. One-page offer page for the flagship wedge (offer-page skill) once offer + phrase bank exist.
-32. ~~Portfolio/demo page with 3 receipts (website-launch skill).~~ routed — the owner's sales lane (crm/docs/sales/ playbook), not this repo's TODO
-33. ~~60-second demo video of a concrete GCP fix (product-launch-video skill).~~ routed — the owner's sales lane (product-launch-video flow lives outside this repo)
+32. ~~Portfolio/demo page with 3 receipts (website-launch skill).~~ won't implement — the owner's sales lane (crm/docs/sales/ playbook), outside this repo's TODO
+33. ~~60-second demo video of a concrete GCP fix (product-launch-video skill).~~ won't implement — the owner's sales lane (product-launch-video flow lives outside this repo)
 34. LinkedIn profile rewritten in ICP vocabulary (positioning output, not buzzwords).
 35. GitHub profile README as a sales asset (proof ladder in one screen).
 36. Publish 1 technical post/week × 6 weeks (build-in-public cadence).
 
 **Community & compounding channels:**
-37. ~~Find and join the local GDG Cloud chapter; attend twice before pitching a talk.~~ routed — the owner's sales lane (crm/docs/sales/ playbook), not this repo's TODO
-38. ~~Propose one talk to the chapter organizer (topic = flagship wedge offer).~~ routed — the owner's sales lane (crm/docs/sales/), not this repo's TODO
+37. ~~Find and join the local GDG Cloud chapter; attend twice before pitching a talk.~~ won't implement — the owner's sales lane (crm/docs/sales/ playbook), outside this repo's TODO
+38. ~~Propose one talk to the chapter organizer (topic = flagship wedge offer).~~ won't implement — the owner's sales lane (crm/docs/sales/), outside this repo's TODO
 39. Pick ONE online community where ICP buyers gather; answer 3 threads/week for a month.
 40. Set a weekly saved search for trigger job posts (GCP + cost/migration/K8s).
 41. After the first ~100 researched sends: measure replies, kill or double the channel — one channel

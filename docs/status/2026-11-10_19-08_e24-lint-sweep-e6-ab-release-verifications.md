@@ -229,9 +229,9 @@ was fixed before this report (build green at write time).
 5. gocognit `runScan` 38: extract resume-skip, event-store-attach,
    render phases.
 6. gocognit `domainFeeder.next` 30: extract per-streamer drain loop.
-7. ~~gocognit `TestQueryReadModelsRoundTrip` 30: table/subtest split.~~ done at 399385a (golangci-lint driven to zero)
-8. ~~wsl_v5 ×7 (doctor_test ×3, render_test ×2, render.go, doctor.go).~~ done at 399385a (golangci-lint driven to zero)
-9. ~~embeddedstructfieldcheck cli_test:257.~~ done at 399385a (golangci-lint driven to zero)
+7. ~~gocognit `TestQueryReadModelsRoundTrip` 30: table/subtest split.~~ done at `399385a` (golangci-lint driven to zero)
+8. ~~wsl_v5 ×7 (doctor_test ×3, render_test ×2, render.go, doctor.go).~~ done at `399385a` (golangci-lint driven to zero)
+9. ~~embeddedstructfieldcheck cli_test:257.~~ done at `399385a` (golangci-lint driven to zero)
 10. makezero scan.go:47 / cli_test:659 (verify FP vs real after format).
 11. Final `buildflow format` + authoritative findings run → 0 remaining
     or documented nolint set.
