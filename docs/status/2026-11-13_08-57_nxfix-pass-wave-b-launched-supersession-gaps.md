@@ -82,7 +82,7 @@ confirmation. All falsified claims are annotated where they live.
 10. **Wave B launched and verified early:** pre-flight TCP green,
     fresh pass, w4/10s, 5354, gdd-20261113; at 08:55 → 2,737 scanned,
     97.0% clean, 1.4% NX, 1.5% unknown, ~4.6 dom/s, ETA ≈ 24 h; ledger
-    + status report updated; SIGINT-safe by design.
+    - status report updated; SIGINT-safe by design.
 11. **Docs truth pass:** census.md (root-cause section replacing the
     falsified narrative, NXDOMAIN-semantics refinement, ledger rows for
     patch/nxfix/B), TODO_LIST (nxdomain-bucket row + T11-patch closed
@@ -227,6 +227,7 @@ confirmation. All falsified claims are annotated where they live.
 ## f) UP TO 50 THINGS TO GET DONE NEXT (ordered by impact)
 
 **Census lane (this repo's core mission)**
+
 1. After wave B completes: run its gate/cleanup/snapshot (wrapper does
    it — verify + record verdict in ledger).
 2. Build the two correction-pass input lists from the journal (6-domain
@@ -258,28 +259,28 @@ confirmation. All falsified claims are annotated where they live.
 17. `gdd doctor` as a census-wave.sh pre-flight stage (e4).
 18. Rule in census.md: diagnostic scans use throwaway event-stores (e5).
 19. `--verify-nxdomain N` sampling mode in census-gate.sh (still useful
-    for audit-of-audit; repurposed from the superseded §f7 idea).
+for audit-of-audit; repurposed from the superseded §f7 idea).
 20. Oracle unit test against a REAL resolver (skip when offline) in CI.
 21. Snapshots: add a verify-restore runbook line (tar → integrity_check
-    → row counts) to census-snapshot.sh output.
+→ row counts) to census-snapshot.sh output.
 22. Consider `incoming-num-tcp`/`outgoing-num-tcp` measurement (are 150
-    ever contended at w8?) for wave B's post-run NOTES.md.
+ever contended at w8?) for wave B's post-run NOTES.md.
 
 **CLI/product (downstream Kith CRM consumer)**
 23. T16–T20 remaining: daily timer (T17), journal-only stats parity
-    (T19), lead scoring (T20) — sibling-lane, verify after C.
+(T19), lead scoring (T20) — sibling-lane, verify after C.
 24. Re-run the CRM delta-rescan on the corrected wave-A data (the
-    sales-facing tier CSVs shift with ~20k formerly-false-NX domains).
+sales-facing tier CSVs shift with ~20k formerly-false-NX domains).
 25. Regenerate the 150 A+B sales report (crm/docs) after correction —
-    verdict counts will move.
+verdict counts will move.
 26. `enrich` command pass over corrected data for the lead pipeline.
 27. README: note the NXDOMAIN-semantics fix (user-visible behavior
-    change for existing users).
+change for existing users).
 
 **Repo hygiene**
 28. `gh run list` ritual + watch the scanner-fix commit's CI.
 29. docs-gates `audit-all`/`cadence` red items (pre-existing, sibling
-    lane) — worth a dedicated session.
+lane) — worth a dedicated session.
 30. Audit-report freshness sweep (version-freshness guard row).
 31. `go mod tidy` sweep + govulncheck (E25 row).
 32. Input-parser fuzzing (E33).
@@ -288,34 +289,34 @@ confirmation. All falsified claims are annotated where they live.
 35. Own-resolver guidance doc + buffered-format bulk note.
 36. README polish: asciinema/GIF + feed-freshness note (E20).
 37. TODO_LIST rewrite pass (the census section grew mid-war; several
-    sibling rows need strike-or-scope decisions).
+sibling rows need strike-or-scope decisions).
 38. AGENTS.md: census lane summary row for "what to do after B/C"
-    (point to the ledger as source of truth).
+(point to the ledger as source of truth).
 39. Archive ritual: docs/status/ has 9 unarchived reports vs the 15
-    cadence bar (owner permission pending, §18-45 c3).
+cadence bar (owner permission pending, §18-45 c3).
 40. .ch SWITCH TSIG zone pull + corpus build (plan item, untouched).
 41. crt.sh .de rate-limit-aware scheduling (plan item).
 42. Nominet DAA draft re-surface (plan item).
 43. Consider a `scan --resolver-health` preflight subcommand
-    (productized gdd doctor) for other hosts running waves.
+(productized gdd doctor) for other hosts running waves.
 44. Document the dual-instance resolver topology (5353 UDP / 5354
-    TCP-upstream) in NOTES.md with the measured rates.
+TCP-upstream) in NOTES.md with the measured rates.
 45. Purge `/tmp` throwaway journals (nx6-test.db etc.) — hygiene.
-    RESOLVED 2026-11-13 (supersession session): /tmp held only
-    nxfix-sample.txt (the nx6-test.db set was already gone); trashed.
+RESOLVED 2026-11-13 (supersession session): /tmp held only
+nxfix-sample.txt (the nx6-test.db set was already gone); trashed.
 46. Rotate/grow the census snapshots dir (378 MB db per wave; disk at
-    92% full — prune or move snapshots to bulk storage).
+92% full — prune or move snapshots to bulk storage).
 47. Disk headroom check before wave C (61 GB free; C's journal + ~2
-    snapshots ≈ 3-4 GB — fine, but the 92% overall warrants a prune).
+snapshots ≈ 3-4 GB — fine, but the 92% overall warrants a prune).
 48. Write the "running the census from zero" quickstart (new host:
-    resolver start, binary, manifest, wave, gate) — the runbook has the
-    pieces but not the 10-line path.
+resolver start, binary, manifest, wave, gate) — the runbook has the
+pieces but not the 10-line path.
 49. Tag a release after C + census report (v0.1.1? the fix is
-    user-facing) — with the release law followed properly this time
-    (CI green on the exact commit).
+user-facing) — with the release law followed properly this time
+(CI green on the exact commit).
 50. Post-mortem synthesis: fold the four-session "false NX" saga into
-    one canonical narrative doc (01-04 → 02-05 → this) so the next
-    reader gets one story, not four.
+one canonical narrative doc (01-04 → 02-05 → this) so the next
+reader gets one story, not four.
 
 ## g) QUESTIONS FOR THE OWNER (3, not self-answerable)
 

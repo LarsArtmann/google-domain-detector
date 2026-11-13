@@ -74,10 +74,10 @@ waves, manifests, unbound, pilot gates, reports, deltas.
       exit 0 with stderr counts; unknown run IDs fail). Would have
       caught §d2/d3 before docs claimed closure.
 - [~] T12–T13 Waves B (100–500k), C (500k–1M) with pilot gates — B
-      RUNNING since 2026-11-13 08:45 (gdd-20261113 existence-oracle
-      binary, TCP-upstream forwarder 127.0.0.1:5354, w4/10s; gates green
-      at launch: nxfix closed 0.42% residual + validated TCP path +
-      owner go). C chains after B's gate.
+  RUNNING since 2026-11-13 08:45 (gdd-20261113 existence-oracle
+  binary, TCP-upstream forwarder 127.0.0.1:5354, w4/10s; gates green
+  at launch: nxfix closed 0.42% residual + validated TCP path +
+  owner go). C chains after B's gate.
 - [ ] T14 Unknown-cleanup loop per wave (<0.5% unknown).
 - [ ] T15 Census report (journal-derived) archived under reports/ — must
       pin excluded runs (pilot 01M74VNNCJS6, forensics) and account for
@@ -193,8 +193,9 @@ which is paperwork only the account holder can sign:
       12-char table forced raw SQL during the poisonfix derivation).
 - [ ] AGENTS.md diet: 308 → ≤220 lines (docs/agents-md-size gate
       warning); move census war-stories to census.md.
-- [ ] Re-pin vendorHash: buildflow preflight warns stale (nix build
-      fails with hash mismatch until `buildflow -s nix-hash-fix --fix`).
+- [x] Re-pin vendorHash: buildflow preflight warns stale — done:
+      `nix build` green at 5f8feb4 (post-go1.27.4-toolchain pin, no hash
+      mismatch; the flake's vendorHash is current).
 - [ ] `buildflow format` re-verify after formatter fingerprint drift
       (oxfmt 0.68 → 0.75, dprint 0.64.1 → 0.64.3).
 - [ ] Poller: per-rank-band unknown-rate expectations (calibrate on
@@ -351,10 +352,10 @@ which is paperwork only the account holder can sign:
       since; ci.yml now runs -timeout 20m and a nightly Soak workflow
       covers GDD_SOAK=1 (first dispatch run verified green).
 - [~] Pull the .ch zone via the public SWITCH TSIG keys and build the .ch
-      census input (docs/zone-data/switch-ch.md has the exact AXFR
-      command; once/24h limit) — AXFR pulled 2026-11-13 (ch.txt 1.44 GB,
-      TSIG key alongside); apex reduction (zone-ch.txt + MANIFEST.sha256)
-      in progress; pre-filter superseded by the existence oracle.
+  census input (docs/zone-data/switch-ch.md has the exact AXFR
+  command; once/24h limit) — AXFR pulled 2026-11-13 (ch.txt 1.44 GB,
+  TSIG key alongside); apex reduction (zone-ch.txt + MANIFEST.sha256)
+  in progress; pre-filter superseded by the existence oracle.
 - [x] crt.sh `.de` extractor rate-limit-aware scheduling — done:
       scripts/crtsh-daily.sh wrapper (24 h per-TLD guard is the contract,
       KEEP_COUNT rotation, plausibility floor: .de ≥ 100k rows else

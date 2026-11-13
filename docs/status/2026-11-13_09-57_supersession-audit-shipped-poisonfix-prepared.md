@@ -60,9 +60,9 @@ without the single-flight moved.
    resolver distress. Operator note appended to the wave monitor.log.
 7. **Hygiene**: `/tmp` purged of the stale nxfix sample (§f45; annotated
    resolved in the 08-57 report); disk headroom verified for B's snapshot
-   + wave C (61 GB free; snapshots dir is compact at 163 MB for three
-   waves — tars compress the db ~6.5×, so the "378 MB per snapshot"
-   fear in §f46 is overstated).
+   - wave C (61 GB free; snapshots dir is compact at 163 MB for three
+     waves — tars compress the db ~6.5×, so the "378 MB per snapshot"
+     fear in §f46 is overstated).
 8. **Verification**: full `-race ./...` suite green (9/9 packages, twice:
    plain flags and buildflow's exact invocation
    `-parallel=32 -shuffle=on CGO_ENABLED=1`); lint 0 issues on the two

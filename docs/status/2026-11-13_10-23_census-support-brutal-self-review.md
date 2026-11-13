@@ -210,41 +210,41 @@ production data get one star.
 18. T16 delta query retirement plan per CRM M11 (replay-based deltas).
 19. T17 daily timer; 20. T19 journal-only stats parity; 21. T20 lead
     scoring (sibling lane, verify after C).
-22. v0.1.1 release consideration (user-facing false-NX fix) — release
+20. v0.1.1 release consideration (user-facing false-NX fix) — release
     law strictly: tag only after CI green on the exact pushed commit.
-23. AGENTS.md diet 308 → ≤220 (gate warning; move war stories out).
-24. Re-pin vendorHash (`buildflow -s nix-hash-fix --fix`) — nix build
+21. AGENTS.md diet 308 → ≤220 (gate warning; move war stories out).
+22. Re-pin vendorHash (`buildflow -s nix-hash-fix --fix`) — nix build
     currently fails.
-25. `buildflow format` re-verify under new formatter fingerprints.
-26. dprint remote plugins → local wasm paths (cold-run hang risk).
-27. io-history-ratchet: `--profile-io` investigation (56 vs median 10).
-28. cmdguard-lint + golangci + govulncheck CI steps (E25).
-29. go mod tidy sweep + govulncheck.
-30. Input-parser fuzzing (E33).
-31. cli coverage 69% → 90% (E33). <!-- fresh:skip already tracked: TODO_LIST E33 row harvested from the 08-57 report -->
-32. Oracle unit test against a REAL resolver in CI (skip offline).
-33. Census binary provenance: consider stamping wave-launched binaries'
+23. `buildflow format` re-verify under new formatter fingerprints.
+24. dprint remote plugins → local wasm paths (cold-run hang risk).
+25. io-history-ratchet: `--profile-io` investigation (56 vs median 10).
+26. cmdguard-lint + golangci + govulncheck CI steps (E25).
+27. go mod tidy sweep + govulncheck.
+28. Input-parser fuzzing (E33).
+29. cli coverage 69% → 90% (E33). <!-- fresh:skip already tracked: TODO_LIST E33 row harvested from the 08-57 report -->
+30. Oracle unit test against a REAL resolver in CI (skip offline).
+31. Census binary provenance: consider stamping wave-launched binaries'
     sha256 into the wave out-dir automatically (provenance law
     automation).
-34. Census-gate: `--verify-nxdomain N` sampling mode (audit-of-audit).
-35. Snapshot rotation policy (host disk 92%; snapshots are compact but
+32. Census-gate: `--verify-nxdomain N` sampling mode (audit-of-audit).
+33. Snapshot rotation policy (host disk 92%; snapshots are compact but
     journal+extracts are not) + verify-restore line in snapshot output.
-36. Write "census from zero" quickstart (new host, 10-line path).
-37. Dual-instance resolver topology + measured rates into NOTES.md.
-38. Post-mortem synthesis: one canonical false-NX narrative doc.
-39. Oracle error honesty: dialed address standardized in errors (e6).
-40. docs-gates audit-all/cadence red items (sibling lane).
-41. Audit-report freshness sweep (version-freshness guard row).
-42. Status-report archive ritual (owner permission pending).
-43. TODO_LIST rewrite pass (census section grew mid-war).
-44. AGENTS.md census-lane "after B/C" pointer row (ledger as truth).
-45. `incoming/outgoing-num-tcp` contention measurement post-B (NOTES).
-46. www-strip skip-vs-scan policy decision (owner).
-47. Scan resume-skip accounting print (coverage visibility at source).
-48. README asciinema/GIF + feed-freshness note (E20).
-49. .ch SWITCH TSIG zone pull + corpus build; crt.sh .de scheduling;
+34. Write "census from zero" quickstart (new host, 10-line path).
+35. Dual-instance resolver topology + measured rates into NOTES.md.
+36. Post-mortem synthesis: one canonical false-NX narrative doc.
+37. Oracle error honesty: dialed address standardized in errors (e6).
+38. docs-gates audit-all/cadence red items (sibling lane).
+39. Audit-report freshness sweep (version-freshness guard row).
+40. Status-report archive ritual (owner permission pending).
+41. TODO_LIST rewrite pass (census section grew mid-war).
+42. AGENTS.md census-lane "after B/C" pointer row (ledger as truth).
+43. `incoming/outgoing-num-tcp` contention measurement post-B (NOTES).
+44. www-strip skip-vs-scan policy decision (owner).
+45. Scan resume-skip accounting print (coverage visibility at source).
+46. README asciinema/GIF + feed-freshness note (E20).
+47. .ch SWITCH TSIG zone pull + corpus build; crt.sh .de scheduling;
     Nominet DAA draft re-surface (zone-data lane, paperwork-dependent).
-50. Consider `scan --resolver-health` productized preflight for other
+48. Consider `scan --resolver-health` productized preflight for other
     hosts running waves.
 
 ## g) QUESTIONS FOR THE OWNER (3, not self-answerable)
