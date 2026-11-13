@@ -46,6 +46,28 @@ func TestParsePlainListCommaAndSpaceSeparated(t *testing.T) {
 	}
 }
 
+func TestParseLeadingBlankLinesBeforePlainAndCSV(t *testing.T) {
+	t.Parallel()
+
+	plain, err := Parse(strings.NewReader("\n\n\nexample.com\n"))
+	if err != nil {
+		t.Fatalf("Parse plain failed: %v", err)
+	}
+
+	if strings.Join(names(plain), ",") != "example.com" {
+		t.Errorf("plain: got %v, want [example.com]", names(plain))
+	}
+
+	csv, err := Parse(strings.NewReader("\n\nDomain,Note\nacme.example,hello\n"))
+	if err != nil {
+		t.Fatalf("Parse csv failed: %v", err)
+	}
+
+	if strings.Join(names(csv), ",") != "acme.example" {
+		t.Errorf("csv: got %v, want [acme.example]", names(csv))
+	}
+}
+
 func TestParseDeduplicatesPreservingFirstSeenOrder(t *testing.T) {
 	t.Parallel()
 

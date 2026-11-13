@@ -107,6 +107,20 @@ func runReplay(ctx context.Context, f ReplayFlags, stdout, stderr io.Writer) err
 	return runReplayBuffered(ctx, f, sys, stdout, stderr, filter, format, colorMode)
 }
 
+// mapReplayError rewrites journal-read failures into user-facing errors:
+// an empty journal names the store, an unknown run names the run and store.
+func mapReplayError(err error, f ReplayFlags) error {
+	if errors.Is(err, scanstore.ErrNoRuns) {
+		return fmt.Errorf("%s: %w", f.EventStore, err)
+	}
+
+	if errors.Is(err, scanstore.ErrUnknownRun) {
+		return fmt.Errorf("run %q not found in %s: %w", runRefOrLatest(f.Run), f.EventStore, err)
+	}
+
+	return err
+}
+
 // runReplayStreaming is the jsonl path: matching (delta mode: flipping)
 // observations are written as the journal walk reaches them.
 func runReplayStreaming(
@@ -145,15 +159,7 @@ func runReplayStreaming(
 		return nil
 	})
 	if err != nil {
-		if errors.Is(err, scanstore.ErrNoRuns) {
-			return fmt.Errorf("%s: %w", f.EventStore, err)
-		}
-
-		if errors.Is(err, scanstore.ErrUnknownRun) {
-			return fmt.Errorf("run %q not found in %s: %w", runRefOrLatest(f.Run), f.EventStore, err)
-		}
-
-		return err
+		return mapReplayError(err, f)
 	}
 
 	_, _ = fmt.Fprintf(stderr, "run %s: %d domains, %s%s\n",
@@ -182,15 +188,7 @@ func runReplayBuffered(
 ) error {
 	replay, err := scanstore.ReplayJournal(ctx, sys, f.Run)
 	if err != nil {
-		if errors.Is(err, scanstore.ErrNoRuns) {
-			return fmt.Errorf("%s: %w", f.EventStore, err)
-		}
-
-		if errors.Is(err, scanstore.ErrUnknownRun) {
-			return fmt.Errorf("run %q not found in %s: %w", runRefOrLatest(f.Run), f.EventStore, err)
-		}
-
-		return err
+		return mapReplayError(err, f)
 	}
 
 	summary := runSummary(replay)

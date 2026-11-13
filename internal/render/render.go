@@ -169,28 +169,10 @@ func renderJSONLUnknown(w io.Writer, data any, _ output.RenderOptions) error {
 // TestFormatEnumsMatchRegistry — dropping a blank import or adding a
 // renderer must update those tags or the build fails.
 func SupportedFormats() []output.Format {
-	const expectedFormatCount = 8
-
-	seen := make(map[output.Format]bool, expectedFormatCount)
-	out := make([]output.Format, 0, expectedFormatCount)
-
-	for _, f := range output.RegisteredTableMarshalFormats() {
-		if !seen[f] {
-			seen[f] = true
-			out = append(out, f)
-		}
-	}
-
-	for _, f := range output.RegisteredUnknownFormats() {
-		if !seen[f] {
-			seen[f] = true
-			out = append(out, f)
-		}
-	}
-
+	out := slices.Concat(output.RegisteredTableMarshalFormats(), output.RegisteredUnknownFormats())
 	slices.Sort(out)
 
-	return out
+	return slices.Compact(out)
 }
 
 // JSON writes the full-fidelity results: verdicts expanded, every evidence
