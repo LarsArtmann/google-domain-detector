@@ -29,7 +29,10 @@ func LatestObservation(ctx context.Context, sys *system.System, domainName strin
 func ListRuns(ctx context.Context, sys *system.System) ([]RunView, error) {
 	reader := metaengine.NewReader[RunView](sys.MetaEngine(), CollectionRuns)
 
-	views, err := reader.Scan(ctx)
+	// Unbounded on purpose: Scan silently caps at 100 rows without WithLimit,
+	// and every run must be visible — a truncated list would hide runs from
+	// --resume/--run selection and the supersession audit.
+	views, err := reader.Scan(ctx, metaengine.WithLimit(0))
 	if err != nil {
 		return nil, fmt.Errorf("scan run views: %w", err)
 	}

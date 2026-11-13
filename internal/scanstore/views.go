@@ -30,7 +30,7 @@ type ObservationView struct {
 	Evidence     []classify.Evidence `json:"evidence"`
 	Err          string              `json:"error,omitempty"`
 	ErrKind      classify.ErrorKind  `json:"error_kind,omitempty"`
-	ObservedAt   time.Time           `json:"observed_at"`
+	ObservedAt   time.Time           `json:"observed_at"` //cqrs-lint:ignore(C013) always UTC: built from event.Instant payloads, so no timezone exists to lose in storage
 	Observations int                 `json:"observations"`
 }
 
@@ -39,7 +39,7 @@ type RunView struct {
 	RunID       string          `json:"run_id"`
 	Started     bool            `json:"started"`
 	Completed   bool            `json:"completed"`
-	StartedAt   time.Time       `json:"started_at"`
+	StartedAt   time.Time       `json:"started_at"` //cqrs-lint:ignore(C013) always UTC: built from event.Instant payloads, so no timezone exists to lose in storage
 	Wave        string          `json:"wave,omitempty"`
 	ResumedFrom string          `json:"resumed_from,omitempty"`
 	Counts      classify.Counts `json:"counts"`

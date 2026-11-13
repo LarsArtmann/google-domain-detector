@@ -69,6 +69,8 @@ type ScanCompletedPayload struct {
 }
 
 // StartScanCmd opens a run on its own stream.
+//
+//cqrs-lint:ignore(B004) internal commands built as struct literals at one call site each; cqrs-gen constructors are codegen overkill here
 type StartScanCmd struct {
 	*command.BasicCommand
 
@@ -80,6 +82,8 @@ type StartScanCmd struct {
 }
 
 // RecordObservationCmd appends one observation to the domain's stream.
+//
+//cqrs-lint:ignore(B004) internal commands built as struct literals at one call site each; cqrs-gen constructors are codegen overkill here
 type RecordObservationCmd struct {
 	*command.BasicCommand
 
@@ -88,6 +92,8 @@ type RecordObservationCmd struct {
 }
 
 // CompleteScanCmd closes the run stream.
+//
+//cqrs-lint:ignore(B004) internal commands built as struct literals at one call site each; cqrs-gen constructors are codegen overkill here
 type CompleteScanCmd struct {
 	*command.BasicCommand
 
@@ -115,6 +121,7 @@ func applyDomain(s DomainState, evt event.Event) (DomainState, error) {
 	return s, nil
 }
 
+//cqrs-lint:ignore(E003,B005) one concern (scan event sourcing) in a 4-file split — a domain/infrastructure package split is over-engineering for a single-consumer internal package; unknown event types must replay on old binaries without crashing, so no StrictApply
 func applyScanRun(s ScanRunState, evt event.Event) (ScanRunState, error) {
 	switch evt.Type() {
 	case evtScanStarted:

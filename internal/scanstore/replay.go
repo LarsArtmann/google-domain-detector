@@ -221,6 +221,7 @@ func walkRuns(ctx context.Context, store event.Store, runFilter string) (Replay,
 // set holds only domain-name keys, so memory stays proportional to the
 // run's domains, not its evidence.
 type ResumeSource struct {
+	//cqrs-lint:ignore(A032) journal-derived resume identity; branded IDs stop at the command/stream boundary (RunSummary precedent)
 	RunID    string
 	Observed map[string]struct{}
 }
