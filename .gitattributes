@@ -5,3 +5,5 @@
 *.png binary
 # Binary files should not be diffed or merged
 *.zip binary
+# Binary files should not be diffed or merged
+*.gz binary
