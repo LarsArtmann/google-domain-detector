@@ -456,6 +456,7 @@ func TestNewDomainFeederStdinTTYWithoutInputIsUsageError(t *testing.T) {
 	t.Parallel()
 
 	_, err := newDomainFeeder(nil, "", strings.NewReader(""), true, nil, 0)
+
 	exitErr, ok := errors.AsType[*v5.ExitError](err)
 	if !ok || exitErr.ExitCode() != exitCodeUsage {
 		t.Fatalf("no input on a TTY must be a usage error, got: %v", err)
