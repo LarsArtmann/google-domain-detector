@@ -949,12 +949,9 @@ func TestReplayAuditExcludedFindsPoisonedSupersessions(t *testing.T) {
 	}
 
 	// Findings are ordered by first-seen JOURNAL order (completion order,
-	// per the scan ordering contract) — which domain an racy oracle answers
+	// per the scan ordering contract) — which domain a racy oracle answers
 	// first is not deterministic, so assert the attribution, not the order.
-	acmeAt := strings.Index(bothOut, "acme.com")
-	goneAt := strings.Index(bothOut, "gone.example")
-
-	if acmeAt < 0 || goneAt < 0 {
+	if !strings.Contains(bothOut, "acme.com") || !strings.Contains(bothOut, "gone.example") {
 		t.Errorf(
 			"audit excluding both runs should name both poisoned domains, got: %q",
 			bothOut,
