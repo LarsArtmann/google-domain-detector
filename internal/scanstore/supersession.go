@@ -49,11 +49,29 @@ func AuditSupersession(ctx context.Context, sys *system.System, excluded []strin
 		return SupersessionAudit{}, ErrNoExcludedRuns
 	}
 
-	excludedSet := make(map[string]struct{}, len(excluded))
-	for _, runID := range excluded {
-		excludedSet[runID] = struct{}{}
+	lastByDomain, domainOrder, knownRuns, err := walkSupersessionState(ctx, sys)
+	if err != nil {
+		return SupersessionAudit{}, err
 	}
 
+	if len(knownRuns) == 0 {
+		return SupersessionAudit{}, ErrNoRuns
+	}
+
+	if missing := findMissingRuns(knownRuns, excluded); len(missing) > 0 {
+		return SupersessionAudit{}, fmt.Errorf("%w: %s", ErrUnknownRun, strings.Join(missing, ", "))
+	}
+
+	return collectSupersessionFindings(lastByDomain, domainOrder, excluded), nil
+}
+
+// walkSupersessionState is the single journal pass: each domain's last
+// observation, the domains in first-seen order, and every run the journal
+// started.
+func walkSupersessionState(
+	ctx context.Context,
+	sys *system.System,
+) (map[string]SupersessionFinding, []string, map[string]struct{}, error) {
 	lastByDomain := map[string]SupersessionFinding{}
 	knownRuns := map[string]struct{}{}
 
@@ -89,13 +107,15 @@ func AuditSupersession(ctx context.Context, sys *system.System, excluded []strin
 		return nil
 	})
 	if err != nil {
-		return SupersessionAudit{}, fmt.Errorf("read event journal: %w", err)
+		return nil, nil, nil, fmt.Errorf("read event journal: %w", err)
 	}
 
-	if len(knownRuns) == 0 {
-		return SupersessionAudit{}, ErrNoRuns
-	}
+	return lastByDomain, domainOrder, knownRuns, nil
+}
 
+// findMissingRuns lists the excluded IDs that name no journal run, in the
+// order they were asked for.
+func findMissingRuns(knownRuns map[string]struct{}, excluded []string) []string {
 	var missing []string
 
 	for _, runID := range excluded {
@@ -104,8 +124,19 @@ func AuditSupersession(ctx context.Context, sys *system.System, excluded []strin
 		}
 	}
 
-	if len(missing) > 0 {
-		return SupersessionAudit{}, fmt.Errorf("%w: %s", ErrUnknownRun, strings.Join(missing, ", "))
+	return missing
+}
+
+// collectSupersessionFindings narrows the last-wins state to the domains
+// whose surviving observation derives from an excluded run.
+func collectSupersessionFindings(
+	lastByDomain map[string]SupersessionFinding,
+	domainOrder []string,
+	excluded []string,
+) SupersessionAudit {
+	excludedSet := make(map[string]struct{}, len(excluded))
+	for _, runID := range excluded {
+		excludedSet[runID] = struct{}{}
 	}
 
 	audit := SupersessionAudit{Excluded: slices.Clone(excluded), TotalDomains: len(domainOrder)}
@@ -117,5 +148,5 @@ func AuditSupersession(ctx context.Context, sys *system.System, excluded []strin
 		}
 	}
 
-	return audit, nil
+	return audit
 }

@@ -111,7 +111,10 @@ func TestAuditSupersessionLastObservationWins(t *testing.T) {
 	}
 
 	if !reflect.DeepEqual(audit.Findings, want) {
-		t.Errorf("excluding the poisoning run = %+v, want adopt.example's NX plus later.example (both last seen in run B)", audit.Findings)
+		t.Errorf(
+			"excluding the poisoning run = %+v, want adopt.example's NX plus later.example (both last seen in run B)",
+			audit.Findings,
+		)
 	}
 
 	audit = mustAudit(t, ctx, reader, []string{runA})

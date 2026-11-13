@@ -357,14 +357,11 @@ func warnRulesetMismatch(stderr io.Writer, from, to *scanstore.RunSummary) {
 // Findings are data, not failure: the exit code stays 0 and gates assert
 // on the stderr count.
 func runReplayAudit(ctx context.Context, f ReplayFlags, stdout, stderr io.Writer) error {
-	if f.Run != "" || f.Since != "" || (f.Only != "" && f.Only != "all") {
-		return usageError(errors.New("--audit-excluded audits the whole journal; drop --run/--since/--only"))
+	if err := validateAuditFlags(f); err != nil {
+		return err
 	}
 
 	excluded := parseRunList(f.AuditExcluded)
-	if len(excluded) == 0 {
-		return usageError(fmt.Errorf("--audit-excluded needs at least one run ID, got %q", f.AuditExcluded))
-	}
 
 	format, err := output.ParseFormat(f.Format)
 	if err != nil {
@@ -376,25 +373,12 @@ func runReplayAudit(ctx context.Context, f ReplayFlags, stdout, stderr io.Writer
 		return err
 	}
 
-	sys, err := scanstore.Boot(ctx, f.EventStore)
+	audit, sys, err := auditJournalFindings(ctx, f.EventStore, excluded)
 	if err != nil {
-		return fmt.Errorf("open event store %s: %w", f.EventStore, err)
+		return err
 	}
 
 	defer func() { _ = sys.Close() }()
-
-	audit, err := scanstore.AuditSupersession(ctx, sys, excluded)
-	if err != nil {
-		if errors.Is(err, scanstore.ErrNoRuns) {
-			return fmt.Errorf("%s: %w", f.EventStore, err)
-		}
-
-		if errors.Is(err, scanstore.ErrUnknownRun) {
-			return fmt.Errorf("excluded run not found in %s: %w", f.EventStore, err)
-		}
-
-		return err
-	}
 
 	_, _ = fmt.Fprintf(stderr, "supersession audit: %d of %d domain(s) last observed by an excluded run%s\n",
 		len(audit.Findings), audit.TotalDomains, byRunSuffix(excluded, audit.Findings))
@@ -417,6 +401,48 @@ func runReplayAudit(ctx context.Context, f ReplayFlags, stdout, stderr io.Writer
 		Title:     "Supersession Audit",
 		ColorMode: colorMode,
 	})
+}
+
+// validateAuditFlags rejects mode conflicts and an empty run list before
+// any I/O: the audit reports the whole journal's last-wins state, so run
+// selectors have no meaning here.
+func validateAuditFlags(f ReplayFlags) error {
+	if f.Run != "" || f.Since != "" || (f.Only != "" && f.Only != "all") {
+		return usageError(errAuditExcludedCombination)
+	}
+
+	if len(parseRunList(f.AuditExcluded)) == 0 {
+		return usageError(fmt.Errorf("%w: %q", errAuditExcludedEmpty, f.AuditExcluded))
+	}
+
+	return nil
+}
+
+// auditJournalFindings boots the journal-only reader and runs the
+// supersession audit, mapping the scanstore sentinels to user-facing
+// failures the way the replay run modes do. The caller closes the system.
+func auditJournalFindings(
+	ctx context.Context,
+	eventStore string,
+	excluded []string,
+) (scanstore.SupersessionAudit, *system.System, error) {
+	sys, err := scanstore.Boot(ctx, eventStore)
+	if err != nil {
+		return scanstore.SupersessionAudit{}, nil, fmt.Errorf("open event store %s: %w", eventStore, err)
+	}
+
+	audit, err := scanstore.AuditSupersession(ctx, sys, excluded)
+
+	switch {
+	case err == nil:
+		return audit, sys, nil
+	case errors.Is(err, scanstore.ErrNoRuns):
+		return scanstore.SupersessionAudit{}, nil, fmt.Errorf("%s: %w", eventStore, err)
+	case errors.Is(err, scanstore.ErrUnknownRun):
+		return scanstore.SupersessionAudit{}, nil, fmt.Errorf("excluded run not found in %s: %w", eventStore, err)
+	default:
+		return scanstore.SupersessionAudit{}, nil, err
+	}
 }
 
 // byRunSuffix summarizes the findings per excluded run in the order the
@@ -446,7 +472,7 @@ func parseRunList(raw string) []string {
 
 	var runs []string
 
-	for _, part := range strings.Split(raw, ",") {
+	for part := range strings.SplitSeq(raw, ",") {
 		part = strings.TrimSpace(part)
 		if part == "" {
 			continue

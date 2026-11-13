@@ -11,4 +11,7 @@ var (
 	errNoObservations     = errors.New("no observations for domain (scan with --event-store first)")
 	errResumeNeedsStore   = errors.New("--resume requires --event-store (the journal IS the checkpoint)")
 	errWaveNeedsStore     = errors.New("--wave requires --event-store (waves live in the journal)")
+
+	errAuditExcludedCombination = errors.New("--audit-excluded audits the whole journal; drop --run/--since/--only")
+	errAuditExcludedEmpty       = errors.New("--audit-excluded needs at least one run ID")
 )
