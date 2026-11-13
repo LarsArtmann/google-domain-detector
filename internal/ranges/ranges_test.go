@@ -169,8 +169,8 @@ func TestLoadFetchFailureExits75(t *testing.T) {
 		Now:       time.Now,
 	})
 
-	var feedErr *Error
-	if !errors.As(err, &feedErr) || feedErr.Kind != KindFetch || feedErr.ExitCode() != ExitFetch {
+	feedErr, ok := errors.AsType[*Error](err)
+	if !ok || feedErr.Kind != KindFetch || feedErr.ExitCode() != ExitFetch {
 		t.Fatalf("fetch failure must be Kind fetch with exit 75, got %v", err)
 	}
 }
@@ -189,8 +189,8 @@ func TestLoadCorruptFeedExits65(t *testing.T) {
 		Now:       time.Now,
 	})
 
-	var feedErr *Error
-	if !errors.As(err, &feedErr) || feedErr.Kind != KindCorrupt || feedErr.ExitCode() != ExitCorrupt {
+	feedErr, ok := errors.AsType[*Error](err)
+	if !ok || feedErr.Kind != KindCorrupt || feedErr.ExitCode() != ExitCorrupt {
 		t.Fatalf("corrupt feed must be Kind corrupt with exit 65, got %v", err)
 	}
 }

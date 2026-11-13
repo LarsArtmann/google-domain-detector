@@ -192,9 +192,9 @@ func TestLookupExistenceVerdicts(t *testing.T) {
 					t.Fatalf("rcode %d: want error, got %v", tc.rcode, got)
 				}
 
-				var dnsErr *net.DNSError
+				dnsErr, ok := errors.AsType[*net.DNSError](err)
 
-				if tc.wantTempor && (!errors.As(err, &dnsErr) || !dnsErr.IsTemporary) {
+				if tc.wantTempor && (!ok || !dnsErr.IsTemporary) {
 					t.Errorf("rcode %d: err %v must be a temporary DNSError", tc.rcode, err)
 				}
 

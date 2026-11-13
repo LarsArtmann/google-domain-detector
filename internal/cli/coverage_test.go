@@ -111,8 +111,8 @@ func TestRunRejectsBadFlagsAsUsageErrors(t *testing.T) {
 
 	err := Run(context.Background(), []string{"scan", "--workers", "0"}, &stdout, &stderr, "test", "abc123")
 
-	var exitErr *v5.ExitError
-	if !errors.As(err, &exitErr) || exitErr.ExitCode() != exitCodeUsage {
+	exitErr, ok := errors.AsType[*v5.ExitError](err)
+	if !ok || exitErr.ExitCode() != exitCodeUsage {
 		t.Fatalf("invalid --workers must be a usage error (exit 2), got: %v", err)
 	}
 }
@@ -200,8 +200,8 @@ func TestScanTargetsEmptyInputIsUsageError(t *testing.T) {
 		t.Errorf("empty input must yield a nil feeder and no chunk, got chunk=%d last=%t", len(chunk), last)
 	}
 
-	var exitErr *v5.ExitError
-	if !errors.As(err, &exitErr) || exitErr.ExitCode() != exitCodeUsage {
+	exitErr, ok := errors.AsType[*v5.ExitError](err)
+	if !ok || exitErr.ExitCode() != exitCodeUsage {
 		t.Fatalf("empty input must be a usage error (exit 2), got: %v", err)
 	}
 }
@@ -293,10 +293,9 @@ func TestScanOutputOptsBranches(t *testing.T) {
 		t.Error("unknown --only value must error")
 	}
 
-	var exitErr *v5.ExitError
-
 	filter, format, _, err := scanOutputOpts(ScanFlags{Only: "all", Format: "nope", Color: "auto"})
-	if !errors.As(err, &exitErr) || exitErr.ExitCode() != exitCodeUsage {
+	exitErr, ok := errors.AsType[*v5.ExitError](err)
+	if !ok || exitErr.ExitCode() != exitCodeUsage {
 		t.Errorf("unknown --format must be a usage error, got: %v", err)
 	}
 
@@ -455,10 +454,9 @@ func TestCheckRangesFeedCorruptFeedNamesFix(t *testing.T) {
 func TestNewDomainFeederStdinTTYWithoutInputIsUsageError(t *testing.T) {
 	t.Parallel()
 
-	var exitErr *v5.ExitError
-
 	_, err := newDomainFeeder(nil, "", strings.NewReader(""), true, nil, 0)
-	if !errors.As(err, &exitErr) || exitErr.ExitCode() != exitCodeUsage {
+	exitErr, ok := errors.AsType[*v5.ExitError](err)
+	if !ok || exitErr.ExitCode() != exitCodeUsage {
 		t.Fatalf("no input on a TTY must be a usage error, got: %v", err)
 	}
 

@@ -251,8 +251,7 @@ func wrapExistenceNetErr(err error, host, server string) error {
 		IsTemporary: true,
 	}
 
-	var netErr net.Error
-	if errors.As(err, &netErr) && netErr.Timeout() {
+	if netErr, ok := errors.AsType[net.Error](err); ok && netErr.Timeout() {
 		out.IsTimeout = true
 	}
 

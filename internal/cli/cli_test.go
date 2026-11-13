@@ -1434,8 +1434,8 @@ func TestScanColorInvalidExitsTwo(t *testing.T) {
 
 	_, _, err := run(t, workspaceDomain(), "", "scan", "--color", "neon", "acme.com")
 
-	var exitErr *v5.ExitError
-	if !errors.As(err, &exitErr) || exitErr.ExitCode() != 2 {
+	exitErr, ok := errors.AsType[*v5.ExitError](err)
+	if !ok || exitErr.ExitCode() != 2 {
 		t.Fatalf("invalid --color must be a usage error (exit 2), got: %v", err)
 	}
 }
