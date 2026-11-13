@@ -57,6 +57,7 @@ func Domain() system.DomainConfig {
 								ObservedAt: event.NewInstantNow(),
 							}
 							sanitizeObservedPayload(&payload)
+
 							evt, err := event.New(evtDomainObserved, cmd.StreamID(), StreamTypeDomain,
 								v.Increment(), payload, event.WithSchemaVersion(1))
 							if err != nil {
