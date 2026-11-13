@@ -87,7 +87,7 @@ func walkSupersessionState(
 
 			knownRuns[payload.RunID] = struct{}{}
 		case evtDomainObserved:
-			p, err := event.DecodePayloadAuto[DomainObservedPayload](evt)
+			p, err := decodeObserved(evt)
 			if err != nil {
 				return fmt.Errorf("decode %s: %w", evtDomainObserved, err)
 			}

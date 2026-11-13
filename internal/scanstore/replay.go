@@ -67,7 +67,7 @@ func ReplayJournal(ctx context.Context, sys *system.System, runFilter string) (R
 			return nil
 		}
 
-		p, err := event.DecodePayloadAuto[DomainObservedPayload](evt)
+		p, err := decodeObserved(evt)
 		if err != nil {
 			return fmt.Errorf("decode %s: %w", evtDomainObserved, err)
 		}
@@ -131,7 +131,7 @@ func StreamObservations(
 			return nil
 		}
 
-		p, err := event.DecodePayloadAuto[DomainObservedPayload](evt)
+		p, err := decodeObserved(evt)
 		if err != nil {
 			return fmt.Errorf("decode %s: %w", evtDomainObserved, err)
 		}
@@ -261,7 +261,7 @@ func LoadResumeSource(ctx context.Context, dsn, runRef string) (ResumeSource, er
 			return nil
 		}
 
-		p, err := event.DecodePayloadAuto[DomainObservedPayload](evt)
+		p, err := decodeObserved(evt)
 		if err != nil {
 			return fmt.Errorf("decode %s: %w", evtDomainObserved, err)
 		}

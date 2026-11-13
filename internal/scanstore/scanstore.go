@@ -47,16 +47,18 @@ func Domain() system.DomainConfig {
 				func(cmdCtx context.Context, cmd RecordObservationCmd) system.Op[DomainState] {
 					return system.Execute(cmdCtx, cmd.StreamID(), StreamTypeDomain,
 						func(_ DomainState, v event.Version) ([]event.Event, error) {
+							payload := DomainObservedPayload{
+								Domain:     cmd.Result.Domain,
+								RunID:      cmd.RunID,
+								Evidence:   cmd.Result.Evidences,
+								Err:        cmd.Result.Err,
+								ErrKind:    cmd.Result.ErrKind,
+								Ruleset:    classify.CurrentRuleset,
+								ObservedAt: event.NewInstantNow(),
+							}
+							sanitizeObservedPayload(&payload)
 							evt, err := event.New(evtDomainObserved, cmd.StreamID(), StreamTypeDomain,
-								v.Increment(), DomainObservedPayload{
-									Domain:     cmd.Result.Domain,
-									RunID:      cmd.RunID,
-									Evidence:   cmd.Result.Evidences,
-									Err:        cmd.Result.Err,
-									ErrKind:    cmd.Result.ErrKind,
-									Ruleset:    classify.CurrentRuleset,
-									ObservedAt: event.NewInstantNow(),
-								}, event.WithSchemaVersion(1))
+								v.Increment(), payload, event.WithSchemaVersion(1))
 							if err != nil {
 								return nil, err
 							}
