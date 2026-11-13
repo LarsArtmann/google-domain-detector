@@ -214,9 +214,9 @@ func probeApexRecords(
 ) error {
 	var lookupErr error
 
-	lookupErr = firstErr(lookupErr, probeRecord(ctx, res,
+	lookupErr = firstErr(lookupErr, probeRecord(ctx,
 		res.LookupTXT, classify.ClassifyTXT, apex, result))
-	lookupErr = firstErr(lookupErr, probeRecord(ctx, res,
+	lookupErr = firstErr(lookupErr, probeRecord(ctx,
 		res.LookupMX, classify.ClassifyMX, apex, result))
 
 	if opts.ProbeDKIM && !result.WorkspaceVerdict().Detected {
@@ -226,7 +226,7 @@ func probeApexRecords(
 		// A missing selector is the normal case, not an error worth reporting.
 	}
 
-	lookupErr = firstErr(lookupErr, probeRecord(ctx, res,
+	lookupErr = firstErr(lookupErr, probeRecord(ctx,
 		res.LookupNS, classify.ClassifyNS, apex, result))
 
 	return lookupErr
@@ -238,7 +238,6 @@ func probeApexRecords(
 // (timeout, SERVFAIL) surfaces as the returned error.
 func probeRecord[V any](
 	ctx context.Context,
-	res resolve.Resolver,
 	lookup func(context.Context, string) ([]V, error),
 	classifyFn func(string, []V) []classify.Evidence,
 	apex string,

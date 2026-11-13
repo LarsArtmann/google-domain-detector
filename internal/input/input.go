@@ -180,9 +180,11 @@ func (s *Streamer) detectMode() {
 		if strings.TrimSpace(trimmed) == "" {
 			if err != nil {
 				s.readFailed(err)
+
+				return
 			}
 
-			return
+			continue
 		}
 
 		s.sawInput = true
