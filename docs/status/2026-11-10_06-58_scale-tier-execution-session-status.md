@@ -202,7 +202,7 @@ pre-sweep; T9 ✓, G4 nearly ✓, T19 pending), T25 (CSV enrichment), T26
 15. T22.3: RegisterUnknownRenderer for the JSON DTO — delete the cli.go
     special-case (json/jsonl still route around renderResults).
 16. T23: registry-derived `values:` enum + drift-proof test.
-17. T24: NXDOMAIN/A-existence pre-sweep (gates: T9 ✓, G4 ~✓, T19 pending).
+~~17. T24: NXDOMAIN/A-existence pre-sweep (gates: T9 ✓, G4 ~✓, T19 pending).~~ superseded — the in-scan existence oracle (resolve.LookupExistence, 2026-11-13) replaces any pre-sweep
 18. T25: CSV enrichment mode.
 19. T26: scoped exit codes in ranges (75 fetch / 65 corrupt).
 20. T27: TimeoutMiddleware, describe contract test, vendorHash.nix

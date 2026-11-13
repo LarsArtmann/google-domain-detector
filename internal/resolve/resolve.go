@@ -152,6 +152,10 @@ func firstSystemNameserver() (string, error) {
 		}
 	}
 
+	if scanErr := scanner.Err(); scanErr != nil {
+		return "", fmt.Errorf("reading /etc/resolv.conf: %w", scanErr)
+	}
+
 	return "", fmt.Errorf("no --resolver given and %w", errNoNameserver)
 }
 

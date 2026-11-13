@@ -97,16 +97,16 @@ byte-identical to HEAD `e1f5160`). The honest nearest-miss, written down so it c
 
 **Unblock (needs §g answers):**
 
-1. Answer the 3 intake questions in §g.
-2. Define what "GCP expertise" is being sold as: which 1–2 of {cost optimization, migration,
+~~1. Answer the 3 intake questions in §g.~~ routed — the owner's sales lane (crm/docs/sales/ playbook), not this repo's TODO
+~~2. Define what "GCP expertise" is being sold as: which 1–2 of {cost optimization, migration,~~ routed — the owner's sales lane (crm/docs/sales/ playbook), not this repo's TODO
    Go-on-GCP development, event-sourcing architecture, Nix/GitOps on GCP, SRE}.
 3. Decide target market scope (local/EU/global) and working language.
 4. Set weekly hours budget for sales vs building, and a minimum engagement size.
 
 **Positioning & offer (skill Steps 1–3):**
 5. Write the one-paragraph positioning statement (Dunford 5 steps).
-6. Narrow the ICP until a page can say "for <specific segment>".
-7. Review-mine GCP consulting marketplaces for pain words → phrase bank.
+~~6. Narrow the ICP until a page can say "for <specific segment>".~~ routed — the owner's sales lane (crm/docs/sales/ playbook), not this repo's TODO
+~~7. Review-mine GCP consulting marketplaces for pain words → phrase bank.~~ routed — the owner's sales lane (crm/docs/sales/ playbook), not this repo's TODO
 8. Interview 5 ICP members with Mom-Test rules (past behavior only).
 9. Design 3 wedge offers (fixed scope, fixed price): e.g. GCP cost audit, GKE→Cloud Run migration
 sprint, Go backend accelerator.
@@ -116,24 +116,24 @@ sprint, Go backend accelerator.
 13. Decide GDE (Google Developer Expert) eligibility check — worth a calendar block.
 
 **Prospecting list (Step 6, cold-outreach):**
-14. Build the 50-name list, trigger-qualified (job posts mentioning GCP + cost/migration/K8s).
+~~14. Build the 50-name list, trigger-qualified (job posts mentioning GCP + cost/migration/K8s).~~ routed — the owner's sales lane (crm/docs/sales/ playbook), not this repo's TODO
 15. Wire google-domain-detector as a prospecting funnel: scan a TLD/city-cohort → GCP-running
 companies → outreach list with evidence attached (the session's missed idea, made concrete).
 16. Package "scan + 1-page GCP-usage report" as a free lead magnet for warm prospects.
-17. Warm-network list first: 20 former colleagues/past clients, ranked by trust.
+~~17. Warm-network list first: 20 former colleagues/past clients, ranked by trust.~~ routed — the owner's sales lane (crm/docs/sales/ playbook), not this repo's TODO
 18. Send the first 10 warm emails (not blasts — researched, 3–5 sentences, one ask).
 19. Draft the 3-touch sequence per wedge offer (day 0 / day 4–5 / day 10 breakup).
-20. Identify 3 dev agencies to white-label for; draft their pitch.
+~~20. Identify 3 dev agencies to white-label for; draft their pitch.~~ routed — the owner's sales lane (crm/docs/sales/ playbook), not this repo's TODO
 21. Check subcontractor routes into GCP services partners (directory as buyer list, not just mine).
-22. Evaluate marketplace fallbacks (vetted talent networks) — admission effort vs first-revenue speed.
+~~22. Evaluate marketplace fallbacks (vetted talent networks) — admission effort vs first-revenue speed.~~ routed — the owner's sales lane (crm/docs/sales/ playbook), not this repo's TODO
 23. Verify GDPR stance for B2B cold outreach in the target country (identity, opt-out, volume floor).
 24. Confirm SPF/DKIM/DMARC on the sending domain before the first batch.
 
 **Conversation & close tooling:**
-25. Write the Mom-Test discovery-call script (diagnose, never pitch).
+~~25. Write the Mom-Test discovery-call script (diagnose, never pitch).~~ routed — the owner's sales lane (crm/docs/sales/ playbook), not this repo's TODO
 26. Write the "10-minute demo" walkthrough for each wedge offer.
 27. Draft proposal + SOW templates (scope, price, liability).
-28. Consulting contract template (or lawyer-reviewed boilerplate).
+~~28. Consulting contract template (or lawyer-reviewed boilerplate).~~ routed — the owner's sales lane (crm/docs/sales/ playbook), not this repo's TODO
 29. Set up a booking link + simple tracking sheet (sends → replies → calls → proposals → paid).
 30. Decide invoicing setup for EU solo services (self-invoice; MOR applies to products, not services).
 

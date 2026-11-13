@@ -175,7 +175,7 @@ VmHWM capture both
 25. E14 wave B (100k–500k) + gate
 26. E15 wave C (500k–1M) + gate → census complete
 27. E16 per-wave unknown-cleanup loop < 0.5%
-28. E17/E18 census summary reports
+~~28. E17/E18 census summary reports~~ routed — T15: reports/census/REPORT.md (2026-11-13, wave-A-through-nxfix inventory)
 29. E23 SWITCH .ch public-TSIG zone pull (actionable now)
 30. E28 pre-filter feed (once/24h Google-domains list)
 
