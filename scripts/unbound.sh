@@ -1,19 +1,32 @@
 #!/usr/bin/env bash
-# Lifecycle manager for the census resolver (user-scoped unbound on
-# 127.0.0.1:5353). Usage: scripts/unbound.sh {start|stop|status|restart}
+# Lifecycle manager for the census resolver (user-scoped unbound).
+# Usage: scripts/unbound.sh {start|stop|status|restart}
 #
-# The canonical config is scripts/unbound.conf (tracked); runtime
-# artifacts (unbound.log, unbound.pid) live under reports/census/unbound/
+# Default instance: the canonical UDP forwarder, scripts/unbound.conf,
+# on 127.0.0.1:5353. A second instance (e.g. the TCP-only variant,
+# scripts/unbound-tcp.conf on :5354) is selected via GDD_UNBOUND_CONF;
+# pid/log files derive from the conf basename so instances are
+# independently managed (stopping one never kills the other).
+#
+# Runtime artifacts (pid, log) live under reports/census/unbound/
 # (gitignored). Never runs as root; never touches the system resolver.
 set -euo pipefail
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-CONF="$REPO_ROOT/scripts/unbound.conf"
+CONF="${GDD_UNBOUND_CONF:-$REPO_ROOT/scripts/unbound.conf}"
 RUN_DIR="${GDD_CENSUS_DIR:-$REPO_ROOT/reports/census/unbound}"
-PID_FILE="$RUN_DIR/unbound.pid"
-LOG_FILE="$RUN_DIR/unbound.log"
+INSTANCE="$(basename "$CONF" .conf)"
+PID_FILE="$RUN_DIR/$INSTANCE.pid"
+LOG_FILE="$RUN_DIR/$INSTANCE.log"
+LISTEN_ADDR="$(awk '/^[[:space:]]*interface:/ {print $2; exit}' "$CONF")"
+LISTEN_PORT="$(awk '/^[[:space:]]*port:/ {print $2; exit}' "$CONF")"
 
 mkdir -p "$RUN_DIR"
+
+if [ ! -f "$CONF" ]; then
+	echo "unbound.sh: no such config: $CONF" >&2
+	exit 2
+fi
 
 resolve_unbound() {
 	if command -v unbound >/dev/null 2>&1; then
@@ -30,7 +43,7 @@ is_running() {
 
 start() {
 	if is_running; then
-		echo "unbound already running (pid $(cat "$PID_FILE"))"
+		echo "$INSTANCE already running (pid $(cat "$PID_FILE"))"
 		return 0
 	fi
 	local bin
@@ -45,9 +58,9 @@ start() {
 	echo $! >"$PID_FILE"
 	sleep 1
 	if is_running; then
-		echo "unbound started (pid $(cat "$PID_FILE")) on 127.0.0.1:5353"
+		echo "$INSTANCE started (pid $(cat "$PID_FILE")) on $LISTEN_ADDR:$LISTEN_PORT"
 	else
-		echo "unbound failed to start; see $LOG_FILE" >&2
+		echo "$INSTANCE failed to start; see $LOG_FILE" >&2
 		return 1
 	fi
 }
@@ -62,17 +75,17 @@ stop() {
 			sleep 1
 		done
 		kill -0 "$pid" 2>/dev/null && kill -9 "$pid" || true
-		echo "unbound stopped (pid $pid)"
+		echo "$INSTANCE stopped (pid $pid)"
 	else
-		echo "unbound not running"
+		echo "$INSTANCE not running"
 	fi
 	rm -f "$PID_FILE"
 }
 
 status() {
 	if is_running; then
-		echo "unbound running (pid $(cat "$PID_FILE")) on 127.0.0.1:5353"
-		if dig +time=2 +tries=1 @127.0.0.1 -p 5353 ch. SOA +short >/dev/null 2>&1; then
+		echo "$INSTANCE running (pid $(cat "$PID_FILE")) on $LISTEN_ADDR:$LISTEN_PORT"
+		if dig +time=2 +tries=1 "@$LISTEN_ADDR" -p "$LISTEN_PORT" ch. SOA +short >/dev/null 2>&1; then
 			echo "health: answering queries"
 		else
 			echo "health: NOT answering queries" >&2
@@ -93,7 +106,7 @@ restart)
 	start
 	;;
 *)
-	echo "usage: $0 {start|stop|status|restart}" >&2
+	echo "usage: $0 {start|stop|status|restart}  [GDD_UNBOUND_CONF=<conf> for a second instance]" >&2
 	exit 2
 	;;
 esac
