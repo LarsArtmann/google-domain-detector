@@ -159,9 +159,21 @@ dep set changes or a new first-party lib is considered.
   per domain per run and boots WITHOUT the projection host. Scan output
   preserves INPUT order, replay journal order — the e2e test compares
   parsed result SETS, never raw bytes.
-- cqrs-lint deliberate non-fixes: E003 (scanstore one-concern 4-file
-  split), B005 (folds ignore unknown event types so old binaries replay
-  old journals).
+- cqrs-lint: every finding is dispositioned inline (2026-11-13, gate = 0
+  findings): real fixes where real (F031 ListRuns `WithLimit(0)` — Scan
+  silently caps at 100 rows; C023 start-failure path reports
+  GracefulClose errors), else a `//cqrs-lint:ignore(RULE)` comment WITH
+  rationale at the firing site (A032 journal-surface RunIDs, B004
+  cqrs-gen overkill, B005 unknown-event tolerance, C013 UTC-only views,
+  C015/C023 read-only input-file close, E003 one-concern 4-file split,
+  F005 v1-initial, F007 no at-least-once bus). New findings: triage,
+  never blind-suppress. Gotchas: package-level F005/F007 anchor to the
+  alphabetically FIRST scanstore file (cborsanitize.go — moves if that
+  file is renamed/deleted); stale-suppression detection warns on
+  comments whose finding stopped firing, so a speculative ignore
+  (e.g. A032 on SupersessionFinding.RunID, which never fires) is
+  visible noise; gofmt rewrites doc-comment directives to `//
+  cqrs-lint:...` (spaced) — the parser accepts both forms.
 - Event payloads use `event.Instant` (not `time.Time` — CBOR epoch
   encoding drops timezones, C013) and every `event.New` stamps
   `event.WithSchemaVersion(1)` (D013). New events must follow both.

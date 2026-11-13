@@ -29,6 +29,18 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Fixed
 
+- `replay` run listings were silently truncated at 100 runs: metaengine
+  `Scan` caps results at 100 unless told otherwise, and `ListRuns` (the
+  `--resume`/`--run` selection surface) passed no limit — a journal with
+  more runs would hide its oldest runs from every listing. Now explicitly
+  unbounded (`WithLimit(0)`), matching the documented contract.
+- A failed run start inside the event store closed the store but
+  swallowed its close error (pending events could be lost silently);
+  it is now reported to stderr like every other close failure.
+- cqrs-lint findings driven to zero: the remaining 12 (A032/B004/B005/
+  C013/C015/E003/F005/F007) are dispositioned as justified suppressions
+  with rationale at each firing site — none silent.
+
 - False NXDOMAIN verdicts eliminated: Go's resolver conflates NXDOMAIN
   and NODATA into a single `IsNotFound` error, and the scanner stamped
   both as domain death (~90% of wave A's 22,010 NX verdicts were false;
