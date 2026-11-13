@@ -456,6 +456,40 @@ func TestEnrichRejectsMissingStoreAndHeader(t *testing.T) {
 	}
 }
 
+// TestEnrichInputFileAndOpenError covers the file path of --input (the
+// stdin '-' path is covered above): a real CSV file enriches like stdin,
+// and a missing file fails with the path named instead of a usage error.
+func TestEnrichInputFileAndOpenError(t *testing.T) {
+	t.Parallel()
+
+	store := filepath.Join(t.TempDir(), "scans.db")
+
+	if _, _, err := run(t, &fakeRes{}, "", "scan", "--no-ranges", "--event-store", store,
+		"--format", "jsonl", "acme.com"); err != nil {
+		t.Fatalf("seed scan failed: %v", err)
+	}
+
+	csvPath := filepath.Join(t.TempDir(), "leads.csv")
+	if err := os.WriteFile(csvPath, []byte("company,domain\nAcme,acme.com\n"), 0o600); err != nil {
+		t.Fatalf("write input CSV: %v", err)
+	}
+
+	stdout, _, err := run(t, &fakeRes{}, "", "enrich", "--event-store", store, "--input", csvPath)
+	if err != nil {
+		t.Fatalf("enrich from file failed: %v", err)
+	}
+
+	if !strings.Contains(stdout, "company,domain,gdd_domain,workspace,gcp,error") {
+		t.Errorf("enriched header missing appended columns, got: %q", stdout)
+	}
+
+	_, _, err = run(t, &fakeRes{}, "", "enrich", "--event-store", store,
+		"--input", filepath.Join(t.TempDir(), "does-not-exist.csv"))
+	if err == nil || !strings.Contains(err.Error(), "open --input") {
+		t.Errorf("missing --input file must fail with the path named, got: %v", err)
+	}
+}
+
 // TestScanInterruptedSummaryCountsScannedOnly pins the interrupted-run
 // accounting fix: a SIGINT'd run reports how many domains actually scanned,
 // plus an explicit interrupted line for the input domains the cancel
