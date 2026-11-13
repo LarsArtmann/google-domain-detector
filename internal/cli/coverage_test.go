@@ -295,10 +295,13 @@ func TestScanOutputOptsBranches(t *testing.T) {
 
 	var exitErr *v5.ExitError
 
-	_, _, _, err := scanOutputOpts(ScanFlags{Only: "all", Format: "nope", Color: "auto"})
+	filter, format, _, err := scanOutputOpts(ScanFlags{Only: "all", Format: "nope", Color: "auto"})
 	if !errors.As(err, &exitErr) || exitErr.ExitCode() != exitCodeUsage {
 		t.Errorf("unknown --format must be a usage error, got: %v", err)
 	}
+
+	_ = filter
+	_ = format
 
 	if _, _, _, err := scanOutputOpts(ScanFlags{Only: "all", Format: "table", Color: "nope"}); err == nil {
 		t.Error("unknown --color value must error")
@@ -450,6 +453,8 @@ func TestCheckRangesFeedCorruptFeedNamesFix(t *testing.T) {
 }
 
 func TestNewDomainFeederStdinTTYWithoutInputIsUsageError(t *testing.T) {
+	t.Parallel()
+
 	var exitErr *v5.ExitError
 
 	_, err := newDomainFeeder(nil, "", strings.NewReader(""), true, nil, 0)

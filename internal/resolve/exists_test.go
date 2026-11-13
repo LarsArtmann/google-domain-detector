@@ -24,18 +24,35 @@ func newOracleServer(t *testing.T, rcode int, truncated bool) *oracleServer {
 
 	var lc net.ListenConfig
 
-	udpConn, err := lc.ListenPacket(t.Context(), "udp", "127.0.0.1:0")
-	if err != nil {
-		t.Fatalf("udp listener: %v", err)
+	// UDP and TCP draw from the same kernel ephemeral port range, so the
+	// TCP bind can lose its freshly-drawn UDP port to a concurrent socket
+	// — under -race this surfaced as "address already in use". Retry with
+	// a fresh port instead of failing the run.
+	var udpConn net.PacketConn
+
+	var tcpListener net.Listener
+
+	for range 10 {
+		candidate, err := lc.ListenPacket(t.Context(), "udp", "127.0.0.1:0")
+		if err != nil {
+			t.Fatalf("udp listener: %v", err)
+		}
+
+		port := candidate.LocalAddr().(*net.UDPAddr).Port
+
+		tcpCandidate, err := lc.Listen(t.Context(), "tcp", "127.0.0.1:"+strconv.Itoa(port))
+		if err == nil {
+			udpConn = candidate
+			tcpListener = tcpCandidate
+
+			break
+		}
+
+		_ = candidate.Close()
 	}
 
-	port := udpConn.LocalAddr().(*net.UDPAddr).Port
-
-	tcpListener, err := lc.Listen(t.Context(), "tcp", "127.0.0.1:"+strconv.Itoa(port))
-	if err != nil {
-		_ = udpConn.Close()
-
-		t.Fatalf("tcp listener on same port: %v", err)
+	if udpConn == nil || tcpListener == nil {
+		t.Fatal("no port accepted both a UDP and a TCP listener after 10 attempts")
 	}
 
 	srv := &oracleServer{
