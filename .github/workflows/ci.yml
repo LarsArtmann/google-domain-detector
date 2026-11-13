@@ -39,3 +39,38 @@ jobs:
 
       - name: Audit freshness
         run: ./scripts/audit-freshness.sh
+
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          # go1.27.4 = the go.mod toolchain pin; govulncheck must scan a
+          # stdlib with GO-2026-6859 fixed (present through 1.27.3)
+          go-version: '1.27.4'
+          cache: true
+
+      - name: golangci-lint
+        uses: golangci/golangci-lint-action@ba0d7d2ec06a0ea1cb5fa41b2e4a3ab91d21278a # v9.3.0
+        with:
+          version: v2.15.0
+
+      - name: govulncheck
+        run: |
+          go install golang.org/x/vuln/cmd/govulncheck@v1.9.0
+          govulncheck ./...
+
+      - name: cmdguard-lint
+        run: |
+          # The lint module's go.mod carries replace directives, so
+          # `go install ...@version` is refused; build the pinned commit
+          # from source instead (same as the local binary's provenance).
+          git clone --filter=blob:none https://github.com/LarsArtmann/cmdguard /tmp/cmdguard
+          git -C /tmp/cmdguard checkout 81b7a038e10f
+          go install -C /tmp/cmdguard/lint ./cmd/cmdguard-lint
+          cmdguard-lint lint .
+
+      - name: Version-freshness guard
+        run: ./scripts/lib-freshness.sh
