@@ -301,6 +301,8 @@ confirmation. All falsified claims are annotated where they live.
 44. Document the dual-instance resolver topology (5353 UDP / 5354
     TCP-upstream) in NOTES.md with the measured rates.
 45. Purge `/tmp` throwaway journals (nx6-test.db etc.) — hygiene.
+    RESOLVED 2026-11-13 (supersession session): /tmp held only
+    nxfix-sample.txt (the nx6-test.db set was already gone); trashed.
 46. Rotate/grow the census snapshots dir (378 MB db per wave; disk at
     92% full — prune or move snapshots to bulk storage).
 47. Disk headroom check before wave C (61 GB free; C's journal + ~2

@@ -154,6 +154,12 @@ which is paperwork only the account holder can sign:
       the whole input while the journal correctly records only real
       observations (census soaks 1–3, NOTES.md); fix the summary to
       report scanned-only plus an interrupted-unscanned count. cli lane.
+- [ ] Input-parser fuzzing (E33; §f32 of the 08-57 report).
+- [ ] cli coverage 69% → 90% (E33; §f33 of the 08-57 report).
+- [ ] Wave watchdog + heartbeat file (§f16 of the 08-57 report): a checker
+      that alerts when the scan child died without the wrapper's completion
+      stages — the 2026-11-13 wrapper death was found by luck. BLOCKED until
+      wave B frees census-wave.sh (never edit the wrapper mid-run).
 - [ ] Retract-note dry run — documentation-only emergency procedure for
       poisoning a published release note; rehearse once so the real
       path is known cold. go-release lane.

@@ -170,7 +170,8 @@ func TestAuditSupersessionWithoutRuns(t *testing.T) {
 
 	reader := auditReader(t, ctx, filepath.Join(t.TempDir(), "empty.db"))
 
-	if _, err := scanstore.AuditSupersession(ctx, reader, []string{"01SOMETHING"}); !errors.Is(err, scanstore.ErrNoRuns) {
+	_, err := scanstore.AuditSupersession(ctx, reader, []string{"01SOMETHING"})
+	if !errors.Is(err, scanstore.ErrNoRuns) {
 		t.Errorf("empty-journal error = %v, want ErrNoRuns", err)
 	}
 }
