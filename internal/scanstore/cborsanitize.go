@@ -8,6 +8,8 @@ import (
 
 	"github.com/larsartmann/go-codec"
 	"github.com/larsartmann/go-cqrs-lite/event/v4"
+
+	"github.com/larsartmann/google-domain-detector/internal/classify"
 )
 
 // DNS records are attacker-controlled bytes; a hostile TXT record can carry
@@ -49,9 +51,14 @@ func sanitizeObservedPayload(p *DomainObservedPayload) {
 	p.Domain = strings.ToValidUTF8(p.Domain, "�")
 	p.RunID = strings.ToValidUTF8(p.RunID, "�")
 	p.Err = strings.ToValidUTF8(p.Err, "�")
-	for i := range p.Evidence {
-		p.Evidence[i].Host = strings.ToValidUTF8(p.Evidence[i].Host, "�")
-		p.Evidence[i].Record = strings.ToValidUTF8(p.Evidence[i].Record, "�")
+	if len(p.Evidence) > 0 {
+		evs := make([]classify.Evidence, len(p.Evidence))
+		copy(evs, p.Evidence)
+		for i := range evs {
+			evs[i].Host = strings.ToValidUTF8(evs[i].Host, "�")
+			evs[i].Record = strings.ToValidUTF8(evs[i].Record, "�")
+		}
+		p.Evidence = evs
 	}
 }
 
@@ -198,8 +205,8 @@ func decodeCBORHead(data []byte, pos int) (argVal, headLen int, indefinite bool,
 		for _, b := range data[pos+1 : pos+9] {
 			v = v<<8 | uint64(b)
 		}
-		if v > uint64(len(data)) {
-			return 0, 0, false, fmt.Errorf("cbor rewrite: length %d exceeds payload at byte %d", v, pos)
+		if v > uint64(maxInt) {
+			return 0, 0, false, fmt.Errorf("cbor rewrite: argument %d exceeds platform int at byte %d", v, pos)
 		}
 		return int(v), 9, false, nil
 	case arg == 31:
@@ -208,6 +215,8 @@ func decodeCBORHead(data []byte, pos int) (argVal, headLen int, indefinite bool,
 		return 0, 0, false, fmt.Errorf("cbor rewrite: reserved length arg %d at byte %d", arg, pos)
 	}
 }
+
+const maxInt = int(^uint(0) >> 1)
 
 // cborHead encodes a minimal CBOR head for the given major type and length.
 func cborHead(major, length int) []byte {
