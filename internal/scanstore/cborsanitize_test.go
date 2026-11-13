@@ -29,6 +29,8 @@ func poisonPayload(t *testing.T) []byte {
 }
 
 func TestSanitizeCBORTextRepairsRealPoisonPayload(t *testing.T) {
+	t.Parallel()
+
 	blob := poisonPayload(t)
 	if err := (codec.CBORCodec{}).Decode(blob, new(DomainObservedPayload)); err == nil {
 		t.Fatal("precondition failed: fixture decodes cleanly, it is no longer the poison case")
@@ -43,16 +45,16 @@ func TestSanitizeCBORTextRepairsRealPoisonPayload(t *testing.T) {
 		t.Fatal("sanitizeCBORText left the payload unchanged")
 	}
 
-	var p DomainObservedPayload
-	if err := (codec.CBORCodec{}).Decode(repaired, &p); err != nil {
+	var repairedPayload DomainObservedPayload
+	if err := (codec.CBORCodec{}).Decode(repaired, &repairedPayload); err != nil {
 		t.Fatalf("repaired payload decodes: %v", err)
 	}
 
-	if p.Domain != "bide-et-musique.com" {
-		t.Errorf("domain = %q, want the fixture's domain", p.Domain)
+	if repairedPayload.Domain != "bide-et-musique.com" {
+		t.Errorf("domain = %q, want the fixture's domain", repairedPayload.Domain)
 	}
 
-	for _, ev := range p.Evidence {
+	for _, ev := range repairedPayload.Evidence {
 		if !utf8.ValidString(ev.Record) {
 			t.Errorf("evidence record still invalid UTF-8: %q", ev.Record)
 		}
@@ -62,13 +64,15 @@ func TestSanitizeCBORTextRepairsRealPoisonPayload(t *testing.T) {
 		}
 	}
 
-	if len(p.Evidence) == 0 {
+	if len(repairedPayload.Evidence) == 0 {
 		t.Fatal("repaired payload lost all evidence")
 	}
 }
 
 func TestSanitizeCBORTextLeavesCleanPayloadsByteIdentical(t *testing.T) {
-	p := DomainObservedPayload{
+	t.Parallel()
+
+	payload := DomainObservedPayload{
 		Domain: "example.ch",
 		RunID:  "01TEST",
 		Evidence: []classify.Evidence{
@@ -86,7 +90,7 @@ func TestSanitizeCBORTextLeavesCleanPayloadsByteIdentical(t *testing.T) {
 
 	c := codec.CBORCodec{}
 
-	raw, err := c.Encode(p)
+	raw, err := c.Encode(payload)
 	if err != nil {
 		t.Fatalf("encode: %v", err)
 	}
@@ -102,8 +106,10 @@ func TestSanitizeCBORTextLeavesCleanPayloadsByteIdentical(t *testing.T) {
 }
 
 func TestSanitizeObservedPayloadCoercesDNSStrings(t *testing.T) {
+	t.Parallel()
+
 	bad := "\xff\xfe hostile \x80"
-	p := DomainObservedPayload{
+	payload := DomainObservedPayload{
 		Domain: "example.com",
 		RunID:  "01TEST",
 		Evidence: []classify.Evidence{
@@ -114,36 +120,34 @@ func TestSanitizeObservedPayloadCoercesDNSStrings(t *testing.T) {
 		},
 		Err: bad,
 	}
-	sanitizeObservedPayload(&p)
+	sanitizeObservedPayload(&payload)
 
-	if !utf8.ValidString(p.Err) {
-		t.Errorf("Err still invalid UTF-8: %q", p.Err)
+	if !utf8.ValidString(payload.Err) {
+		t.Errorf("Err still invalid UTF-8: %q", payload.Err)
 	}
 
-	if !utf8.ValidString(p.Evidence[0].Record) {
-		t.Errorf("Record still invalid UTF-8: %q", p.Evidence[0].Record)
+	if !utf8.ValidString(payload.Evidence[0].Record) {
+		t.Errorf("Record still invalid UTF-8: %q", payload.Evidence[0].Record)
 	}
 
-	if !strings.HasPrefix(p.Evidence[0].Record, "10 aspmx.l.google.com.") {
-		t.Errorf("Record lost its prefix: %q", p.Evidence[0].Record)
+	if !strings.HasPrefix(payload.Evidence[0].Record, "10 aspmx.l.google.com.") {
+		t.Errorf("Record lost its prefix: %q", payload.Evidence[0].Record)
 	}
 
-	var raw []byte
-
-	c := codec.CBORCodec{}
-
-	raw, err := c.Encode(p)
+	raw, err := (codec.CBORCodec{}).Encode(payload)
 	if err != nil {
 		t.Fatalf("encode sanitized payload: %v", err)
 	}
 
 	var back DomainObservedPayload
-	if err := c.Decode(raw, &back); err != nil {
+	if err := (codec.CBORCodec{}).Decode(raw, &back); err != nil {
 		t.Fatalf("decode sanitized payload: %v", err)
 	}
 }
 
 func TestSanitizeCBORTextRejectsGarbage(t *testing.T) {
+	t.Parallel()
+
 	for name, blob := range map[string][]byte{
 		"truncated head":     {0xa5},
 		"text overruns":      {0x63, 'a', 'b'},
@@ -153,6 +157,8 @@ func TestSanitizeCBORTextRejectsGarbage(t *testing.T) {
 		"tag with bad inner": {0xc0, 0x63, 'a'},
 	} {
 		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
 			if _, err := sanitizeCBORText(blob); err == nil {
 				t.Fatalf("sanitizeCBORText(%s) = nil error, want rejection", name)
 			}

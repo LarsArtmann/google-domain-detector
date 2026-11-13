@@ -1,6 +1,7 @@
 package scanstore
 
 import (
+	"encoding/binary"
 	"errors"
 	"fmt"
 	"strings"
@@ -24,21 +25,52 @@ import (
 // strings in place (sanitizeCBORText) and decoding the repaired bytes — the
 // journal stays append-only, no event is rewritten.
 
+// CBOR major types and head arguments (RFC 8949 section 3.1).
+const (
+	cborMajorUint = 0
+	cborMajorNeg  = 1
+	cborMajorByte = 2
+	cborMajorText = 3
+
+	cborMajorArray = 4
+	cborMajorMap   = 5
+	cborMajorTag   = 6
+	cborMajorMisc  = 7
+
+	cborMajorShift = 5
+	cborArgMask    = 0x1f
+
+	cborArgOneByte    = 24
+	cborArgTwoBytes   = 25
+	cborArgFourBytes  = 26
+	cborArgEightBytes = 27
+	cborArgReservedLo = 28
+	cborArgIndefinite = 31
+
+	cborLenMaxOneByte = 0xff
+	cborLenMaxTwoByte = 0xffff
+
+	cborBitsPerByte  = 8
+	cborMapPairCount = 2
+
+	cborEightByteArgWidth = 8
+)
+
 var (
-	errCBORTruncated   = errors.New("cbor rewrite: truncated item")
-	errCBORIndefinite  = errors.New("cbor rewrite: indefinite items unsupported")
-	errCBOROverrun     = errors.New("cbor rewrite: item overruns payload")
-	errCBORReserved    = errors.New("cbor rewrite: reserved length argument")
-	errCBORUnsupported = errors.New("cbor rewrite: unsupported CBOR head")
-	errCBORTooLarge    = errors.New("cbor rewrite: argument exceeds platform int")
+	errCBORTruncated   = errors.New("truncated item")
+	errCBORIndefinite  = errors.New("indefinite items unsupported")
+	errCBOROverrun     = errors.New("item overruns payload")
+	errCBORReserved    = errors.New("reserved length argument")
+	errCBORUnsupported = errors.New("unsupported CBOR head")
+	errCBORTooLarge    = errors.New("argument exceeds platform int")
 )
 
 // decodeObserved decodes a DomainObservedPayload, repairing poisoned payloads.
 // The original decode error wins when repair is impossible.
 func decodeObserved(evt event.Event) (DomainObservedPayload, error) {
-	p, err := event.DecodePayloadAuto[DomainObservedPayload](evt)
+	observation, err := event.DecodePayloadAuto[DomainObservedPayload](evt)
 	if err == nil {
-		return p, nil
+		return observation, nil
 	}
 
 	repaired, rerr := sanitizeCBORText(evt.Payload())
@@ -51,37 +83,40 @@ func decodeObserved(evt event.Event) (DomainObservedPayload, error) {
 		return DomainObservedPayload{}, err
 	}
 
-	if derr := c.Decode(repaired, &p); derr != nil {
+	if derr := c.Decode(repaired, &observation); derr != nil {
 		return DomainObservedPayload{}, err
 	}
 
-	return p, nil
+	return observation, nil
 }
 
 // sanitizeObservedPayload coerces every DNS-derived string in the payload to
-// valid UTF-8 before encoding. Call it immediately before event.New.
-func sanitizeObservedPayload(p *DomainObservedPayload) {
-	p.Domain = strings.ToValidUTF8(p.Domain, "�")
-	p.RunID = strings.ToValidUTF8(p.RunID, "�")
+// valid UTF-8 before encoding. Call it immediately before event.New. Evidence
+// is copied first: the slice aliases the scan result, which other sinks read
+// concurrently.
+func sanitizeObservedPayload(payload *DomainObservedPayload) {
+	payload.Domain = strings.ToValidUTF8(payload.Domain, "\ufffd")
+	payload.RunID = strings.ToValidUTF8(payload.RunID, "\ufffd")
+	payload.Err = strings.ToValidUTF8(payload.Err, "\ufffd")
 
-	p.Err = strings.ToValidUTF8(p.Err, "�")
-	if len(p.Evidence) > 0 {
-		evs := make([]classify.Evidence, len(p.Evidence))
-		copy(evs, p.Evidence)
-
-		for i := range evs {
-			evs[i].Host = strings.ToValidUTF8(evs[i].Host, "�")
-			evs[i].Record = strings.ToValidUTF8(evs[i].Record, "�")
-		}
-
-		p.Evidence = evs
+	if len(payload.Evidence) == 0 {
+		return
 	}
+
+	evidences := make([]classify.Evidence, 0, len(payload.Evidence))
+	for _, ev := range payload.Evidence {
+		ev.Host = strings.ToValidUTF8(ev.Host, "\ufffd")
+		ev.Record = strings.ToValidUTF8(ev.Record, "\ufffd")
+		evidences = append(evidences, ev)
+	}
+
+	payload.Evidence = evidences
 }
 
 // sanitizeCBORText rewrites every CBOR text string in payload that is not
-// valid UTF-8, replacing invalid bytes with U+FFFD. It reports whether the
-// payload changed. Truncated or malformed CBOR is an error: the caller must
-// not mistake unrepairable garbage for a repaired payload.
+// valid UTF-8, replacing invalid bytes with U+FFFD. Truncated or malformed
+// CBOR is an error: the caller must not mistake unrepairable garbage for a
+// repaired payload.
 func sanitizeCBORText(payload []byte) ([]byte, error) {
 	out, changed, _, err := rewriteCBORItem(payload, 0)
 	if err != nil {
@@ -98,188 +133,190 @@ func sanitizeCBORText(payload []byte) ([]byte, error) {
 // rewriteCBORItem rewrites the single CBOR item starting at data[pos],
 // returning the rewritten item, whether any byte changed, and the next
 // position after the item.
-func rewriteCBORItem(data []byte, pos int) (out []byte, changed bool, next int, err error) {
+func rewriteCBORItem(data []byte, pos int) ([]byte, bool, int, error) {
 	if pos >= len(data) {
 		return nil, false, pos, fmt.Errorf("at byte %d: %w", pos, errCBORTruncated)
 	}
 
-	head := data[pos]
-	major := head >> 5
-	arg := head & 0x1f
-
-	argVal, headLen, indefinite, err := decodeCBORHead(data, pos)
+	major, argVal, headLen, indefinite, err := decodeCBORHead(data, pos)
 	if err != nil {
 		return nil, false, pos, err
 	}
 
 	switch major {
-	case 0, 1, 7:
-		end := pos + headLen
-		if arg == 31 && major == 7 {
-			end = pos + headLen // break/simple: head only
-		}
-
-		return data[pos:end], false, end, nil
-	case 2:
-		if indefinite {
-			return nil, false, pos, fmt.Errorf("byte string at byte %d: %w", pos, errCBORIndefinite)
-		}
-
-		end := pos + headLen + argVal
-		if end > len(data) {
-			return nil, false, pos, fmt.Errorf("byte string at byte %d: %w", pos, errCBOROverrun)
-		}
-
-		return data[pos:end], false, end, nil
-	case 3:
-		if indefinite {
-			return nil, false, pos, fmt.Errorf("text string at byte %d: %w", pos, errCBORIndefinite)
-		}
-
-		end := pos + headLen + argVal
-		if end > len(data) {
-			return nil, false, pos, fmt.Errorf("text string at byte %d: %w", pos, errCBOROverrun)
-		}
-
-		raw := data[pos+headLen : end]
-		if utf8.Valid(raw) {
-			return data[pos:end], false, end, nil
-		}
-
-		valid := strings.ToValidUTF8(string(raw), "�")
-
-		return append(cborTextHead(len(valid)), valid...), true, end, nil
-	case 4:
-		if indefinite {
-			return nil, false, pos, fmt.Errorf("array at byte %d: %w", pos, errCBORIndefinite)
-		}
-
-		cursor := pos + headLen
-
-		var inner []byte
-
-		for range argVal {
-			item, itemChanged, nextPos, err := rewriteCBORItem(data, cursor)
-			if err != nil {
-				return nil, false, pos, err
-			}
-
-			inner = append(inner, item...)
-			changed = changed || itemChanged
-			cursor = nextPos
-		}
-
-		if !changed {
-			return data[pos:cursor], false, cursor, nil
-		}
-
-		return append(cborHead(4, argVal), inner...), true, cursor, nil
-	case 5:
-		if indefinite {
-			return nil, false, pos, fmt.Errorf("map at byte %d: %w", pos, errCBORIndefinite)
-		}
-
-		cursor := pos + headLen
-
-		var inner []byte
-
-		for i := 0; i < 2*argVal; i++ {
-			item, itemChanged, nextPos, err := rewriteCBORItem(data, cursor)
-			if err != nil {
-				return nil, false, pos, err
-			}
-
-			inner = append(inner, item...)
-			changed = changed || itemChanged
-			cursor = nextPos
-		}
-
-		if !changed {
-			return data[pos:cursor], false, cursor, nil
-		}
-
-		return append(cborHead(5, argVal), inner...), true, cursor, nil
-	case 6:
-		item, itemChanged, nextPos, err := rewriteCBORItem(data, pos+headLen)
-		if err != nil {
-			return nil, false, pos, err
-		}
-
-		if !itemChanged {
-			return data[pos:nextPos], false, nextPos, nil
-		}
-
-		return append(cborHead(6, argVal), item...), true, nextPos, nil
+	case cborMajorUint, cborMajorNeg, cborMajorMisc:
+		return data[pos : pos+headLen], false, pos + headLen, nil
+	case cborMajorByte, cborMajorText:
+		return rewriteCBORString(data, pos, headLen, argVal, indefinite)
+	case cborMajorArray, cborMajorMap:
+		return rewriteCBORContainer(data, pos, headLen, major, argVal, indefinite)
+	case cborMajorTag:
+		return rewriteCBORTag(data, pos, headLen, argVal)
 	default:
-		return nil, false, pos, fmt.Errorf("major type %d at byte %d: %w", major, pos, errCBORUnsupported)
+		return nil, false, pos, fmt.Errorf("major %d at byte %d: %w", major, pos, errCBORUnsupported)
 	}
 }
 
-// cborExtraLen maps a head's length argument (24..27) to the number of
-// argument bytes that follow the head byte.
-var cborExtraLen = [32]int{24: 1, 25: 2, 26: 4, 27: 8}
+// rewriteCBORString handles byte and text strings; only text strings can
+// change (invalid UTF-8 becomes U+FFFD).
+func rewriteCBORString(
+	data []byte, pos, headLen, argVal int, indefinite bool,
+) ([]byte, bool, int, error) {
+	if indefinite {
+		return nil, false, pos, fmt.Errorf("string at byte %d: %w", pos, errCBORIndefinite)
+	}
 
-const maxInt = int(^uint(0) >> 1)
+	end := pos + headLen + argVal
+	if end > len(data) {
+		return nil, false, pos, fmt.Errorf("string at byte %d: %w", pos, errCBOROverrun)
+	}
 
-// decodeCBORHead parses the head at data[pos]: its argument value, the head's
-// byte length, and whether the item is indefinite (arg 31).
-func decodeCBORHead(data []byte, pos int) (argVal, headLen int, indefinite bool, err error) {
-	arg := int(data[pos] & 0x1f)
+	raw := data[pos+headLen : end]
+
+	isText := data[pos]>>cborMajorShift == cborMajorText
+	if !isText || utf8.Valid(raw) {
+		return data[pos:end], false, end, nil
+	}
+
+	valid := strings.ToValidUTF8(string(raw), "\ufffd")
+
+	return append(cborHead(cborMajorText, len(valid)), valid...), true, end, nil
+}
+
+// rewriteCBORContainer handles arrays and maps: argVal elements (twice that
+// for maps), each rewritten so a changed child re-headers the container.
+func rewriteCBORContainer(
+	data []byte, pos, headLen, major, argVal int, indefinite bool,
+) ([]byte, bool, int, error) {
+	if indefinite {
+		return nil, false, pos, fmt.Errorf("container at byte %d: %w", pos, errCBORIndefinite)
+	}
+
+	entries := argVal
+	if major == cborMajorMap {
+		entries = cborMapPairCount * argVal
+	}
+
+	changed := false
+	cursor := pos + headLen
+	inner := make([]byte, 0, len(data)-cursor)
+
+	for range entries {
+		item, itemChanged, nextPos, itemErr := rewriteCBORItem(data, cursor)
+		if itemErr != nil {
+			return nil, false, pos, itemErr
+		}
+
+		inner = append(inner, item...)
+		changed = itemChanged || changed
+		cursor = nextPos
+	}
+
+	if !changed {
+		return data[pos:cursor], false, cursor, nil
+	}
+
+	return append(cborHead(major, argVal), inner...), true, cursor, nil
+}
+
+// rewriteCBORTag handles major 6: the tag number is the head argument, the
+// tagged item follows.
+func rewriteCBORTag(data []byte, pos, headLen, argVal int) ([]byte, bool, int, error) {
+	item, itemChanged, nextPos, itemErr := rewriteCBORItem(data, pos+headLen)
+	if itemErr != nil {
+		return nil, false, pos, itemErr
+	}
+
+	if !itemChanged {
+		return data[pos:nextPos], false, nextPos, nil
+	}
+
+	return append(cborHead(cborMajorTag, argVal), item...), true, nextPos, nil
+}
+
+const (
+	maxInt    = int(^uint(0) >> 1)
+	maxUint32 = int(^uint32(0))
+)
+
+// Argument-byte counts for the length arguments 24..27.
+const (
+	cborExtraOneByte  = 1
+	cborExtraTwoBytes = 2
+	cborExtraFourByte = 4
+
+	cborHeadSizeFour  = 5 // head byte + 4 argument bytes
+	cborHeadSizeEight = 9 // head byte + 8 argument bytes
+)
+
+// cborHeadExtraLen reports how many argument bytes follow the head byte for
+// the given length argument (24..27).
+func cborHeadExtraLen(arg int) int {
+	switch arg {
+	case cborArgOneByte:
+		return cborExtraOneByte
+	case cborArgTwoBytes:
+		return cborExtraTwoBytes
+	case cborArgFourBytes:
+		return cborExtraFourByte
+	default:
+		return cborEightByteArgWidth
+	}
+}
+
+// decodeCBORHead parses the head at data[pos]: its major type, argument
+// value, the head's byte length, and whether the item is indefinite (arg 31).
+func decodeCBORHead(data []byte, pos int) (int, int, int, bool, error) {
+	head := data[pos]
+	major := int(head >> cborMajorShift)
+	arg := int(head & cborArgMask)
 
 	switch {
-	case arg < 24:
-		return arg, 1, false, nil
-	case arg == 31:
-		return 0, 1, true, nil
-	case arg >= 28:
-		return 0, 0, false, fmt.Errorf("arg %d at byte %d: %w", arg, pos, errCBORReserved)
+	case arg < cborArgOneByte:
+		return major, arg, 1, false, nil
+	case arg == cborArgIndefinite:
+		return major, 0, 1, true, nil
+	case arg >= cborArgReservedLo:
+		return major, 0, 0, false, fmt.Errorf("arg %d at byte %d: %w", arg, pos, errCBORReserved)
 	}
 
-	extra := cborExtraLen[arg]
+	extra := cborHeadExtraLen(arg)
 	if pos+1+extra > len(data) {
-		return 0, 0, false, fmt.Errorf("%d-byte argument at byte %d: %w", extra, pos, errCBORTruncated)
+		return major, 0, 0, false, fmt.Errorf("%d-byte argument at byte %d: %w", extra, pos, errCBORTruncated)
 	}
 
-	var v uint64
-	for _, b := range data[pos+1 : pos+1+extra] {
-		v = v<<8 | uint64(b)
+	argBytes := data[pos+1 : pos+1+extra]
+
+	var value uint64
+	for _, b := range argBytes {
+		value = value<<cborBitsPerByte | uint64(b)
 	}
 
-	if v > uint64(maxInt) {
-		return 0, 0, false, fmt.Errorf("arg %d at byte %d: %w", v, pos, errCBORTooLarge)
+	if value > uint64(maxInt) {
+		return major, 0, 0, false, fmt.Errorf("arg %d at byte %d: %w", value, pos, errCBORTooLarge)
 	}
 
-	return int(v), 1 + extra, false, nil
+	return major, int(value), 1 + extra, false, nil
 }
 
 // cborHead encodes a minimal CBOR head for the given major type and length.
 func cborHead(major, length int) []byte {
-	mb := byte(major << 5)
+	headByte := byte(major << cborMajorShift)
 
 	switch {
-	case length < 24:
-		return []byte{mb | byte(length)}
-	case length <= 0xff:
-		return []byte{mb | 24, byte(length)}
-	case length <= 0xffff:
-		return []byte{mb | 25, byte(length >> 8), byte(length)}
-	case int(uint32(length)) == length:
-		return []byte{mb | 26, byte(length >> 24), byte(length >> 16), byte(length >> 8), byte(length)}
+	case length < cborArgOneByte:
+		return []byte{headByte | byte(length)}
+	case length <= cborLenMaxOneByte:
+		return []byte{headByte | cborArgOneByte, byte(length)}
+	case length <= cborLenMaxTwoByte:
+		return append([]byte{headByte | cborArgTwoBytes}, byte(length>>cborBitsPerByte), byte(length))
+	case length <= maxUint32:
+		out := make([]byte, 0, cborHeadSizeFour)
+
+		return append(append(out, headByte|cborArgFourBytes), binary.BigEndian.AppendUint32(nil, uint32(length))...)
 	default:
-		return []byte{
-			mb | 27,
-			byte(uint64(length) >> 56),
-			byte(uint64(length) >> 48),
-			byte(uint64(length) >> 40),
-			byte(
-				uint64(length) >> 32,
-			),
-			byte(uint64(length) >> 24),
-			byte(uint64(length) >> 16),
-			byte(uint64(length) >> 8),
-			byte(uint64(length)),
-		}
+		out := make([]byte, 0, cborHeadSizeEight)
+
+		return append(append(out, headByte|cborArgEightBytes), binary.BigEndian.AppendUint64(nil, uint64(length))...)
 	}
 }
-
-func cborTextHead(length int) []byte { return cborHead(3, length) }
