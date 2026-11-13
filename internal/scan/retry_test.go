@@ -46,6 +46,10 @@ func (f *flakyResolver) LookupNS(ctx context.Context, host string) ([]*net.NS, e
 	return f.inner.LookupNS(ctx, host)
 }
 
+func (f *flakyResolver) LookupExistence(ctx context.Context, host string) (resolve.Existence, error) {
+	return f.inner.LookupExistence(ctx, host)
+}
+
 func TestTransientFailureIsRetriedOnce(t *testing.T) {
 	t.Parallel()
 

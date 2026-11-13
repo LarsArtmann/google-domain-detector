@@ -29,6 +29,10 @@ type fake struct {
 	cname  map[string]string
 	ips    map[string][]net.IP
 	ns     map[string][]*net.NS
+	// existence defaults to Exists per host; overrides script dead names
+	// and oracle trouble.
+	existence    map[string]resolve.Existence
+	existenceErr map[string]error
 }
 
 func newFake() *fake {
@@ -89,6 +93,20 @@ func (f *fake) LookupNS(_ context.Context, host string) ([]*net.NS, error) {
 	f.record("ns:" + host)
 
 	return f.ns[host], nil
+}
+
+func (f *fake) LookupExistence(_ context.Context, host string) (resolve.Existence, error) {
+	f.record("exists:" + host)
+
+	if err, ok := f.existenceErr[host]; ok {
+		return resolve.Exists, err
+	}
+
+	if existence, ok := f.existence[host]; ok {
+		return existence, nil
+	}
+
+	return resolve.Exists, nil
 }
 
 func notFound(host string) error {

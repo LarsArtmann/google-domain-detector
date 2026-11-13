@@ -132,20 +132,53 @@ func fillUnrunResults(ctx context.Context, results []classify.Result, domains []
 	}
 }
 
-// ScanDomain probes one domain: TXT (SPF, site verification) and MX at the
-// apex, NS at the apex, CNAME and IP-range evidence at apex and www. The DKIM
-// selector is only queried when MX and SPF were both silent, so proven
-// Workspace domains cost no extra lookup. NXDOMAIN on the first lookup
-// short-circuits the domain.
+// ScanDomain probes one domain: an existence oracle first (the D3 verdict
+// about the NAME itself), then TXT (SPF, site verification) and MX at the
+// apex, NS at the apex, CNAME and IP-range evidence at apex and www. The
+// DKIM selector is only queried when MX and SPF were both silent, so proven
+// Workspace domains cost no extra lookup. NXDOMAIN from the oracle
+// short-circuits the domain; below it, an absent record type (NODATA) is a
+// normal fact, never an error — Go conflates the two into one IsNotFound
+// error, which stamped every live no-MX domain as NXDOMAIN-dead until the
+// oracle split them (2026-11-13 census finding).
 func ScanDomain(ctx context.Context, res resolve.Resolver, d domain.Domain, opts Options) classify.Result {
 	apex := d.String()
 	result := classify.Result{Domain: apex}
 
-	lookupErr := probeApexRecords(ctx, res, apex, opts, &result)
-	if errors.Is(lookupErr, errShortCircuit) {
+	existence, err := res.LookupExistence(ctx, apex)
+	if err != nil {
+		lookupErr := err
+
+		if dnsErr, ok := errors.AsType[*net.DNSError](err); ok && dnsErr.IsNotFound {
+			result.Err = "domain not found: " + err.Error()
+			result.ErrKind = classify.ErrorNXDomain
+
+			return result
+		}
+
+		// The oracle could not get an answer (timeout, SERVFAIL): record it
+		// and probe on — cached sub-lookups may still yield evidence, and a
+		// partial failure with evidence is a normal result (AGENTS.md).
+		lookupErr = firstErr(lookupErr, probeApexRecords(ctx, res, apex, opts, &result))
+		lookupErr = firstErr(lookupErr, probeHosts(ctx, res, d, opts, &result))
+
+		if len(result.Evidences) == 0 {
+			result.Err = lookupErr.Error()
+			result.ErrKind = classify.ErrorKindOf(lookupErr)
+		}
+
 		return result
 	}
 
+	if existence == resolve.NotExists {
+		result.Err = "domain not found: resolver answered NXDOMAIN for " + apex
+		result.ErrKind = classify.ErrorNXDomain
+
+		return result
+	}
+
+	// The name exists: record-type absence below is a fact, not a failure.
+	lookupErr := probeApexRecords(ctx, res, apex, opts, &result)
 	lookupErr = firstErr(lookupErr, probeHosts(ctx, res, d, opts, &result))
 
 	if lookupErr != nil && len(result.Evidences) == 0 {
@@ -156,13 +189,13 @@ func ScanDomain(ctx context.Context, res resolve.Resolver, d domain.Domain, opts
 	return result
 }
 
-// errShortCircuit signals that the domain answered NXDOMAIN: no further
-// lookups can change the verdict.
-var errShortCircuit = errors.New("nxdomain short-circuit")
+// errShortCircuit is gone: the existence oracle replaced the TXT-based NX
+// short-circuit, which could not tell NODATA from NXDOMAIN.
 
 // probeApexRecords collects apex TXT/SPF, MX, DKIM (only when MX+SPF are
-// silent), and NS evidence. The returned error is the first non-NXDOMAIN
-// lookup failure, or errShortCircuit when the domain does not exist.
+// silent), and NS evidence. Record-type absence (IsNotFound on an existing
+// name) is normal and yields neither evidence nor error; the returned
+// error is only genuine lookup trouble (timeout, SERVFAIL).
 func probeApexRecords(
 	ctx context.Context,
 	res resolve.Resolver,
@@ -174,20 +207,17 @@ func probeApexRecords(
 
 	txts, err := res.LookupTXT(ctx, apex)
 	if err != nil {
-		if dnsErr, ok := errors.AsType[*net.DNSError](err); ok && dnsErr.IsNotFound {
-			result.Err = "domain not found: " + err.Error()
-			result.ErrKind = classify.ErrorNXDomain
-
-			return errShortCircuit
+		if !isRecordAbsence(err) {
+			lookupErr = firstErr(lookupErr, err)
 		}
-
-		lookupErr = err
 	} else {
 		result.Evidences = append(result.Evidences, classify.ClassifyTXT(apex, txts)...)
 	}
 
 	if mxs, err := res.LookupMX(ctx, apex); err != nil {
-		lookupErr = firstErr(lookupErr, err)
+		if !isRecordAbsence(err) {
+			lookupErr = firstErr(lookupErr, err)
+		}
 	} else {
 		result.Evidences = append(result.Evidences, classify.ClassifyMX(apex, mxs)...)
 	}
@@ -200,12 +230,24 @@ func probeApexRecords(
 	}
 
 	if nss, err := res.LookupNS(ctx, apex); err != nil {
-		lookupErr = firstErr(lookupErr, err)
+		if !isRecordAbsence(err) {
+			lookupErr = firstErr(lookupErr, err)
+		}
 	} else {
 		result.Evidences = append(result.Evidences, classify.ClassifyNS(apex, nss)...)
 	}
 
 	return lookupErr
+}
+
+// isRecordAbsence reports whether err is Go's conflated "no such host": an
+// authoritative NXDOMAIN (impossible below the oracle's Exists verdict in
+// practice, harmless if a resolver is inconsistent) or plain NODATA — both
+// are absence of records, never lookup trouble.
+func isRecordAbsence(err error) bool {
+	dnsErr, ok := errors.AsType[*net.DNSError](err)
+
+	return ok && dnsErr.IsNotFound
 }
 
 // probeHosts collects CNAME and IP-range evidence for every host of the
@@ -227,7 +269,9 @@ func probeHosts(
 
 		if opts.GCP != nil {
 			if ips, err := res.LookupIP(ctx, host); err != nil {
-				lookupErr = firstErr(lookupErr, err)
+				if !isRecordAbsence(err) {
+					lookupErr = firstErr(lookupErr, err)
+				}
 			} else {
 				result.Evidences = append(result.Evidences, classify.ClassifyIPs(host, ips, opts.GCP)...)
 			}
@@ -255,6 +299,10 @@ func retryOnce[T any](lookup func() (T, error)) (T, error) {
 
 func (r retryResolver) LookupTXT(ctx context.Context, host string) ([]string, error) {
 	return retryOnce(func() ([]string, error) { return r.inner.LookupTXT(ctx, host) })
+}
+
+func (r retryResolver) LookupExistence(ctx context.Context, host string) (resolve.Existence, error) {
+	return retryOnce(func() (resolve.Existence, error) { return r.inner.LookupExistence(ctx, host) })
 }
 
 func (r retryResolver) LookupMX(ctx context.Context, host string) ([]*net.MX, error) {

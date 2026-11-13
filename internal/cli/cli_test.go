@@ -54,6 +54,10 @@ func (f *fakeRes) LookupNS(_ context.Context, host string) ([]*net.NS, error) {
 	return f.ns[host], nil
 }
 
+func (f *fakeRes) LookupExistence(_ context.Context, host string) (resolve.Existence, error) {
+	return resolve.Exists, nil
+}
+
 func workspaceDomain() *fakeRes {
 	return &fakeRes{
 		txt: map[string][]string{"acme.com": {"v=spf1 include:_spf.google.com ~all"}},

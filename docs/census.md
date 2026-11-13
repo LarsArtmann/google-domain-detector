@@ -21,6 +21,60 @@ scripts/unbound.sh start     # also: stop | status | restart
   worker-pressure measurements (see `reports/census/unbound/NOTES.md`).
 - Never runs as root, never becomes the system resolver (census guard 5).
 
+### Two measured UDP defects and the TCP-upstream variant (2026-11-13)
+
+The UDP forwarder path has two independent, measured failure modes; both
+are reasons the census default moves to the TCP-upstream variant:
+
+1. **NXDOMAIN fabrication under census load.** During the 2026-11-10
+   pilot and the 2026-11-13 patch cleanup round 4, live domains got
+   NXDOMAIN-classified verdicts through the UDP forwarder (12/12 sampled
+   false, verified by direct `dig @9.9.9.9` — see
+   `docs/status/2026-11-13_01-04_census-plan-execution-and-resolver-forensics.md`).
+   Worker-count independent (seen at w8 and w2). Smoking gun in the
+   unbound log: `cannot increase max open fds from 65536 to 131566 —
+   continuing with less udp ports: 4065` — the outgoing UDP port pool
+   (unbound's UPSTREAM query pool) is starved by the user-scoped fd
+   limit, and under starvation the forwarder path returns wrong
+   authoritative-looking negatives. False NXDOMAINs are the worst census
+   error class: NXDOMAIN counts as domain truth, so they would
+   permanently pollute the census.
+2. **Host-level outbound UDP:53 outage (2026-11-12 23:24–23:45).**
+   Every fresh UDP recursion died (`dig @9.9.9.9` = no servers
+   reachable) while TCP:53 and ICMP kept working; a wave launched into
+   that window fabricated ~3 450 garbage observations. The negative
+   entries OUTLIVE the distress (see AGENTS.md "distressed resolver"
+   gotcha).
+
+**Mitigation: `scripts/unbound-tcp.conf` — TCP-upstream forwarding on
+`127.0.0.1:5354`** (`tcp-upstream: yes`: the unbound → upstream hop is
+TCP end to end, connection-scoped, no UDP-port-pool surface; the
+scanner → unbound hop stays loopback UDP — Go's resolver can't do
+DNS-over-TCP via its Dial callback without breaking framing, so
+scanner-side TCP is not an option). Cost: wall-clock — per-query
+upstream connections are slower than UDP; a fresh 5k pilot through this
+config measures the throughput and is the launch gate for any wave on
+it. Usage (per-instance lifecycle, never bare nohup):
+
+```bash
+GDD_UNBOUND_CONF=scripts/unbound-tcp.conf scripts/unbound.sh start   # also: status | stop | restart
+# scans then target it with --resolver 127.0.0.1:5354
+```
+
+### Pre-flight law (2026-11-13)
+
+`census-wave.sh` refuses to start (exit 5) unless BOTH two upstream
+resolvers and the configured forwarder answer a live probe. A forwarder
+answering from cache proves nothing about upstream health — during the
+UDP outage `unbound.sh status` was green while every fresh recursion
+died. Waves on the TCP variant set `GDD_PREFLIGHT_TRANSPORT=tcp` so the
+upstream probes run over TCP too (immune to a UDP-only outage);
+`GDD_NO_PREFLIGHT=1` exists for test harnesses only.
+
+After ANY resolver distress: restart the instance fresh (`unbound.sh
+restart`) and never reuse a cache that witnessed the distress — poisoned
+negative-cache entries outlive their cause by tens of minutes.
+
 ## Error semantics (D3 tail, decided 2026-11-10)
 
 - **NXDOMAIN is domain truth** — an authoritative "this name does not
@@ -149,11 +203,12 @@ it) — first appeared underved 2026-11-11 14:44 and was copied onward.
 
 ### Wave ledger
 
-| Wave       | Ranks             | List  | Manifest sha256 (first 12) | Status                                                          |
-| ---------- | ----------------- | ----- | -------------------------- | --------------------------------------------------------------- |
-| tranco1m-a | 1–100 000         | 947N2 | b4450f660567               | pass 1 done 2026-11-12 04:51 — health PASS, 97 265 scanned, unknown 1.53%; coverage gap 2 731 (resume hazard below) pending owner call |
-| tranco1m-b | 100 001–500 000   | 947N2 | b6d5b3821c90               | pending                                                         |
-| tranco1m-c | 500 001–1 000 000 | 947N2 | b0317d71873a               | pending                                                         |
+| Wave             | Ranks             | List  | Manifest sha256 (first 12) | Status                                                          |
+| ---------------- | ----------------- | ----- | -------------------------- | --------------------------------------------------------------- |
+| tranco1m-a       | 1–100 000         | 947N2 | b4450f660567               | pass 1 done 2026-11-12 04:51 — health PASS, 97 265 scanned, unknown 1.53%; coverage gap 2 731 closed by patch (below) |
+| tranco1m-a-patch | the 2 731 gap     | —     | derived from journal       | done 2026-11-12/13 — pass 1 + 5 cleanup rounds; final residual 15/2 731 error-class = 6 NXDOMAIN (domain truth) + 9 unknown (3 timeout, 6 SERVFAIL) = 0.33% < 0.5% bar on original-size accounting → UNDER BAR; round-relative gate verdicts on c4/c5 are by-design meaningless (round input = 100% prior errorers). 2026-11-13 nxdomain-fabrication finding makes the 6 NXDOMAINs + the forensics pilot's 946 re-verify candidates (see TODO_LIST nxdomain-bucket row) |
+| tranco1m-b       | 100 001–500 000   | 947N2 | b6d5b3821c90               | pending — launch gated on a 5k pilot PASS through the TCP forwarder |
+| tranco1m-c       | 500 001–1 000 000 | 947N2 | b0317d71873a               | pending — chains after B's gate PASS |
 
 ## Worker-pressure findings (E7/E9 ladder + 2026-11-11 soaks)
 

@@ -14,7 +14,10 @@
 #   GDD_WARN_PCT (2) — mid-pass unknown-rate WARNING threshold (D3 bar;
 #   2 = percent). Set GDD_WARN_PCT=0 to disable the warning.
 #   GDD_NO_PREFLIGHT=1 skips the upstream pre-flight (test harnesses
-#   only; never for production waves).
+#   only; never for production waves). GDD_PREFLIGHT_TRANSPORT=tcp probes
+#   upstreams over TCP — set it for waves on the TCP-upstream forwarder
+#   (unbound-tcp.conf) so a UDP-only outage cannot block a launch that
+#   would be immune to it.
 # exit: 0 wave done/gate pass · 3 single-flight refusal · 4 coverage gap
 #   · 5 pre-flight failure (upstream or forwarder dead — see docs/census.md
 #   "outage fallback" before relaunching; never reuse a cache that ran
@@ -83,13 +86,20 @@ fi
 # start. SERVFAIL counts as failure: an upstream that answers but refuses
 # is as useless for a census as a dead one.
 preflight() {
-	local upstream status resolver_host resolver_port
+	local upstream status resolver_host resolver_port transport_args=()
 	if [ "${GDD_NO_PREFLIGHT:-0}" = "1" ]; then
 		log "pre-flight SKIPPED via GDD_NO_PREFLIGHT=1 (operator override — never for production waves)"
 		return 0
 	fi
+	# Waves on the TCP-upstream forwarder (unbound-tcp.conf) must probe
+	# upstreams over TCP too — immune to a UDP-only outage (2026-11-12:
+	# UDP:53 died while TCP:53 worked).
+	if [ "${GDD_PREFLIGHT_TRANSPORT:-udp}" = "tcp" ]; then
+		transport_args=(+tcp)
+		log "pre-flight: probing upstreams over TCP (GDD_PREFLIGHT_TRANSPORT=tcp)"
+	fi
 	for upstream in 9.9.9.9 1.1.1.1; do
-		status=$(dig +time=3 +tries=1 "@$upstream" google.com A 2>/dev/null | grep -oE 'status: (NOERROR|NXDOMAIN)' | head -1)
+		status=$(dig +time=3 +tries=1 "${transport_args[@]+"${transport_args[@]}"}" "@$upstream" google.com A 2>/dev/null | grep -oE 'status: (NOERROR|NXDOMAIN)' | head -1)
 		if [ -z "$status" ]; then
 			log "pre-flight FAIL: upstream $upstream unresponsive on UDP:53 — outbound DNS outage suspected. Do NOT launch; if switching to the TCP forwarder (docs/census.md 'outage fallback'), restart it fresh and never reuse a cache that ran while upstream was dead."
 			return 1
