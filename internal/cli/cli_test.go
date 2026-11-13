@@ -1387,3 +1387,102 @@ func TestScanCancelMidRunDrainsEventStore(t *testing.T) {
 		}
 	}
 }
+
+// TestShowOpenErrorNamesStore covers the event-store open failure path:
+// a missing store file must fail with the path named, not a usage error.
+func TestShowOpenErrorNamesStore(t *testing.T) {
+	t.Parallel()
+
+	missing := filepath.Join(t.TempDir(), "absent.db")
+
+	_, _, err := run(t, &fakeRes{}, "", "show", "--event-store", missing, "acme.com")
+	if err == nil || !strings.Contains(err.Error(), missing) {
+		t.Errorf("show on missing store must name the path, got: %v", err)
+	}
+}
+
+// TestReplaySinceUnknownRunNamesID covers the --since unknown-run branch:
+// a store WITH runs must reject an unknown baseline id by name.
+func TestReplaySinceUnknownRunNamesID(t *testing.T) {
+	t.Parallel()
+
+	store := filepath.Join(t.TempDir(), "scans.db")
+
+	if _, _, err := run(t, &fakeRes{}, "", "scan", "--no-ranges", "--event-store", store,
+		"--format", "jsonl", "acme.com"); err != nil {
+		t.Fatalf("seed scan failed: %v", err)
+	}
+
+	_, _, err := run(t, &fakeRes{}, "", "replay", "--event-store", store,
+		"--since", "01NOPE", "--format", "jsonl")
+	if err == nil || !strings.Contains(err.Error(), "01NOPE") {
+		t.Errorf("replay --since unknown id must name the id, got: %v", err)
+	}
+}
+
+// TestEnrichShortRowSurvives covers the short-row branch: a CSV record
+// with fewer cells than the header keeps its row with an explanatory
+// error cell instead of failing the run.
+func TestEnrichShortRowSurvives(t *testing.T) {
+	t.Parallel()
+
+	store := filepath.Join(t.TempDir(), "scans.db")
+
+	if _, _, err := run(t, &fakeRes{}, "", "scan", "--no-ranges", "--event-store", store,
+		"--format", "jsonl", "acme.com"); err != nil {
+		t.Fatalf("seed scan failed: %v", err)
+	}
+
+	stdout, _, err := run(t, &fakeRes{}, "company,domain\nAcme\n", "enrich",
+		"--event-store", store, "--input", "-")
+	if err != nil {
+		t.Fatalf("enrich with a short row must not fail: %v", err)
+	}
+
+	if !strings.Contains(stdout, "short row (no domain column)") {
+		t.Errorf("short row must carry the explanatory cell, got: %q", stdout)
+	}
+}
+
+// TestReplaySinceEmptyStoreNamesPath covers the baseline ErrNoRuns branch:
+// --since on a store with no runs must fail naming the store path.
+func TestReplaySinceEmptyStoreNamesPath(t *testing.T) {
+	t.Parallel()
+
+	store := filepath.Join(t.TempDir(), "scans.db")
+
+	if _, _, err := run(t, &fakeRes{}, "", "scan", "--no-ranges", "--event-store", store,
+		"--format", "jsonl", "acme.com"); err != nil {
+		t.Fatalf("seed scan failed: %v", err)
+	}
+
+	empty := filepath.Join(t.TempDir(), "empty.db")
+
+	_, _, err := run(t, &fakeRes{}, "", "replay", "--event-store", empty,
+		"--since", "01NOPE", "--format", "jsonl")
+	if err == nil || !strings.Contains(err.Error(), empty) {
+		t.Errorf("replay --since on an empty store must name the path, got: %v", err)
+	}
+}
+
+// TestReplayBufferedFormatCoversRenderPath runs a non-jsonl replay so the
+// buffered rebuild branch (renderResults) executes, not just streaming.
+func TestReplayBufferedFormatCoversRenderPath(t *testing.T) {
+	t.Parallel()
+
+	store := filepath.Join(t.TempDir(), "scans.db")
+
+	if _, _, err := run(t, workspaceDomain(), "", "scan", "--no-ranges", "--event-store", store,
+		"--format", "jsonl", "acme.com"); err != nil {
+		t.Fatalf("seed scan failed: %v", err)
+	}
+
+	stdout, _, err := run(t, &fakeRes{}, "", "replay", "--event-store", store, "--format", "csv")
+	if err != nil {
+		t.Fatalf("buffered replay failed: %v", err)
+	}
+
+	if !strings.Contains(stdout, "acme.com") {
+		t.Errorf("csv replay must contain the domain, got: %q", stdout)
+	}
+}

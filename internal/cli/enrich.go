@@ -102,6 +102,10 @@ func runEnrich(ctx context.Context, f EnrichFlags, stdin io.Reader, stdout, stde
 		return err
 	}
 
+	// Flush explicitly and check: csv.Writer buffers, so writer.Error()
+	// before a flush would silently swallow small-output write failures.
+	writer.Flush()
+
 	if err := writer.Error(); err != nil {
 		return fmt.Errorf("write CSV: %w", err)
 	}

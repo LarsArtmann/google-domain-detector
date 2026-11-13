@@ -7,6 +7,7 @@ import (
 	"io"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -398,5 +399,162 @@ func TestReplayHelpers(t *testing.T) {
 
 	if runSummary(scanstore.Replay{RunID: "absent"}) != nil {
 		t.Error("runSummary must return nil for an unknown run id")
+	}
+}
+
+// TestRunReplayAndShowFlagBranches covers the programmatic flag-parse
+// branches the CLI enum binding normally front-runs: direct calls with
+// unparseable Only/Format/Color values must error before any store I/O.
+func TestRunReplayAndShowFlagBranches(t *testing.T) {
+	t.Parallel()
+
+	ctx := context.Background()
+	store := filepath.Join(t.TempDir(), "scans.db")
+
+	for name, call := range map[string]func() error{
+		"replay bad --only": func() error {
+			return runReplay(ctx, ReplayFlags{EventStore: store, Only: "bogus"}, io.Discard, io.Discard)
+		},
+		"replay bad --format": func() error {
+			return runReplay(ctx, ReplayFlags{EventStore: store, Format: "nope"}, io.Discard, io.Discard)
+		},
+		"replay bad --color": func() error {
+			return runReplay(ctx, ReplayFlags{EventStore: store, Color: "nope"}, io.Discard, io.Discard)
+		},
+		"show bad --format": func() error {
+			return runShow(ctx, ShowFlags{EventStore: store, Format: "nope"}, []string{"acme.com"}, io.Discard, io.Discard)
+		},
+		"show bad --color": func() error {
+			return runShow(ctx, ShowFlags{EventStore: store, Color: "nope"}, []string{"acme.com"}, io.Discard, io.Discard)
+		},
+	} {
+		if err := call(); err == nil {
+			t.Errorf("%s must error", name)
+		}
+	}
+}
+
+func TestCheckRangesFeedCorruptFeedNamesFix(t *testing.T) {
+	garbage := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		_, _ = w.Write([]byte("{not json"))
+	}))
+	defer garbage.Close()
+
+	t.Setenv("GDD_RANGES_URL", garbage.URL)
+	t.Setenv("GDD_RANGES_CACHE", filepath.Join(t.TempDir(), "cloud.json"))
+
+	err := checkRangesFeed(context.Background())
+	if err == nil || !strings.Contains(err.Error(), "corrupt") {
+		t.Errorf("unparseable feed must fail the probe with the corrupt family, got: %v", err)
+	}
+}
+
+func TestNewDomainFeederStdinTTYWithoutInputIsUsageError(t *testing.T) {
+	var exitErr *v5.ExitError
+
+	_, err := newDomainFeeder(nil, "", strings.NewReader(""), true, nil, 0)
+	if !errors.As(err, &exitErr) || exitErr.ExitCode() != exitCodeUsage {
+		t.Fatalf("no input on a TTY must be a usage error, got: %v", err)
+	}
+
+	list := filepath.Join(t.TempDir(), "list.txt")
+	if err := os.WriteFile(list, []byte("a.example\n"), 0o600); err != nil {
+		t.Fatalf("write list: %v", err)
+	}
+
+	feeder, err := newDomainFeeder(nil, list, strings.NewReader(""), false, nil, 0)
+	if err != nil {
+		t.Fatalf("zero chunk size must default, got: %v", err)
+	}
+
+	if feeder == nil || feeder.chunkSize != defaultScanChunkSize {
+		t.Errorf("chunkSize must default to %d, got %+v", defaultScanChunkSize, feeder)
+	}
+}
+
+func TestDefaultRangesCacheFailsWithoutHome(t *testing.T) {
+	t.Setenv("XDG_CACHE_HOME", "")
+	t.Setenv("HOME", "")
+
+	if _, err := defaultRangesCache(); err == nil {
+		t.Error("no HOME and no XDG_CACHE_HOME must fail the cache-path lookup")
+	}
+}
+
+func TestCheckRangesFeedHealthyFeedPasses(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		_, _ = w.Write([]byte(fixtureFeed))
+	}))
+	defer server.Close()
+
+	t.Setenv("GDD_RANGES_URL", server.URL)
+	t.Setenv("GDD_RANGES_CACHE", filepath.Join(t.TempDir(), "cloud.json"))
+
+	if err := checkRangesFeed(context.Background()); err != nil {
+		t.Errorf("healthy feed must pass the probe, got: %v", err)
+	}
+}
+
+// TestEnrichMalformedCSVFailsCleanly covers the row-read error branch: a
+// bare-quote line must abort with the file line named, not silently drop.
+func TestEnrichMalformedCSVFailsCleanly(t *testing.T) {
+	t.Parallel()
+
+	store := filepath.Join(t.TempDir(), "scans.db")
+
+	var out, errOut bytes.Buffer
+
+	err := runEnrich(context.Background(), EnrichFlags{EventStore: store, Input: "-"},
+		strings.NewReader("domain\nacme.com\nbad \"quote\n"), &out, &errOut)
+	if err == nil || !strings.Contains(err.Error(), "read CSV line") {
+		t.Errorf("malformed CSV must fail naming the line, got: %v", err)
+	}
+}
+
+// failingWriter covers the CSV write-error branches of enrichRows.
+type failingWriter struct{ after int }
+
+func (w *failingWriter) Write(p []byte) (int, error) {
+	if w.after <= 0 {
+		return 0, errors.New("disk full")
+	}
+
+	w.after--
+
+	return len(p), nil
+}
+
+func TestEnrichWriteErrorAborts(t *testing.T) {
+	t.Parallel()
+
+	store := filepath.Join(t.TempDir(), "scans.db")
+
+	err := runEnrich(context.Background(), EnrichFlags{EventStore: store, Input: "-"},
+		strings.NewReader("domain\nacme.com\nother.example\n"), &failingWriter{after: 1}, io.Discard)
+	if err == nil || !strings.Contains(err.Error(), "write CSV") {
+		t.Errorf("writer failure must abort with the line named, got: %v", err)
+	}
+}
+
+// TestEnrichRowStoreReadFailed covers the read-model failure branch: the
+// row survives with a store-read error cell instead of aborting.
+func TestEnrichRowStoreReadFailed(t *testing.T) {
+	t.Parallel()
+
+	store := filepath.Join(t.TempDir(), "scans.db")
+
+	sys, err := scanstore.Open(context.Background(), store)
+	if err != nil {
+		t.Fatalf("open store: %v", err)
+	}
+
+	defer func() { _ = sys.Close() }()
+
+	ctx, cancel := context.WithCancel(context.Background())
+	cancel()
+
+	verdict := enrichRow(ctx, sys, []string{"acme.com"}, 0)
+	if verdict.scanned || !strings.Contains(verdict.cells[3], "store read failed") {
+		t.Errorf("canceled read must surface the store-read-failed cell, got: %+v", verdict)
 	}
 }
