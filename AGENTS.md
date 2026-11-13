@@ -129,25 +129,31 @@ first-party lib is considered.
   landing during event-store startup fails the run cleanly with exit 1,
   nothing journaled, and that is correct behavior). Whole-TLD runs are
   unblocked.
-- **A distressed local resolver can LIE NXDOMAIN — and the lies OUTLIVE
-  the distress:** during the 2026-11-10 T5 validation, a system resolver
-  (127.0.0.1) under concurrent bulk load returned NXDOMAIN for live
-  domains (14/14 sampled false). Worse: the negative-cache entries
-  PERSIST — the 10:10 E1 replication run (calm spot-checks beforehand,
-  8 workers) still recorded 597 NXDOMAINs of which 11/12 sampled were
-  ALIVE (own SOA + NS delegation; authoritative/Quad9/local all answered
-  positively 20 minutes later). The earlier "~90% genuinely dead"
-  conclusion came from re-scanning the bucket through Quad9 minutes after
-  poisoning — it reproduced the same stale negatives and understated the
-  false rate. Positive verdicts are NOT affected (a lying cache serves
-  false negatives, never fabricated positives; 14 dig cross-checks all
-  confirm). stdlib `net.Resolver` cannot distinguish an authoritative
-  NXDOMAIN from a lying cache, and the tool deliberately never retries
-  NXDOMAIN. Mitigation is operational: bulk runs MUST use `--resolver`
-  against a server with a fresh cache or the user-scoped unbound
-  (reports/census/unbound/; 127.0.0.1:5353) — and never a cache that
-  witnessed an earlier distressed run. The census plan's unbound-first
-  design is the root fix.
+- **"Distressed resolver LIES NXDOMAIN" — SUPERSEDED 2026-11-13:** the
+  2026-11-10/12 false-NXDOMAIN observations (T5's 14/14, the patch
+  rounds' 6) had ONE root cause and it was NEVER the resolver: the
+  scanner conflated Go's NXDOMAIN/NODATA `IsNotFound` (gotcha above);
+  resolver path, cache, and load were falsified as factors (identical
+  repro through a fresh-cache TCP-upstream instance). The DURABLE
+  operational lessons from that incident stand: negative-cache entries
+  PERSIST tens of minutes past their cause — never re-scan a poisoned
+  bucket through the cache that watched the poisoning (the retracted
+  "~90% genuinely dead" claim measured stale negatives), and positive
+  verdicts were never affected (false negatives only). Bulk runs still
+  MUST use `--resolver` against the census forwarder, never the system
+  resolver.
+- **Host-level outbound UDP:53 outages happen (2026-11-12 23:24–23:45):**
+  every fresh UDP recursion died (`dig @9.9.9.9` = no servers reachable)
+  while TCP:53 and ICMP kept working; a wave launched into the window
+  burned ~3 450 garbage observations. `census-wave.sh` therefore runs a
+  REAL-UPSTREAM PRE-FLIGHT (exit 5 on failure; forwarder liveness alone
+  proves nothing — it answers from cache while upstream is dead) and
+  waves on the TCP-upstream forwarder set `GDD_PREFLIGHT_TRANSPORT=tcp`
+  so a UDP-only outage cannot block a launch immune to it.
+- **This host runs a live resolver on `[::1]:53`** — discovered when the
+  IPv6 resolver e2e test answered from it; `[::1]` loopback is NOT a
+  dead network on this machine, and "port 53 in use" style surprises can
+  come from v6 loopback, not just 127.0.0.1.
 - cmdguard's flag-binding layer returns `fmt.Errorf`-wrapped SENTINELS
   (`v5.ErrInvalidEnum`, `v5.ErrValueTooLarge`, …), not `*v5.EnumError`/
   `*ExitError` structs — `errors.As` for the struct types finds nothing.
