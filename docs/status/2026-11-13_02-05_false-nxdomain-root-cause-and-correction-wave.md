@@ -124,3 +124,32 @@ annotated as such in that report and in docs/census.md.
   the next natural lane close per repo habit).
 
 <!-- fresh:skip sibling-scoped: enrich/stats lanes, docs-gates audit -->
+
+## FINAL VERDICT (appended 2026-11-13 08:45 CET) — tranco1m-a-nxfix: PASS
+
+Pass 1 (22,136 scanned, 6.5 h at sustained w4 through the TCP-upstream
+forwarder, ~4.0 dom/s): 21,561 clean (97.33%), 365 nxdomain (1.65%),
+210 unknown (timeout 202, servfail 8 — 0.95%). Gate: coverage PASS
+(manifest 22,136 = scanned + 0 unparseable + 0 expected skips) and
+health PASS. Cleanup round 1 (`tranco1m-a-nxfix-c1`, w4/12s): 210 → 92
+residual = **0.42% of original size, under the 0.5% bar → CLEAN**.
+Post-fix NX trustworthiness: 19/20 sampled NX verdicts confirmed
+NXDOMAIN at direct Quad9 (1 sample = q9 timeout, not a contradiction) —
+vs the pre-fix bucket's 27/30 ALIVE. The census's wave-A domain-truth
+data is now trustworthy. Journal: run `01M7969W0M73G7SKHTQ4000001` +
+`-c1`; snapshot `tranco1m-a-nxfix-complete-20261113-0843.tar.gz`
+(db 378 MB, tar 60 MB + sha256).
+
+Incident (recovered, documented in AGENTS.md Gotchas): the wave runner
+died at pass-1 completion — census-wave.sh was edited on disk while the
+wave's bash executed (sibling commit 28a7773), so bash's next
+offset-based read aborted with a bogus syntax error; the scan and its
+30-min poller survived as orphans. Recovery: run-id + gate + cleanup +
+snapshot completed manually; orphaned poller killed (`kill` here is a
+silent no-op builtin — `pkill -9 -f` works). Lesson recorded.
+
+Wave-B gating state after this wave: TCP-upstream path validated at
+sustained load (22,136 domains, 0.95% pre-cleanup unknown, 4.0 dom/s →
+wave B ≈ 400k / 4.0 ≈ 28 h); scanner fixed; nxfix clean. Remaining per
+the standing decision: owner go. Wall-clock budget at this rate: B ≈ 28
+h, C ≈ 35 h (500k), total ≈ 2.6 days for the full 1M.

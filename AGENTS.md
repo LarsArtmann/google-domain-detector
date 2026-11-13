@@ -93,6 +93,19 @@ first-party lib is considered.
   go through `resolve.LookupExistence` (rcode-level oracle); below an
   Exists verdict, sub-lookup IsNotFound is ordinary record absence, never
   an error (`scan.go` `isRecordAbsence`).
+- **NEVER edit a script while a detached instance of it is mid-run** —
+  bash reads scripts by byte offset, not line: an edit that shifts
+  offsets under a running `census-wave.sh` makes the next post-child
+  read land mid-content and aborts the wrapper with a bogus syntax
+  error, orphaning the scan and its poller (2026-11-13: the nxfix wave
+  lost its run-id/gate/cleanup/snapshot stages to exactly this; the
+  scan survived and the stages were completed manually). Recovery
+  recipe: check run1.stderr for the summary + run id, write `run-id`,
+  re-run the gate with `--manifest`, run the cleanup round, snapshot,
+  and log the incident in monitor.log. Related: `kill` in this shell is
+  a silent no-op builtin — use `pkill -9 -f` (SIGTERM is also deferred
+  by bash while it waits on a foreground child; kill the child's sleep
+  or use -9).
 - **DNS-over-TCP cannot be forced via Go's Dial callback** — the resolver
   frames messages by the network string IT passed in; overriding udp→tcp
   inside Dial sends unprefixed data. TCP transport to the resolver needs
