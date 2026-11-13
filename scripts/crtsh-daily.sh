@@ -8,12 +8,24 @@
 #
 # usage: crtsh-daily.sh [tld ...]   (default: de)
 # env: GDD_ZONE_DATA_DIR (default reports/census/zone-data)
+#      GDD_MIN_ROWS overrides the per-TLD plausibility floor (testing only)
 set -euo pipefail
 
 here=$(cd "$(dirname "$0")" && pwd)
-data_dir=${GDD_ZONE_DATA_DIR:-"$here/../../reports/census/zone-data"}
+data_dir=${GDD_ZONE_DATA_DIR:-"$here/../reports/census/zone-data"}
 keep_count=${KEEP_COUNT:-3}
 min_age_hours=24
+
+# A successful-looking but truncated harvest (crt.sh rate-limit or partial
+# pages) must never enter the census inputs. Floors: .de has millions of
+# CT-logged domains (2026-11-13's broken pull yielded 2,060 rows); other
+# TLDs get a conservative default.
+min_rows_for() {
+	case $1 in
+	de) echo 100000 ;;
+	*) echo 1000 ;;
+	esac
+}
 
 mkdir -p "$data_dir"
 
@@ -34,13 +46,21 @@ pull_tld() {
 	outfile="$data_dir/$tld-crtsh-$(date '+%Y%m%d').txt"
 	log "$tld: pulling cert-transparency domains → $outfile (this can take minutes; crt.sh is slow)"
 
-	if "$here/crtsh-extract.sh" "$tld" "$outfile"; then
-		log "$tld: $(wc -l <"$outfile") registrable domains harvested"
-	else
+	if ! "$here/crtsh-extract.sh" "$tld" "$outfile"; then
 		log "$tld: FAILED (see above); artifact removed if partial"
 		rm -f "$outfile"
 		return 1
 	fi
+
+	min_rows=${GDD_MIN_ROWS:-$(min_rows_for "$tld")}
+	rows=$(wc -l <"$outfile")
+	if [ "$rows" -lt "$min_rows" ]; then
+		log "$tld: PLAUSIBILITY FAIL — $rows rows < floor $min_rows; artifact removed (truncated harvest suspected)"
+		rm -f "$outfile"
+		return 1
+	fi
+
+	log "$tld: $rows registrable domains harvested"
 
 	ls -t "$data_dir/$tld"-crtsh-*.txt 2>/dev/null | tail -n +"$((keep_count + 1))" |
 		while IFS= read -r stale; do

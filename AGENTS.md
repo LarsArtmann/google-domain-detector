@@ -211,6 +211,17 @@ first-party lib is considered.
   the build wasn't stamped. Byte-reproducing a build from another
   directory is impossible (build-dir paths embedded), so don't try;
   record the stamp + sha256 instead (`reports/census/unbound/PROVENANCE.md`).
+- **crtsh-daily.sh wrong-root bug (fixed 2026-11-13):** the default
+  `data_dir` was `$here/../..`-based, which resolved OUTSIDE the repo into
+  `/home/lars/projects/reports/census/zone-data` (a REAL sibling project —
+  never delete that tree; only its stray `census/` dir was crtsh fallout).
+  The 04:48 timer run landed there; artifacts (ch 1,685 / de 2,060 rows in
+  ~18 s) were truncated — relocated into the repo zone-data dir, monitor.log
+  merged. Wrapper now carries a plausibility guard (de ≥100k rows, other
+  TLDs ≥1k, `GDD_MIN_ROWS` override) branch-tested via the crtsh fixture.
+  Real verification = the next 04:37 timer run landing in-repo. Lesson:
+  test the LITERAL path string a script embeds, not a canonicalized
+  equivalent — isolated probes masked the bug for three debug rounds.
 - **Snapshotting the journal: use `sqlite3 <db> ".backup '<dest>'"`**
   (scripts/census-snapshot.sh) — WAL-consistent and safe while a scan is
   mid-run; a plain file-copy of census.db misses/stale-reads the -wal.
