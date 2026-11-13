@@ -1,3 +1,5 @@
+> **Live remainder:** every item resolved as of the 2026-11-13 docs-health pass (docs-gates green); open census work lives in TODO_LIST.md + docs/census.md.
+
 # Status Report — E19/E26/E27 landed, race flake killed, v0.1.0 RELEASED (CI red on runners, fix identified)
 
 **Written:** 2026-11-10 13:27 CET · **Session scope:** "GET SHIT DONE — the

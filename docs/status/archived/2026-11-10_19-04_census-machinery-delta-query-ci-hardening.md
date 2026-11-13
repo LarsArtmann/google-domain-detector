@@ -1,3 +1,5 @@
+> **Live remainder:** every item resolved as of the 2026-11-13 docs-health pass (docs-gates green); open census work lives in TODO_LIST.md + docs/census.md.
+
 # Status Report — census machinery proven, delta query landed, CI hardened (tree red under sibling edit)
 
 **Written:** 2026-11-10 19:04 CET · **Session scope:** "GET SHIT DONE — the

@@ -1,3 +1,5 @@
+> **Live remainder:** every item resolved as of the 2026-11-13 docs-health pass (docs-gates green); open census work lives in TODO_LIST.md + docs/census.md.
+
 # Status Report — E24 lint sweep driven to ZERO, fleet formatter conflict resolved, CLI coverage 71.6→84.2%
 
 **Written:** 2026-11-11 02:00 CET · **Session scope:** resume from the

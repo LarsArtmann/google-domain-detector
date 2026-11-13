@@ -1,3 +1,5 @@
+> **Live remainder:** every item resolved as of the 2026-11-13 docs-health pass (docs-gates green); open census work lives in TODO_LIST.md + docs/census.md.
+
 # Status Report — Streaming/Resume Session + T5 Validation (interrupted; superseded by plan v3)
 
 **Written:** 2026-11-12 22:50 CET · **Session covered:** the 2026-11-10

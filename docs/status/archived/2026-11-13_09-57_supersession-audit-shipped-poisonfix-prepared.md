@@ -1,3 +1,5 @@
+> **Live remainder:** every item resolved as of the 2026-11-13 docs-health pass (docs-gates green); open census work lives in TODO_LIST.md + docs/census.md.
+
 # Status Report — Supersession audit shipped, poisonfix pass prepared, wave-B warning investigated
 
 **Written:** 2026-11-13 09:57 CET · **Session scope:** continuation of the

@@ -1,3 +1,5 @@
+> **Live remainder:** every item resolved as of the 2026-11-13 docs-health pass (docs-gates green); open census work lives in TODO_LIST.md + docs/census.md.
+
 # Status Report — v3 Spine Execution: plan shipped, truth debt paid, release blocked by a race
 
 **Written:** 2026-11-10 10:11 CET · **Session scope:** the "READ → PLAN →

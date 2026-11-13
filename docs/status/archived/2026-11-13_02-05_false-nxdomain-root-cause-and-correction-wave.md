@@ -1,3 +1,5 @@
+> **Live remainder:** every item resolved as of the 2026-11-13 docs-health pass (docs-gates green); open census work lives in TODO_LIST.md + docs/census.md.
+
 # Status Report — False-NXDOMAIN root cause found and fixed; tranco1m-a-nxfix correction wave running
 
 **Written:** 2026-11-13 02:05 CET · **Session:** continuation of the

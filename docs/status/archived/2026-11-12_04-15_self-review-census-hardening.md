@@ -1,3 +1,5 @@
+> **Live remainder:** every item resolved as of the 2026-11-13 docs-health pass (docs-gates green); open census work lives in TODO_LIST.md + docs/census.md.
+
 # Status 2026-11-12 04:15 — self-review: census hardening session + wave A at 93%
 
 Scope: THIS session (2026-11-11 ~16:00 → 2026-11-12 04:15 CET), census

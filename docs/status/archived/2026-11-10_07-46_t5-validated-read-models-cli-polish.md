@@ -1,3 +1,5 @@
+> **Live remainder:** every item resolved as of the 2026-11-13 docs-health pass (docs-gates green); open census work lives in TODO_LIST.md + docs/census.md.
+
 # Status Report — google-domain-detector: T5 validated, read models consumed, CLI polish
 
 > **CORRECTION (2026-11-10 10:40, E1 replication):** this report's

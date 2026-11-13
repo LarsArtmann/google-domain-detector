@@ -1,3 +1,5 @@
+> **Live remainder:** every item resolved as of the 2026-11-13 docs-health pass (docs-gates green); open census work lives in TODO_LIST.md + docs/census.md.
+
 # Status Report — LarsArtmann Library Audit (google-domain-detector)
 
 **Written:** 2026-11-10 00:36 CET · **Session scope:** the 22-library audit run

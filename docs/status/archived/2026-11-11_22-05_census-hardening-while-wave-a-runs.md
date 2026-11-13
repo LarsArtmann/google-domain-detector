@@ -1,3 +1,5 @@
+> **Live remainder:** every item resolved as of the 2026-11-13 docs-health pass (docs-gates green); open census work lives in TODO_LIST.md + docs/census.md.
+
 # Status 2026-11-11 22:05 — census hardening while wave A runs
 
 Continuation of the census lane (15-27 handoff). Owner §g questions

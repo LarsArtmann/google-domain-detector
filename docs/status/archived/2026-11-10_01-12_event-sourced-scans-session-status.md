@@ -1,3 +1,5 @@
+> **Live remainder:** every item resolved as of the 2026-11-13 docs-health pass (docs-gates green); open census work lives in TODO_LIST.md + docs/census.md.
+
 # Status Report — Event-Sourced Scans via go-cqrs-lite (session 2026-11-09 → 11-10)
 
 **Scope line.** This report covers ONE session: the request to make

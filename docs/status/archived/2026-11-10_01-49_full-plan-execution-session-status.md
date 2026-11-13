@@ -1,3 +1,5 @@
+> **Live remainder:** every item resolved as of the 2026-11-13 docs-health pass (docs-gates green); open census work lives in TODO_LIST.md + docs/census.md.
+
 # Status Report — Full Plan Execution Session (spine + process debt + zone data)
 
 **Written:** 2026-11-10 01:49 CET · **Session scope:** executing the ENTIRE

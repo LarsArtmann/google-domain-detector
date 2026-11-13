@@ -1,3 +1,5 @@
+> **Live remainder:** every item resolved as of the 2026-11-13 docs-health pass (docs-gates green); open census work lives in TODO_LIST.md + docs/census.md.
+
 # Status Report — Polish lane: CI hardening, 90% coverage, zone harvest, and a live wedged wave runner
 
 **Written:** 2026-11-13 08:32 CET · **Session scope:** execute the whole

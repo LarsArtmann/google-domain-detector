@@ -1,3 +1,5 @@
+> **Live remainder:** every item resolved as of the 2026-11-13 docs-health pass (docs-gates green); open census work lives in TODO_LIST.md + docs/census.md.
+
 # Status Report — Plan Execution Session 2: Scale Tier (T5 analysis, T7–T11)
 
 **Written:** 2026-11-10 06:58 CET · **Session scope:** continuing the

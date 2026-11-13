@@ -1,3 +1,5 @@
+> **Live remainder:** every item resolved as of the 2026-11-13 docs-health pass (docs-gates green); open census work lives in TODO_LIST.md + docs/census.md.
+
 # Status Report — False-NXDOMAIN fix landed, nxfix wave PASS, wave B running; supersession-coverage gaps found in self-review
 
 **Written:** 2026-11-13 08:57 CET · **Session scope:** continuation of the

@@ -1,3 +1,5 @@
+> **Live remainder:** every item resolved as of the 2026-11-13 docs-health pass (docs-gates green); open census work lives in TODO_LIST.md + docs/census.md.
+
 # Status Report — Pareto Planning Run (planning + commit + push)
 
 **Written:** 2026-11-10 01:12 CET · **Session scope:** the planning task that

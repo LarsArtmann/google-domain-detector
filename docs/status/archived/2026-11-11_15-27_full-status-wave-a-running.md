@@ -1,3 +1,5 @@
+> **Live remainder:** every item resolved as of the 2026-11-13 docs-health pass (docs-gates green); open census work lives in TODO_LIST.md + docs/census.md.
+
 # Session status — FULL: E10 closed, wave A at 21%, all session debt routed; waiting
 
 **2026-11-11 15:27 CET · @ master 0316f84 (+1 uncommitted report reword;

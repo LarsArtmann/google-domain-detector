@@ -1,3 +1,5 @@
+> **Live remainder:** every item resolved as of the 2026-11-13 docs-health pass (docs-gates green); open census work lives in TODO_LIST.md + docs/census.md.
+
 # Status — wave A complete; 2,731-domain resume hole root-caused and gated shut
 
 **2026-11-12 18:45 CET · @ master 0bd3deb + this session's changes (commit

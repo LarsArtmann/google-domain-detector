@@ -1,3 +1,5 @@
+> **Live remainder:** every item resolved as of the 2026-11-13 docs-health pass (docs-gates green); open census work lives in TODO_LIST.md + docs/census.md.
+
 # Status Report — Census Patch Wave, Resolver Outage, and the Polish Lane
 
 **Written:** 2026-11-13 00:03 CET · **Session covered:** 2026-11-12

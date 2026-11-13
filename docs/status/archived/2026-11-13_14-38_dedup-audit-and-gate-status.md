@@ -1,3 +1,5 @@
+> **Live remainder:** every item resolved as of the 2026-11-13 docs-health pass (docs-gates green); open census work lives in TODO_LIST.md + docs/census.md.
+
 # Status Report — Dedup Audit to Zero + Gate Cleanup
 
 **2026-11-13 14:38 CET** · session scope: art-dupl deduplication audit, quality-gate cleanup, erraudit migration

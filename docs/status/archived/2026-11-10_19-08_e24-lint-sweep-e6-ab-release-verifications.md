@@ -1,3 +1,5 @@
+> **Live remainder:** every item resolved as of the 2026-11-13 docs-health pass (docs-gates green); open census work lives in TODO_LIST.md + docs/census.md.
+
 # Session status — E6 A/B executed, release verifications closed, E24 lint sweep 192→~30, mid-refactor
 
 > **ADDENDUM (19:15, post-write):** the census sibling's 19-04 report

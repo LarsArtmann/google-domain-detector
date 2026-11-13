@@ -1,3 +1,5 @@
+> **Live remainder:** every item resolved as of the 2026-11-13 docs-health pass (docs-gates green); open census work lives in TODO_LIST.md + docs/census.md.
+
 # Session status — release unblocked: race diagnosed, CI gates fixed, E6/E7 data in
 
 **2026-11-10 13:27 CET · @ 404dfed (pushed origin+github, CI GREEN 4m33s) · plan v3 execution lane**

@@ -1,3 +1,5 @@
+> **Live remainder:** every item resolved as of the 2026-11-13 docs-health pass (docs-gates green); open census work lives in TODO_LIST.md + docs/census.md.
+
 # Status Report — Census plan execution: scanstore review, ruleset stamps, resolver forensics
 
 > **2026-11-13 resolution (post-fix annotation):** this report's central

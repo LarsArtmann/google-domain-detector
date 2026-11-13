@@ -1,3 +1,5 @@
+> **Live remainder:** every item resolved as of the 2026-11-13 docs-health pass (docs-gates green); open census work lives in TODO_LIST.md + docs/census.md.
+
 # Session status — E10 closed, soaks decided wave params, wave A RUNNING; full self-review
 
 **2026-11-11 14:44 CET · @ master 92432b0 (pushed both remotes; CI GREEN
