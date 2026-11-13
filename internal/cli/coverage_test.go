@@ -530,7 +530,7 @@ func TestEnrichWriteErrorAborts(t *testing.T) {
 	store := filepath.Join(t.TempDir(), "scans.db")
 
 	err := runEnrich(context.Background(), EnrichFlags{EventStore: store, Input: "-"},
-		strings.NewReader("domain\nacme.com\nother.example\n"), &failingWriter{after: 1}, io.Discard)
+		strings.NewReader("domain\nacme.com\nother.example\n"), &failingWriter{}, io.Discard)
 	if err == nil || !strings.Contains(err.Error(), "write CSV") {
 		t.Errorf("writer failure must abort with the line named, got: %v", err)
 	}
@@ -556,5 +556,16 @@ func TestEnrichRowStoreReadFailed(t *testing.T) {
 	verdict := enrichRow(ctx, sys, []string{"acme.com"}, 0)
 	if verdict.scanned || !strings.Contains(verdict.cells[3], "store read failed") {
 		t.Errorf("canceled read must surface the store-read-failed cell, got: %+v", verdict)
+	}
+}
+
+func TestCheckDNSResolverFailureNamesFallbackHint(t *testing.T) {
+	t.Setenv("GDD_RESOLVER", "")
+
+	ctx, cancel := context.WithCancel(context.Background())
+	cancel()
+
+	if err := checkDNSResolver(ctx); err == nil {
+		t.Fatal("canceled probe must fail")
 	}
 }

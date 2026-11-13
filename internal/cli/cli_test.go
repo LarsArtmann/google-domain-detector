@@ -1486,3 +1486,107 @@ func TestReplayBufferedFormatCoversRenderPath(t *testing.T) {
 		t.Errorf("csv replay must contain the domain, got: %q", stdout)
 	}
 }
+
+// TestReplayUnknownRunNamesID covers the --run unknown-id branch.
+func TestReplayUnknownRunNamesID(t *testing.T) {
+	t.Parallel()
+
+	store := filepath.Join(t.TempDir(), "scans.db")
+
+	if _, _, err := run(t, &fakeRes{}, "", "scan", "--no-ranges", "--event-store", store,
+		"--format", "jsonl", "acme.com"); err != nil {
+		t.Fatalf("seed scan failed: %v", err)
+	}
+
+	_, _, err := run(t, &fakeRes{}, "", "replay", "--event-store", store,
+		"--run", "01GHOST", "--format", "jsonl")
+	if err == nil || !strings.Contains(err.Error(), "01GHOST") {
+		t.Errorf("replay --run unknown id must name the id, got: %v", err)
+	}
+}
+
+// TestReplayBufferedUnknownRunAndOpenError covers the buffered rebuild
+// path's unknown-run branch and the store open failure.
+func TestReplayBufferedUnknownRunAndOpenError(t *testing.T) {
+	t.Parallel()
+
+	store := filepath.Join(t.TempDir(), "scans.db")
+
+	if _, _, err := run(t, &fakeRes{}, "", "scan", "--no-ranges", "--event-store", store,
+		"--format", "jsonl", "acme.com"); err != nil {
+		t.Fatalf("seed scan failed: %v", err)
+	}
+
+	_, _, err := run(t, &fakeRes{}, "", "replay", "--event-store", store, "--run", "01GHOST")
+	if err == nil || !strings.Contains(err.Error(), "01GHOST") {
+		t.Errorf("buffered replay --run unknown id must name the id, got: %v", err)
+	}
+
+	badStore := filepath.Join(t.TempDir(), "no-such-dir", "x.db")
+
+	_, _, err = run(t, &fakeRes{}, "", "replay", "--event-store", badStore, "--format", "jsonl")
+	if err == nil || !strings.Contains(err.Error(), badStore) {
+		t.Errorf("replay on an unopenable store must name the path, got: %v", err)
+	}
+}
+
+// TestRunsFlagBranches covers the runs command's usage and open errors.
+func TestRunsFlagBranches(t *testing.T) {
+	t.Parallel()
+
+	_, _, err := run(t, &fakeRes{}, "", "runs")
+	if code := v5.ExitCode(err); code != 2 {
+		t.Errorf("runs without --event-store must exit 2, got %d (%v)", code, err)
+	}
+
+	badStore := filepath.Join(t.TempDir(), "no-such-dir", "x.db")
+
+	_, _, err = run(t, &fakeRes{}, "", "runs", "--event-store", badStore)
+	if err == nil || !strings.Contains(err.Error(), badStore) {
+		t.Errorf("runs on an unopenable store must name the path, got: %v", err)
+	}
+}
+
+// TestReplaySinceNewDomainIsNoFlip covers the baseline !seen branch: a
+// domain first seen after the baseline run is not a verdict flip.
+func TestReplaySinceNewDomainIsNoFlip(t *testing.T) {
+	t.Parallel()
+
+	store := filepath.Join(t.TempDir(), "scans.db")
+
+	if _, _, err := run(t, &fakeRes{}, "", "scan", "--no-ranges", "--event-store", store,
+		"--format", "jsonl", "acme.com"); err != nil {
+		t.Fatalf("baseline scan failed: %v", err)
+	}
+
+	_, baselineStderr, err := run(t, &fakeRes{}, "", "scan", "--no-ranges", "--event-store", store,
+		"--format", "jsonl", "acme.com")
+	if err != nil {
+		t.Fatalf("baseline scan failed: %v", err)
+	}
+
+	baselineRun := regexp.MustCompile(`run ([0-9A-Z]{10,32}) recorded`).FindStringSubmatch(baselineStderr)
+	if baselineRun == nil {
+		t.Fatalf("scan stderr must record the run id, got: %q", baselineStderr)
+	}
+
+	stdout, _, err := run(t, &fakeRes{}, "", "scan", "--no-ranges", "--event-store", store,
+		"--format", "jsonl", "acme.com", "fresh.example")
+	if err != nil {
+		t.Fatalf("second scan failed: %v", err)
+	}
+
+	if !strings.Contains(stdout, "fresh.example") {
+		t.Fatalf("second scan must cover the new domain, got: %q", stdout)
+	}
+
+	diffOut, _, err := run(t, &fakeRes{}, "", "replay", "--event-store", store,
+		"--since", baselineRun[1], "--format", "jsonl")
+	if err != nil {
+		t.Fatalf("diff replay failed: %v", err)
+	}
+
+	if strings.Contains(diffOut, "fresh.example") {
+		t.Errorf("a domain absent from the baseline is not a flip, but appeared: %q", diffOut)
+	}
+}
