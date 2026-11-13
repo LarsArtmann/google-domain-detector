@@ -159,21 +159,9 @@ dep set changes or a new first-party lib is considered.
   per domain per run and boots WITHOUT the projection host. Scan output
   preserves INPUT order, replay journal order — the e2e test compares
   parsed result SETS, never raw bytes.
-- cqrs-lint: every finding is dispositioned inline (2026-11-13, gate = 0
-  findings): real fixes where real (F031 ListRuns `WithLimit(0)` — Scan
-  silently caps at 100 rows; C023 start-failure path reports
-  GracefulClose errors), else a `//cqrs-lint:ignore(RULE)` comment WITH
-  rationale at the firing site (A032 journal-surface RunIDs, B004
-  cqrs-gen overkill, B005 unknown-event tolerance, C013 UTC-only views,
-  C015/C023 read-only input-file close, E003 one-concern 4-file split,
-  F005 v1-initial, F007 no at-least-once bus). New findings: triage,
-  never blind-suppress. Gotchas: package-level F005/F007 anchor to the
-  alphabetically FIRST scanstore file (cborsanitize.go — moves if that
-  file is renamed/deleted); stale-suppression detection warns on
-  comments whose finding stopped firing, so a speculative ignore
-  (e.g. A032 on SupersessionFinding.RunID, which never fires) is
-  visible noise; gofmt rewrites doc-comment directives to `//
-  cqrs-lint:...` (spaced) — the parser accepts both forms.
+- cqrs-lint: findings dispositioned inline with rationale at their site
+  (2026-11-13, gate 0); package-level F005/F007 anchor to the
+  alphabetically FIRST scanstore file; stale suppressions warn.
 - Event payloads use `event.Instant` (not `time.Time` — CBOR epoch
   encoding drops timezones, C013) and every `event.New` stamps
   `event.WithSchemaVersion(1)` (D013). New events must follow both.
@@ -201,11 +189,10 @@ dep set changes or a new first-party lib is considered.
   working (2026-11-10): retry later or bypass with the documented
   `curl --resolve api.github.com:443:<IP>` + token pattern; SSH pushes are
   unaffected.
-- BuildFlow's result cache replays FAILED step results verbatim — a
-  `test-race` "failure" in seconds with stale output is a cached failure;
-  re-run with `BUILDFLOW_NO_RESULT_CACHE=1 -s <step>`. NEVER run two
-  `-race ./...` suites concurrently on this host — the interference
-  produced a phantom cli failure (one verification lane at a time).
+- BuildFlow's result cache replays FAILED step results verbatim — re-run
+  with `BUILDFLOW_NO_RESULT_CACHE=1 -s <step>` before diagnosing the code.
+  NEVER run two `-race ./...` suites concurrently on this host (phantom
+  failures — one verification lane at a time).
 
 ## Git remotes
 
