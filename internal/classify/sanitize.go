@@ -2,7 +2,8 @@ package classify
 
 import "strings"
 
-// DNS record contents are attacker-controlled bytes; downstream consumers
+// SanitizeEvidence coerces DNS-derived strings to valid UTF-8: record
+// contents are attacker-controlled bytes, and downstream consumers
 // reject invalid UTF-8 (the JSON v2 encoder errors, CBOR text strings must
 // be valid UTF-8). SanitizeEvidence returns a copy of evidences with every
 // DNS-derived string coerced to valid UTF-8, invalid bytes replaced by
