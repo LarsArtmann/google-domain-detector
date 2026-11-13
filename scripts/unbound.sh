@@ -85,7 +85,7 @@ stop() {
 status() {
 	if is_running; then
 		echo "$INSTANCE running (pid $(cat "$PID_FILE")) on $LISTEN_ADDR:$LISTEN_PORT"
-		if dig +time=2 +tries=1 "@$LISTEN_ADDR" -p "$LISTEN_PORT" ch. SOA +short >/dev/null 2>&1; then
+		if dig +tcp +time=2 +tries=1 "@$LISTEN_ADDR" -p "$LISTEN_PORT" ch. SOA +short >/dev/null 2>&1; then
 			echo "health: answering queries"
 		else
 			echo "health: NOT answering queries" >&2
