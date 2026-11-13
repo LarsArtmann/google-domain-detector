@@ -212,8 +212,9 @@ which is paperwork only the account holder can sign:
 - [x] Re-pin vendorHash: buildflow preflight warns stale — done:
       `nix build` green at 5f8feb4 (post-go1.27.4-toolchain pin, no hash
       mismatch; the flake's vendorHash is current).
-- [ ] `buildflow format` re-verify after formatter fingerprint drift
-      (oxfmt 0.68 → 0.75, dprint 0.64.1 → 0.64.3).
+- [x] `buildflow format` re-verify after formatter fingerprint drift
+      (oxfmt 0.68 → 0.75, dprint 0.64.1 → 0.64.3) — done 2026-11-13:
+      `buildflow format --check` pipeline 20 success / 0 failed.
 - [ ] Poller: per-rank-band unknown-rate expectations (calibrate on
       wave B's ~2.8% pass-1 vs wave A's 1.53%).
 - [ ] `--audit-excluded`: accept wave NAMES in addition to run IDs.
