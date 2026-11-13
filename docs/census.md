@@ -244,6 +244,27 @@ it) — first appeared underved 2026-11-11 14:44 and was copied onward.
 | tranco1m-b       | 100 001–500 000          | 947N2 | b6d5b3821c90               | **running 2026-11-13 08:45** — launched under the session execution mandate with all gates green (scanner fix gdd-20261113, TCP-upstream path validated by nxfix at sustained w4, pre-flight TCP green); fresh pass, w4/10s, 5354; ETA ≈ 24–28 h; SIGINT-safe (explicit-retry resume via out-dir run-id)                                                                                                                                                                                                                                                       |
 | tranco1m-c       | 500 001–1 000 000        | 947N2 | b0317d71873a               | pending — chains after B's gate PASS                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
 
+### Supersession audit (replay --audit-excluded, added 2026-11-13)
+
+"Replay last-wins supersedes the false verdicts" is a per-domain claim.
+The audit makes it mechanical: name the run IDs you distrust and it
+lists every domain whose LAST journal observation comes from one of
+them — exactly the input a correction pass must cover, and exactly the
+check that it worked afterwards (expect `0 poisoned` on a clean
+journal).
+
+```bash
+gdd replay --event-store census.db --audit-excluded RUN1,RUN2
+gdd replay --event-store census.db --audit-excluded RUN1 --format jsonl   # one finding per line
+```
+
+Findings are data, not failure: exit 0 either way, gates assert the
+stderr count. Unknown run IDs FAIL the audit — a typo must not report
+clean. The 2026-11-13 self-review found two supersession gaps by hand
+(the 6 c4/c5 false-NX outside the nxfix manifest; the pilot's ~946 NX
+superseding healthy wave-A verdicts, §d2/d3 of the 08-57 report) —
+this command is that check, never hand-rolled again.
+
 ## Worker-pressure findings (E7/E9 ladder + 2026-11-11 soaks)
 
 Two resolver modes were measured, cold cache, 10s timeout, mixed-TLD
@@ -291,7 +312,17 @@ empty (the pattern tolerates dated binaries like `gdd-20261113`), and the
 wave lane owns long runs. Bulk scans also NEVER use the
 system resolver directly — a 2026-11-11 pilot accidentally did (its
 observations went through 127.0.0.1:53 and are excluded from census
-accounting as protocol-contaminated).
+accounting as protocol-contaminated). **Diagnostic scans write to
+throwaway event-stores, always (2026-11-13):** a falsification
+experiment stamped 6 false NX + 9 unknown into census.db under wave
+`tranco1m-a-patch-c5`, and the journal carried that false domain-truth
+until the poisonfix pass — a diagnostic that might record lies does not
+belong in the production journal.
 
 Single-TLD scans (.ch zone pulls): the same ladder's recursion-mode w2
 row is the relevant bound — workers ≤ 2 plus cleanup loops, always.
+
+**TCP-upstream forwarder (127.0.0.1:5354), measured 2026-11-13:** the
+nxfix wave sustained 4.0–4.6 dom/s at w4/10s over 22 136 domains, and
+wave B confirmed the same rate early. This is the calibrated bulk path;
+the UDP forwarder rows above are older measurements.

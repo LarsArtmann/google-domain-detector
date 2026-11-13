@@ -83,6 +83,7 @@ google-domain-detector replay --event-store scans.db            # latest run, no
 google-domain-detector replay --event-store scans.db --run ID   # any earlier run
 google-domain-detector show acme.com --event-store scans.db     # one domain's full history
 google-domain-detector runs --event-store scans.db              # the run ledger
+google-domain-detector replay --event-store scans.db --audit-excluded ID1,ID2   # poison check
 google-domain-detector scan --resume latest --event-store scans.db domains.txt  # skip what's done
 ```
 
@@ -115,6 +116,22 @@ detection rulesets (each run stamps its ruleset) get an explicit warning:
 rule changes can masquerade as adoption. Works with every `--format`,
 including streaming `jsonl`.
 
+### Trusting a journal: the supersession audit (`--audit-excluded`)
+
+A long-lived journal accumulates runs you may distrust (a diagnostic
+against the wrong binary, a pilot through the system resolver). Verdicts
+are last-observation-wins, so "the bad run's verdicts are superseded" is
+a per-domain claim — the audit proves it mechanically:
+
+```bash
+google-domain-detector replay --event-store scans.db --audit-excluded <run-id>[,<run-id>...]
+```
+
+lists every domain whose latest observation comes from an excluded run.
+Findings are data, not failure: exit 0 either way, the stderr count is
+what a gate asserts. Unknown run IDs fail the audit instead of silently
+reporting clean.
+
 ## Honest limitations
 
 - **Only externally visible services are detectable.** A backend on Cloud Run
@@ -126,12 +143,12 @@ including streaming `jsonl`.
 - **Mail gateways fronting Workspace** (Mimecast, Proofpoint) hide the MX
   signal; the SPF include and the DKIM probe still catch most of them.
 - **Error tails are resolver-dependent, never ground truth.** A hiccup
-  surfaces as an `Error` cell; worse, a shared local cache that served a
-  previous distressed run can keep answering NXDOMAIN for LIVE domains
-  long after recovery (measured: 11/12 sampled "nxdomain" results were
-  alive). Positive verdicts are unaffected — cross-checked against
-  independent resolvers — but treat every `Error` cell as "unknown, ask
-  again via a fresh `--resolver`", not as a fact about the domain.
+  surfaces as an `Error` cell. NXDOMAIN verdicts are rcode-level truth
+  since 2026-11-13 (the scanner used to conflate Go's NXDOMAIN/NODATA
+  `IsNotFound` into domain death, stamping ~90% of one census wave's NX
+  verdicts false) — but a resolver serving stale cached negatives can
+  still lie, so treat every `Error` cell as "unknown, ask again via a
+  fresh `--resolver`", not as a fact about the domain.
 
 ## Install
 

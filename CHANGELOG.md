@@ -8,6 +8,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Added
 
+- `replay --audit-excluded RUN_ID[,RUN_ID...]`: the supersession audit —
+  lists every domain whose last journal observation comes from an
+  excluded run, the mechanical proof that correction passes covered the
+  poisoned supersessions (findings are data: exit 0 either way, counts
+  on stderr; unknown run IDs fail the audit instead of reporting clean).
 - `replay --since RUN_ID`: delta mode reporting exactly the domains whose
   Workspace/GCP verdict flipped since an earlier run (adopted/left counts
   on stderr, all output formats incl. streaming jsonl). Errored lookups
@@ -24,6 +29,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Fixed
 
+- False NXDOMAIN verdicts eliminated: Go's resolver conflates NXDOMAIN
+  and NODATA into a single `IsNotFound` error, and the scanner stamped
+  both as domain death (~90% of wave A's 22,010 NX verdicts were false;
+  windowsupdate.com-class domains alive at Quad9). Name existence now
+  goes through `resolve.LookupExistence`, a wire-level rcode oracle;
+  below an Exists verdict, record absence is ordinary absence, never an
+  error. Detection rules are unchanged (ruleset v1-2026-11-10).
 - `replay --run <unknown-id>` silently returned an empty report; it now
   fails naming the run and store (new `scanstore.ErrUnknownRun`), as does
   `--since` with an unknown baseline.

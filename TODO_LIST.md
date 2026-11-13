@@ -55,7 +55,24 @@ waves, manifests, unbound, pilot gates, reports, deltas.
       tranco1m-a-nxfix re-scans all 22,136 affected domains (disjoint:
       wave A's 22,010 + patch's 126) through the TCP-upstream
       forwarder; post-fix NX verdicts 12/12 confirmed true at Quad9;
-      replay last-wins supersedes the false verdicts.
+      replay last-wins supersedes the false verdicts FOR THE NXFIX
+      MANIFEST — the c4/c5 and pilot supersession gaps are the
+      T11-poisonfix row below (supersession claims are per-domain;
+      proven by replay --audit-excluded, never assumed).
+- [ ] T11-poisonfix Correction pass for the poisoned supersessions —
+      READY 2026-11-13, awaiting B's single-flight + owner go: input
+      list built from the snapshot journal
+      (reports/census/waves/tranco1m-a-poisonfix.txt, 948 domains =
+      6 c4/c5 NX ∪ 946 pilot NX; ledger row in docs/census.md with
+      derivation + sha256). After it runs,
+      `replay --audit-excluded <correction-run-ids>` must report 0
+      poisoned before wave-A data is declared trustworthy.
+- [x] Supersession audit as a tool (e2 of the 08-57 report) — done
+      2026-11-13: `replay --audit-excluded ID1,ID2` lists every domain
+      whose LAST journal observation comes from an excluded run
+      (scanstore.AuditSupersession; all --format renderers; findings
+      exit 0 with stderr counts; unknown run IDs fail). Would have
+      caught §d2/d3 before docs claimed closure.
 - [ ] T12–T13 Waves B (100–500k), C (500k–1M) with pilot gates — launch
       gated on tranco1m-a-nxfix completing clean + a 5k pilot PASS
       through the TCP-upstream forwarder, then owner go (standing
