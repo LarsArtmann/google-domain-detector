@@ -152,12 +152,22 @@ func (s *Streamer) readMore() bool {
 	}
 
 	if err != nil {
-		s.err = fmt.Errorf("read input: %w", err)
+		s.readFailed(err)
 
 		return false
 	}
 
 	return true
+}
+
+// readFailed records err as the stream-ending read error; a clean EOF is
+// the normal end of input, not a failure.
+func (s *Streamer) readFailed(err error) {
+	if errors.Is(err, io.EOF) {
+		return
+	}
+
+	s.err = fmt.Errorf("read input: %w", err)
 }
 
 // detectMode consumes leading blank lines, decides plain vs CSV from the
@@ -169,14 +179,10 @@ func (s *Streamer) detectMode() {
 		trimmed := strings.TrimRight(line, "\r\n")
 		if strings.TrimSpace(trimmed) == "" {
 			if err != nil {
-				if !errors.Is(err, io.EOF) {
-					s.err = fmt.Errorf("read input: %w", err)
-				}
-
-				return
+				s.readFailed(err)
 			}
 
-			continue
+			return
 		}
 
 		s.sawInput = true
@@ -191,8 +197,8 @@ func (s *Streamer) detectMode() {
 
 		s.tokens = tokenize(trimmed)
 
-		if err != nil && !errors.Is(err, io.EOF) {
-			s.err = fmt.Errorf("read input: %w", err)
+		if err != nil {
+			s.readFailed(err)
 		}
 
 		return
@@ -279,13 +285,7 @@ func csvHeaderColumn(line string) (int, bool) {
 		return 0, false
 	}
 
-	for i, field := range splitCSVLine(line) {
-		if headerKeywords[normalizeHeader(field)] {
-			return i, true
-		}
-	}
-
-	return 0, false
+	return HeaderColumn(splitCSVLine(line))
 }
 
 func splitCSVLine(line string) []string {

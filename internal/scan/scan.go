@@ -150,8 +150,7 @@ func ScanDomain(ctx context.Context, res resolve.Resolver, dom domain.Domain, op
 		lookupErr := err
 
 		if dnsErr, ok := errors.AsType[*net.DNSError](err); ok && dnsErr.IsNotFound {
-			result.Err = "domain not found: " + err.Error()
-			result.ErrKind = classify.ErrorNXDomain
+			markNXDomain(&result, err.Error())
 
 			return result
 		}
@@ -162,17 +161,13 @@ func ScanDomain(ctx context.Context, res resolve.Resolver, dom domain.Domain, op
 		lookupErr = firstErr(lookupErr, probeApexRecords(ctx, res, apex, opts, &result))
 		lookupErr = firstErr(lookupErr, probeHosts(ctx, res, dom, opts, &result))
 
-		if len(result.Evidences) == 0 {
-			result.Err = lookupErr.Error()
-			result.ErrKind = classify.ErrorKindOf(lookupErr)
-		}
+		noteLookupError(&result, lookupErr)
 
 		return result
 	}
 
 	if existence == resolve.NotExists {
-		result.Err = "domain not found: resolver answered NXDOMAIN for " + apex
-		result.ErrKind = classify.ErrorNXDomain
+		markNXDomain(&result, "resolver answered NXDOMAIN for "+apex)
 
 		return result
 	}
@@ -181,12 +176,26 @@ func ScanDomain(ctx context.Context, res resolve.Resolver, dom domain.Domain, op
 	lookupErr := probeApexRecords(ctx, res, apex, opts, &result)
 	lookupErr = firstErr(lookupErr, probeHosts(ctx, res, dom, opts, &result))
 
+	noteLookupError(&result, lookupErr)
+
+	return result
+}
+
+// markNXDomain stamps the result as a dead domain: the name does not exist
+// (authoritative NXDOMAIN), so probing ends here.
+func markNXDomain(result *classify.Result, cause string) {
+	result.Err = "domain not found: " + cause
+	result.ErrKind = classify.ErrorNXDomain
+}
+
+// noteLookupError records lookupErr as the result's error, but only when the
+// domain yielded zero evidence: a partial failure with evidence is a normal
+// result, never an error row (AGENTS.md invariant).
+func noteLookupError(result *classify.Result, lookupErr error) {
 	if lookupErr != nil && len(result.Evidences) == 0 {
 		result.Err = lookupErr.Error()
 		result.ErrKind = classify.ErrorKindOf(lookupErr)
 	}
-
-	return result
 }
 
 // errShortCircuit is gone: the existence oracle replaced the TXT-based NX
@@ -205,22 +214,10 @@ func probeApexRecords(
 ) error {
 	var lookupErr error
 
-	txts, err := res.LookupTXT(ctx, apex)
-	if err != nil {
-		if !isRecordAbsence(err) {
-			lookupErr = firstErr(lookupErr, err)
-		}
-	} else {
-		result.Evidences = append(result.Evidences, classify.ClassifyTXT(apex, txts)...)
-	}
-
-	if mxs, err := res.LookupMX(ctx, apex); err != nil {
-		if !isRecordAbsence(err) {
-			lookupErr = firstErr(lookupErr, err)
-		}
-	} else {
-		result.Evidences = append(result.Evidences, classify.ClassifyMX(apex, mxs)...)
-	}
+	lookupErr = firstErr(lookupErr, probeRecord(ctx, res,
+		res.LookupTXT, classify.ClassifyTXT, apex, result))
+	lookupErr = firstErr(lookupErr, probeRecord(ctx, res,
+		res.LookupMX, classify.ClassifyMX, apex, result))
 
 	if opts.ProbeDKIM && !result.WorkspaceVerdict().Detected {
 		if dkim, err := res.LookupTXT(ctx, "google._domainkey."+apex); err == nil {
@@ -229,15 +226,36 @@ func probeApexRecords(
 		// A missing selector is the normal case, not an error worth reporting.
 	}
 
-	if nss, err := res.LookupNS(ctx, apex); err != nil {
-		if !isRecordAbsence(err) {
-			lookupErr = firstErr(lookupErr, err)
-		}
-	} else {
-		result.Evidences = append(result.Evidences, classify.ClassifyNS(apex, nss)...)
-	}
+	lookupErr = firstErr(lookupErr, probeRecord(ctx, res,
+		res.LookupNS, classify.ClassifyNS, apex, result))
 
 	return lookupErr
+}
+
+// probeRecord performs one record-type lookup with the census rule baked
+// in: below the oracle's Exists verdict, record absence (NODATA) is a fact
+// yielding neither evidence nor error, while genuine lookup trouble
+// (timeout, SERVFAIL) surfaces as the returned error.
+func probeRecord[V any](
+	ctx context.Context,
+	res resolve.Resolver,
+	lookup func(context.Context, string) ([]V, error),
+	classifyFn func(string, []V) []classify.Evidence,
+	apex string,
+	result *classify.Result,
+) error {
+	records, err := lookup(ctx, apex)
+	if err != nil {
+		if isRecordAbsence(err) {
+			return nil
+		}
+
+		return err
+	}
+
+	result.Evidences = append(result.Evidences, classifyFn(apex, records)...)
+
+	return nil
 }
 
 // isRecordAbsence reports whether err is Go's conflated "no such host": an
