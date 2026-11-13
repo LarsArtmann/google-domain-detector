@@ -5,6 +5,7 @@ import (
 	"errors"
 	"net"
 	"strconv"
+	"sync/atomic"
 	"testing"
 	"time"
 )
@@ -28,11 +29,14 @@ func TestResolverDialAddr(t *testing.T) {
 }
 
 // TestNewWithAddrQueriesIPv6Server proves the --resolver flag dials a real
-// IPv6 literal end to end. A one-shot responder on [::1] echoes the query
-// back with the QR bit set (NOERROR, zero answers); the Go resolver parses
+// IPv6 literal end to end. A responder on [::1] echoes every query back
+// with the QR bit set (NOERROR, zero answers); the Go resolver parses
 // that as "domain name has no TXT record" — a *net.DNSError with
 // IsNotFound. A broken v6 dial path would surface as an i/o timeout
-// instead, which fails the test. Skipped on hosts without IPv6 loopback.
+// instead, which fails the test. The responder loops (a probe or retried
+// query must not starve it) and records whether any query arrived, so a
+// failure states whether the dial path or the response parsing broke.
+// Skipped on hosts without IPv6 loopback.
 func TestNewWithAddrQueriesIPv6Server(t *testing.T) {
 	t.Parallel()
 
@@ -46,38 +50,60 @@ func TestNewWithAddrQueriesIPv6Server(t *testing.T) {
 
 	srvAddr := conn.LocalAddr().(*net.UDPAddr)
 
-	go echoOneDNSResponse(conn)
+	var gotQuery atomic.Bool
+
+	go echoDNSResponses(conn, 10*time.Second, &gotQuery)
 
 	res := NewWithAddr(net.JoinHostPort(srvAddr.IP.String(), strconv.Itoa(srvAddr.Port))) // bracketed [::1]:port
 
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
+	var lastErr error
 
-	_, err = res.LookupTXT(ctx, "example.com")
+	for range 2 {
+		ctx, cancel := context.WithTimeout(context.Background(), 4*time.Second)
 
-	dnsErr, ok := errors.AsType[*net.DNSError](err)
-	if !ok || !dnsErr.IsNotFound {
-		t.Fatalf("LookupTXT over IPv6 resolver must parse the empty response (IsNotFound), got: %v", err)
+		_, err = res.LookupTXT(ctx, "example.com")
+
+		cancel()
+
+		if dnsErr, ok := errors.AsType[*net.DNSError](err); ok && dnsErr.IsNotFound {
+			return
+		}
+
+		lastErr = err
+
+		time.Sleep(200 * time.Millisecond)
 	}
+
+	if !gotQuery.Load() {
+		t.Fatalf("resolver never sent a query to the [::1] responder (dial path broken?): %v", lastErr)
+	}
+
+	t.Fatalf("query reached the responder but no echoed response was accepted: %v", lastErr)
 }
 
-// echoOneDNSResponse answers exactly one DNS query by echoing it with the
-// QR bit set: same ID, same question, zero answers — a well-formed empty
-// NOERROR response the Go resolver accepts.
-func echoOneDNSResponse(conn net.PacketConn) {
+// echoDNSResponses answers DNS queries until the deadline by echoing each
+// one with the QR bit set: same ID, same question, zero answers — a
+// well-formed empty NOERROR response the Go resolver accepts.
+func echoDNSResponses(conn net.PacketConn, window time.Duration, gotQuery *atomic.Bool) {
 	var buf [512]byte
 
-	_ = conn.SetReadDeadline(time.Now().Add(3 * time.Second))
+	_ = conn.SetReadDeadline(time.Now().Add(window))
 
-	n, from, err := conn.ReadFrom(buf[:])
-	if err != nil {
-		return
+	for {
+		n, from, err := conn.ReadFrom(buf[:])
+		if err != nil {
+			return
+		}
+
+		gotQuery.Store(true)
+
+		resp := append([]byte{}, buf[:n]...)
+		resp[2] |= 0x80 // response bit
+
+		_ = conn.SetWriteDeadline(time.Now().Add(time.Second))
+
+		if _, err := conn.WriteTo(resp, from); err != nil {
+			return
+		}
 	}
-
-	resp := append([]byte{}, buf[:n]...)
-	resp[2] |= 0x80 // response bit
-
-	_ = conn.SetWriteDeadline(time.Now().Add(time.Second))
-
-	_, _ = conn.WriteTo(resp, from)
 }
