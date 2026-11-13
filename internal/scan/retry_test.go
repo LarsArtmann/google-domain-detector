@@ -91,7 +91,7 @@ func TestNXDOMAINIsNotRetried(t *testing.T) {
 	t.Parallel()
 
 	f := newFake()
-	f.txtErr = map[string]error{"gone.example": notFound("gone.example")}
+	f.existence = map[string]resolve.Existence{"gone.example": resolve.NotExists}
 
 	results := Run(context.Background(), f, mustDomains(t, "gone.example"), Options{Timeout: time.Second})
 
@@ -99,7 +99,11 @@ func TestNXDOMAINIsNotRetried(t *testing.T) {
 		t.Errorf("ErrKind = %q, want nxdomain", results[0].ErrKind)
 	}
 
-	if calls := f.calls("txt:gone.example"); calls != 1 {
-		t.Errorf("an authoritative NXDOMAIN must never be retried, got %d calls", calls)
+	if calls := f.calls("exists:gone.example"); calls != 1 {
+		t.Errorf("an authoritative NXDOMAIN must never be retried, got %d oracle calls", calls)
+	}
+
+	if calls := f.calls("txt:gone.example"); calls != 0 {
+		t.Errorf("record probes must be skipped after NXDOMAIN, got %d TXT calls", calls)
 	}
 }

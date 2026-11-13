@@ -228,17 +228,38 @@ func TestScanDomainNotFoundShortCircuits(t *testing.T) {
 	t.Parallel()
 
 	f := newFake()
-	f.txtErr = map[string]error{"gone.example": notFound("gone.example")}
+	f.existence = map[string]resolve.Existence{"gone.example": resolve.NotExists}
 
 	r := ScanDomain(context.Background(), f, mustDomains(t, "gone.example")[0], Options{GCP: fixtureRanges(t)})
 	if r.Err == "" {
 		t.Error("NXDOMAIN must surface as Err")
 	}
 
-	for _, probe := range []string{"mx:gone.example", "cname:gone.example", "ip:gone.example"} {
+	for _, probe := range []string{"txt:gone.example", "mx:gone.example", "cname:gone.example", "ip:gone.example"} {
 		if f.calls(probe) != 0 {
 			t.Errorf("lookup %q must be skipped after NXDOMAIN", probe)
 		}
+	}
+}
+
+// TestScanDomainNoMXIsNotNX pins the 2026-11-13 census bug: a live name
+// (oracle says Exists) whose MX lookup answers NODATA — Go maps that to
+// the same IsNotFound error as NXDOMAIN — must surface clean, not as a
+// domain-truth NXDOMAIN verdict. kwai.net was the live specimen.
+func TestScanDomainNoMXIsNotNX(t *testing.T) {
+	t.Parallel()
+
+	f := newFake()
+	f.txt = map[string][]string{"kwai.example": {"fastly-domain-delegation-x"}}
+	f.mxErr = map[string]error{"kwai.example": notFound("kwai.example")}
+
+	r := ScanDomain(context.Background(), f, mustDomains(t, "kwai.example")[0], Options{GCP: fixtureRanges(t)})
+	if r.Err != "" {
+		t.Errorf("NODATA on MX of an existing name must not set Err, got %q (%v)", r.Err, r.ErrKind)
+	}
+
+	if r.ErrKind != classify.ErrorNone {
+		t.Errorf("ErrKind = %q, want none", r.ErrKind)
 	}
 }
 
