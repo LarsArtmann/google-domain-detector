@@ -88,6 +88,27 @@ GDD_UNBOUND_CONF=scripts/unbound-tcp.conf scripts/unbound.sh start   # also: sta
 # scans then target it with --resolver 127.0.0.1:5354
 ```
 
+### G4 journal capacity + sink/cancel semantics (2026-11-10, plan v3)
+
+The journal is trustworthy to at least 100k events — append 18.7 s
+(5 345/s), replay 2.0 s (51 035/s), db 125 MiB, heap 15 MiB
+(`TestJournalOneHundredThousandEvents`, opt-in via `GDD_SOAK=1` — the soak
+exceeds CI's default 10-min budget on 2-core runners and is not a
+functional gate). Extrapolated to 2.5M domains: ~8 min append, ~3 GiB db,
+~50 s replay. The sink retries each observation 3× with backoff and
+reports the exact dropped count on Close. Ctrl-C mid-domain drains and
+still completes the run record (pinned by `TestScanCancelMidRunDrainsEventStore`
+with a deterministic cancel trigger — never wall-clock `AfterFunc`, which
+raced suite load); a cancel landing during event-store startup fails the
+run cleanly with exit 1, nothing journaled — correct behavior.
+
+Negative-cache lesson from the 2026-11-10/12 incident (the resolver was
+falsified as the false-NX cause, but the operational tail stands):
+negative-cache entries PERSIST tens of minutes past their cause — never
+re-scan a poisoned bucket through the cache that watched the poisoning
+(the retracted "~90% genuinely dead" claim measured stale negatives).
+Positive verdicts were never affected (false negatives only).
+
 ### Pre-flight law (2026-11-13)
 
 `census-wave.sh` refuses to start (exit 5) unless BOTH two upstream

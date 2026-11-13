@@ -200,8 +200,10 @@ which is paperwork only the account holder can sign:
       948 tranco1m-a-poisonfix domains; diff against the list.
 - [ ] `runs --format` support (jsonl with FULL run IDs — the truncated
       12-char table forced raw SQL during the poisonfix derivation).
-- [ ] AGENTS.md diet: 308 → ≤220 lines (docs/agents-md-size gate
-      warning); move census war-stories to census.md.
+- [x] AGENTS.md diet — done 2026-11-13: 349 → 222 lines (-36%); census
+      war-stories (G4 numbers, negative-cache lesson, wedge narratives)
+      moved to docs/census.md §"G4 journal capacity"; gotchas condensed
+      with every distinct fact preserved; all five docs-gates green.
 - [ ] file-size-check debt: 9 files over the go-file-too-large gate
       (cli.go, replay.go, scanstore.go + 6 test files) — split by concern;
       pre-existing at the 2026-11-13 dedup audit (art-dupl zeroed
