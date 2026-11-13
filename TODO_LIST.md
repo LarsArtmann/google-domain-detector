@@ -160,6 +160,27 @@ which is paperwork only the account holder can sign:
       that alerts when the scan child died without the wrapper's completion
       stages — the 2026-11-13 wrapper death was found by luck. BLOCKED until
       wave B frees census-wave.sh (never edit the wrapper mid-run).
+- [ ] Triage the 14 cqrs-lint findings handed over at session start
+      (10-23 report §c1): A032 on `ResumeSource.RunID` + likely a NEW A032
+      on `SupersessionFinding.RunID` (needs the same journal-surface
+      ignore comment as `RunSummary`), F031 `ListRuns` unbounded Scan →
+      `WithLimit`, C015/C023 ignored Close errors in domains.go; E003/B005
+      stay deliberate non-fixes; then re-run `buildflow -s cqrs-lint`.
+- [ ] Cross-check the supersession audit against reality (10-23 report
+      §c2): re-extract the nxfix-complete snapshot, run
+      `replay --audit-excluded <pilot,c4,c5 run IDs>`, expect exactly the
+      948 tranco1m-a-poisonfix domains; diff against the list.
+- [ ] `runs --format` support (jsonl with FULL run IDs — the truncated
+      12-char table forced raw SQL during the poisonfix derivation).
+- [ ] AGENTS.md diet: 308 → ≤220 lines (docs/agents-md-size gate
+      warning); move census war-stories to census.md.
+- [ ] Re-pin vendorHash: buildflow preflight warns stale (nix build
+      fails with hash mismatch until `buildflow -s nix-hash-fix --fix`).
+- [ ] `buildflow format` re-verify after formatter fingerprint drift
+      (oxfmt 0.68 → 0.75, dprint 0.64.1 → 0.64.3).
+- [ ] Poller: per-rank-band unknown-rate expectations (calibrate on
+      wave B's ~2.8% pass-1 vs wave A's 1.53%).
+- [ ] `--audit-excluded`: accept wave NAMES in addition to run IDs.
 - [ ] Retract-note dry run — documentation-only emergency procedure for
       poisoning a published release note; rehearse once so the real
       path is known cold. go-release lane.

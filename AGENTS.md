@@ -274,6 +274,17 @@ first-party lib is considered.
   api.github.com: retry later, or bypass with the documented
   `curl --resolve api.github.com:443:<IP>` + token pattern; pushes via
   SSH (`github` remote) are unaffected.
+- BuildFlow's result cache replays FAILED step results verbatim
+  (2026-11-13): a `test-race` step that "fails" in seconds with
+  stale-looking output is a cached failure, not a fresh one — re-run
+  with `BUILDFLOW_NO_RESULT_CACHE=1 -s <step>` before diagnosing the
+  code. The root failure that seeded the cache was resource contention
+  from running two `-race ./...` suites at once; one verification lane
+  at a time on this host.
+- NEVER run your own `go test -race ./...` concurrently with a buildflow
+  gate (or another suite) on this host — the interference produced a
+  phantom cli-package failure that cost a full diagnosis round-trip
+  (2026-11-13, see the 09-57 and 10-23 status reports §d).
 
 ## Git remotes
 
