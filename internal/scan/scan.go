@@ -147,23 +147,18 @@ func ScanDomain(ctx context.Context, res resolve.Resolver, dom domain.Domain, op
 
 	existence, err := res.LookupExistence(ctx, apex)
 	if err != nil {
-		lookupErr := err
-
 		if dnsErr, ok := errors.AsType[*net.DNSError](err); ok && dnsErr.IsNotFound {
 			markNXDomain(&result, err.Error())
 
 			return result
 		}
 
-		// The oracle could not get an answer (timeout, SERVFAIL): record it
-		// and probe on — cached sub-lookups may still yield evidence, and a
-		// partial failure with evidence is a normal result (AGENTS.md).
-		lookupErr = firstErr(lookupErr, probeApexRecords(ctx, res, apex, opts, &result))
-		lookupErr = firstErr(lookupErr, probeHosts(ctx, res, dom, opts, &result))
-
-		noteLookupError(&result, lookupErr)
-
-		return result
+		// The oracle could not get an answer (timeout, SERVFAIL): assume
+		// the name may exist and probe on — cached sub-lookups may still
+		// yield evidence, and a partial failure with evidence is a normal
+		// result (AGENTS.md). The oracle error joins the probe errors
+		// below; Exists is the deliberate assumption, not the zero value.
+		existence = resolve.Exists
 	}
 
 	if existence == resolve.NotExists {
@@ -172,8 +167,9 @@ func ScanDomain(ctx context.Context, res resolve.Resolver, dom domain.Domain, op
 		return result
 	}
 
-	// The name exists: record-type absence below is a fact, not a failure.
-	lookupErr := probeApexRecords(ctx, res, apex, opts, &result)
+	// The name exists (or the oracle was inconclusive): record-type absence
+	// below is a fact, not a failure.
+	lookupErr := firstErr(err, probeApexRecords(ctx, res, apex, opts, &result))
 	lookupErr = firstErr(lookupErr, probeHosts(ctx, res, dom, opts, &result))
 
 	noteLookupError(&result, lookupErr)
