@@ -152,11 +152,12 @@ func TestAuditSupersessionRejectsUnknownRuns(t *testing.T) {
 		t.Errorf("empty excluded set error = %v, want ErrNoExcludedRuns", err)
 	}
 
-	if _, err := scanstore.AuditSupersession(ctx, reader, []string{"01NOPE"}); !errors.Is(err, scanstore.ErrUnknownRun) {
+	_, err := scanstore.AuditSupersession(ctx, reader, []string{"01NOPE"})
+	if !errors.Is(err, scanstore.ErrUnknownRun) {
 		t.Errorf("unknown run error = %v, want ErrUnknownRun", err)
 	}
 
-	_, err := scanstore.AuditSupersession(ctx, reader, []string{runA, "01NOPE", runB})
+	_, err = scanstore.AuditSupersession(ctx, reader, []string{runA, "01NOPE", runB})
 	if !errors.Is(err, scanstore.ErrUnknownRun) {
 		t.Errorf("mixed known/unknown runs error = %v, want ErrUnknownRun naming the miss", err)
 	}
