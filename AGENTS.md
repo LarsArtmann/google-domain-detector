@@ -75,8 +75,8 @@ dep set changes or a new first-party lib is considered.
   error** ("no such host" for both; Go 1.27 constructs `errNoSuchHost` for
   each) — reading it as "the domain is dead" stamped ~90% of wave A's
   22,010 NX verdicts false. Name existence MUST go through
-  `resolve.LookupExistence` (rcode oracle); below an Exists verdict,
-  sub-lookup IsNotFound is ordinary record absence (`isRecordAbsence`).
+  `resolve.LookupExistence` (rcode oracle); below Exists, sub-lookup
+  IsNotFound is ordinary record absence (`isRecordAbsence`).
 - **NEVER edit a bash script while a detached instance is mid-run** — bash
   reads by byte offset; an in-place edit shifts the running instance's
   pending read into garbage (the 2026-11-13 nxfix wedge; the edit/write
@@ -86,9 +86,8 @@ dep set changes or a new first-party lib is considered.
   no-op builtin here), read run1.stderr for the run id, write `run-id`,
   re-run the gate with `--manifest`, snapshot, log in monitor.log.
 - **DNS-over-TCP cannot be forced via Go's Dial callback** — overriding
-  udp→tcp in Dial sends unprefixed data. TCP needs a hand-rolled wire
-  client (the existence oracle) or the TCP-upstream unbound variant
-  (`scripts/unbound-tcp.conf`, client hop stays UDP).
+  udp→tcp sends unprefixed data. TCP needs a hand-rolled wire client (the
+  existence oracle) or `scripts/unbound-tcp.conf` (client hop stays UDP).
 - **Failed-lookup error strings lie about the port**: DNSError.Server shows
   the resolv.conf address even when Dial sent the query to `--resolver`
   (`internal/resolve` discards Go's address) — never diagnose "the scan
@@ -97,17 +96,16 @@ dep set changes or a new first-party lib is considered.
   registered wins** (`foldByEvent`, metaengine v4.23.0). `views.go`
   registers insert- AND update-shaped folds for `scan.domain_observed`;
   only the update fold runs (upsert — pinned, `Observations == 1`). The
-  insert fold is NOT dead weight: it declares the Map keyType
-  `QueryKeyType()` reads. Never "simplify" it away without the
-  read-model round-trip tests on memory AND sqlite.
+  insert fold declares the Map keyType `QueryKeyType()` reads; never
+  "simplify" it away without the read-model round-trip tests (memory+sqlite).
 - **G4 journal capacity + sink/cancel semantics moved to census.md**
   (§"G4 journal capacity": 100k-event numbers, sink 3× retry + dropped
   count, Ctrl-C drain contract, negative-cache persistence lesson).
 - **Host-level outbound UDP:53 outages happen** (2026-11-12: TCP:53 kept
-  working; ~3 450 garbage observations). `census-wave.sh` pre-flights real
-  upstreams (exit 5; a cache-answering forwarder proves nothing);
-  TCP-forwarder waves set `GDD_PREFLIGHT_TRANSPORT=tcp`. This host also
-  runs a live resolver on `[::1]:53`.
+  working; ~3 450 garbage observations). Waves pre-flight real upstreams
+  (exit 5; a cache-answering forwarder proves nothing); TCP-forwarder
+  waves set `GDD_PREFLIGHT_TRANSPORT=tcp`. Host also runs a resolver on
+  `[::1]:53`.
 - cmdguard's flag-binding layer returns `fmt.Errorf`-wrapped SENTINELS,
   not `*v5.EnumError`/`*ExitError` structs — `errors.As` for the structs
   finds nothing. `internal/cli.Run` maps that sentinel family to usageError
@@ -151,11 +149,11 @@ dep set changes or a new first-party lib is considered.
   mutated) and before `event.New`; decode-side CBOR repair
   (`scanstore/cborsanitize.go`, fixture-pinned; journal append-only).
   Route NEW payload-carrying event types through the repair wrapper.
-- Observation streams are per-domain (stream ID = domain name); run
-  streams hold started/completed only. Replay keeps the LAST observation
-  per domain per run and boots WITHOUT the projection host. Scan output
-  preserves INPUT order, replay journal order — the e2e test compares
-  parsed result SETS, never raw bytes.
+- Observation streams are per-domain (stream ID = domain name); run streams
+  hold started/completed only. Replay keeps the LAST observation per domain
+  per run and boots WITHOUT the projection host. Scan output preserves INPUT
+  order, replay journal order — the e2e test compares parsed result SETS,
+  never raw bytes.
 - cqrs-lint: findings dispositioned inline with rationale at their site;
   F005/F007 anchor to the alphabetically FIRST scanstore file.
 - **Read models lag the journal — folds live in projection workers, not
@@ -180,9 +178,8 @@ dep set changes or a new first-party lib is considered.
   (go-cqrs-lite v4 tags); do NOT follow go-version-auto-configure's
   "major.minor only" advice. BuildFlow#56: go1.27.0 binaries block the
   pre-commit hook — verify via direct gates, `--no-verify` for docs-only.
-- docs-gates verdicts can differ between the pre-commit hook and a direct
-  run (the hook runs `--build-mode pre-commit --staged-only` and stashes
-  unstaged changes) — diagnose red-hook/green-direct with a direct run.
+- docs-gates verdicts can differ between pre-commit hook and direct run (hook
+  runs `--build-mode pre-commit --staged-only`) — diagnose with a direct run.
 - Session start: `gh run list --limit 3` before acting (the v0.1.0 tag
   sat on red CI unnoticed). Release law: local green gates do NOT
   substitute for CI green on the exact pushed commit — tag only after
@@ -205,11 +202,11 @@ dep set changes or a new first-party lib is considered.
 Push to both. The auto-commit daemon (pma) may commit mid-session — check
 `git status` before committing; never assume.
 
-Mixed-commit policy (daemon-swept bundles): junk-message bundles containing
+Mixed-commit policy (daemon-swept bundles): junk-message bundles with
 unrelated concurrent changes → `git reset --soft <daemon-commit>^` +
 per-file commits; message-only amend (`--no-verify`) ONLY when the tree is
-byte-identical to the committed one. Never rewrite pushed history (mirror
-included) without explicit approval.
+byte-identical. Never rewrite pushed history (mirror included) without
+explicit approval.
 
 ## Downstream consumers (pointer)
 
