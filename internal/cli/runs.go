@@ -15,10 +15,11 @@ import (
 	"github.com/larsartmann/google-domain-detector/internal/scanstore"
 )
 
+//nolint:golines // fleet golines pads/reorders tags against the project tagalign policy; tags cannot wrap (see .golangci.yml)
 type RunsFlags struct {
 	EventStore string `env:"EVENT_STORE" flag:"event-store" help:"SQLite event store written by scan --event-store"`
-	Format     string `                  flag:"format"      help:"Output format"                                    default:"table" values:"table,json,csv,tsv,markdown,yaml,toml,jsonl"`
-	Color      string `                  flag:"color"       help:"Terminal colors for table output"                 default:"auto"  values:"auto,always,never"`
+	Format     string `default:"table" flag:"format"  help:"Output format"                    values:"table,json,csv,tsv,markdown,yaml,toml,jsonl"`
+	Color      string `default:"auto"  flag:"color"   help:"Terminal colors for table output" values:"auto,always,never"`
 }
 
 // runRuns lists every recorded scan run from the read model, newest first,
