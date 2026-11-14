@@ -89,6 +89,7 @@ google-domain-detector replay --event-store scans.db            # latest run, no
 google-domain-detector replay --event-store scans.db --run ID   # any earlier run
 google-domain-detector show acme.com --event-store scans.db     # one domain's full history
 google-domain-detector runs --event-store scans.db              # the run ledger
+google-domain-detector runs --event-store scans.db --format jsonl   # FULL run IDs, machine-readable
 google-domain-detector replay --event-store scans.db --audit-excluded ID1,ID2   # poison check (wave names work too)
 google-domain-detector scan --resume latest --event-store scans.db domains.txt  # skip what's done
 ```

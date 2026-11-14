@@ -42,5 +42,10 @@ inventory in [FEATURES](FEATURES.md).
   (19-27 §f43); the detector proves *domains*, not companies.
 - **GoReleaser binaries** — cross-platform release binaries beyond the
   nix + Homebrew-tap paths (E28 idea, 2026-11-11).
+- **Journal metadata evolution**: causation/actor stamps
+  (`event.WithCommandCausality`, `command.WithActor`), schema upcaster
+  declarations, EventCatalog wiring — all deferred by design until the
+  journal gains external consumers or its first payload evolution
+  (docs/status/2026-11-11_17-43 §c/§g).
 - **Verdict-flip alerting** (daily digest of delta-query output) — the
   delta query exists (`replay --since`); the digest/timer is unrefined.
