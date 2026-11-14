@@ -217,7 +217,7 @@ operator decision, not an accounting default.
   Root cause of the 08:43
   wedge: census-wave.sh edited on disk mid-run (inode offset shift →
   syntax error at pass-1 completion) — never edit the wrapper or ANY
-  running bash script in place; build in /tmp and`install` over the path.
+  running bash script in place; build in /tmp and `install` over the path.
 - Gate coverage assertion: the runner always passes `--manifest` (and
   `--expect-skip` on retries, journal-derived), so a pass whose scanned
   - unparseable + expected skips do not reconcile with the manifest

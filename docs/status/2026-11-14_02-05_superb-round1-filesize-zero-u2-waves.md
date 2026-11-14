@@ -134,7 +134,7 @@ landed by sibling sessions and were integrated, not duplicated.
 1. Re-run the FULL buildflow gate end-to-end on the current tree.
 2. `buildflow format` once (formatter-fingerprint-drift warn).
 3. `buildflow -s nix-hash-fix --fix` (stale vendorHash warn) + `nix build`.
-4. C1 continued: heartbeat watch until B exits (ETA ~14:45–16:00).
+4. ~~C1 continued: heartbeat watch until B exits (ETA 14:45-16:00).~~ Superseded — the TODO_LIST census-chain row (T12-T13) owns the live watch: wave B RUNNING, watchdog attached, 0 alarms, wrapper auto-gates on exit
 5. C2 on B exit: wrapper stderr summary → run-id; gate `--manifest --expect-skip`.
 6. U4: extract B pass-1 unknown-rate by rank band; set poller expectations.
 7. U2 live smoke: `replay --audit-excluded wave:tranco1m-a --format jsonl` on census.db vs the ledger's per-run counts.
@@ -148,39 +148,39 @@ landed by sibling sessions and were integrated, not duplicated.
 15. Q5: TODO_LIST hygiene (docs-gates audit-all sweep, merge the duplicate file-size rows, close E27, strike done rows).
 16. Q6: STACK.md go-codec row (cborsanitize made it direct).
 17. Q6: CHANGELOG Unreleased coherence vs daemon-landed entries.
-18. Q6: `describe` battery eyeball post-resume/wave flags.
-19. Q3: docs/review/libs index.html render proof re-shoot.
-20. Q3: go-cqrs-lite verdict re-audit vs current pin.
-21. Q3: cqrs-htmx verdict re-audit.
-22. Q2: reproduce the cloudflare TXT "cannot unmarshal" class from wave logs; root-cause the decoder path; fix or file.
-23. R5: owner-decision doc — www-strip, B→C auto-chain, GPG, BuildFlow#56 rebuild, Nominet email, poisonfix go (one doc, one ask batch).
-24. R3: zone-ch manifest + gate params + post-C slot note.
-25. R1: asciinema demo script (60-domain TTY scan) + GIF + README embed.
-26. R2: io-history `--profile-io` (56-file offender).
-27. R4: CRM delta-retirement confirm + enrichment/registrant-dedup ROADMAP entries.
-28. R6: check the 2 unarchived status reports for closure.
-29. R6: quiet stale LSP golangci diagnostics (classify/coverage_scan ghosts above).
-30. C3 (owner go): launch wave C via census-wave.sh, GDD_PREFLIGHT_TRANSPORT=tcp.
-31. C4 (owner go): poisonfix-25 fresh binary + PROVENANCE stamp + sha256.
-32. C5: `--audit-excluded` 4 runs → 0 poisoned; ledger row; snapshot.
-33. Post-B: verify B's completion snapshot tar + .sha256 exist and restore.
-34. Push verification: daemon-swept commits present on BOTH remotes.
-35. CI: watch the push-triggered run on the exact HEAD (release law).
-36. T14 contingency: if B's gate FAILs, triage unknowns before C.
-37. Confirm T16 replay-delta coverage for the CRM diff logic (R4 detail).
-38. Decision: DKIM microsoft selector probe — plan or park (with ruleset question).
-39. Decision: `MicrosoftVerdict()` method + Counts.MS tally — now or post-census.
-40. Check census.db disk headroom for wave C + zone-ch.
-41. Wave-name UX: consider `runs` output showing wave names more loudly (already in provenance suffix — verify).
-42. Audit resolver edge: token = wave name that equals a run ID prefix (impossible: ULID vs lowercase — pin with a test comment).
-43. scanstore_test.go at 346 — pre-split the next addition (headroom 4 lines).
-44. cli_scan_test.go at 344 — same (headroom 6).
-45. Move auditTestStore + audit fixtures fully into audit_test.go (cli_test.go slimming, optional).
-46. Add a session-start `pgrep` single-flight guard to the ritual checklist (done manually this session).
-47. Consider `WaitProjectionsSettled` integration test for runs/show/enrich commands (sibling added projections_test — verify coverage).
-48. PROVENANCE.md update when wave C's binary is stamped (C3.1).
-49. Closing status report + index after C5 (the census closeout ritual).
-50. Park: projectionhost settled-API library fix (TODO row exists, post-census).
+    ~~18. Q6: `describe` battery eyeball post-resume/wave flags.~~ done — at `9bf1adb` - describe battery eyeballed post-resume/wave/max-runtime; every command and flag current
+18. Q3: docs/review/libs index.html render proof re-shoot.
+19. Q3: go-cqrs-lite verdict re-audit vs current pin.
+20. Q3: cqrs-htmx verdict re-audit.
+21. Q2: reproduce the cloudflare TXT "cannot unmarshal" class from wave logs; root-cause the decoder path; fix or file.
+22. R5: owner-decision doc — www-strip, B→C auto-chain, GPG, BuildFlow#56 rebuild, Nominet email, poisonfix go (one doc, one ask batch).
+23. R3: zone-ch manifest + gate params + post-C slot note.
+24. R1: asciinema demo script (60-domain TTY scan) + GIF + README embed.
+25. R2: io-history `--profile-io` (56-file offender).
+26. R4: CRM delta-retirement confirm + enrichment/registrant-dedup ROADMAP entries. **→ routed this pass - TODO_LIST Kith CRM row (repo: crm) + ROADMAP parked bullets (enrichment join, registrant dedup)**
+27. R6: check the 2 unarchived status reports for closure.
+28. R6: quiet stale LSP golangci diagnostics (classify/coverage_scan ghosts above).
+29. C3 (owner go): launch wave C via census-wave.sh, GDD_PREFLIGHT_TRANSPORT=tcp.
+30. C4 (owner go): poisonfix-25 fresh binary + PROVENANCE stamp + sha256.
+31. C5: `--audit-excluded` 4 runs → 0 poisoned; ledger row; snapshot.
+32. Post-B: verify B's completion snapshot tar + .sha256 exist and restore.
+33. Push verification: daemon-swept commits present on BOTH remotes.
+34. CI: watch the push-triggered run on the exact HEAD (release law).
+35. T14 contingency: if B's gate FAILs, triage unknowns before C.
+36. Confirm T16 replay-delta coverage for the CRM diff logic (R4 detail).
+37. Decision: DKIM microsoft selector probe — plan or park (with ruleset question).
+38. Decision: `MicrosoftVerdict()` method + Counts.MS tally — now or post-census.
+39. Check census.db disk headroom for wave C + zone-ch.
+40. Wave-name UX: consider `runs` output showing wave names more loudly (already in provenance suffix — verify).
+41. Audit resolver edge: token = wave name that equals a run ID prefix (impossible: ULID vs lowercase — pin with a test comment).
+42. scanstore_test.go at 346 — pre-split the next addition (headroom 4 lines).
+43. cli_scan_test.go at 344 — same (headroom 6).
+44. Move auditTestStore + audit fixtures fully into audit_test.go (cli_test.go slimming, optional).
+45. Add a session-start `pgrep` single-flight guard to the ritual checklist (done manually this session).
+46. Consider `WaitProjectionsSettled` integration test for runs/show/enrich commands (sibling added projections_test — verify coverage).
+47. PROVENANCE.md update when wave C's binary is stamped (C3.1).
+48. Closing status report + index after C5 (the census closeout ritual).
+49. Park: projectionhost settled-API library fix (TODO row exists, post-census).
 
 ## g) QUESTIONS FOR THE OWNER (cannot self-answer)
 

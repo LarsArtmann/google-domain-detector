@@ -203,42 +203,42 @@ tail (f1/f3/f42–f45, tap, soak workflow, E22 headers, TODO truth pass).
     err113-in-tests, wrapcheck first-party) once the sibling lane lands.
     ~~14. E24 mechanical: errcheck, mnd, varnamelen, cyclop (ScanDomain 15>12),~~ done — golangci-lint run = 0 issues (2026-11-13)
     exhaustive, paralleltest, modernize, perfsprint, unparam.
-14. E25: CI cmdguard-lint + golangci-lint + govulncheck; watch first run.
-15. E33: coverage profile → gap list → test batches (69 → 90).
+    ~~14. E25: CI cmdguard-lint + golangci-lint + govulncheck; watch first run.~~ done — ci.yml lint job (cmdguard-lint pinned clone + golangci-lint v2.15.0 + govulncheck v1.9.0), first run green 2026-11-13
+14. E33: coverage profile → gap list → test batches (69 → 90).
     ~~17. TimeoutMiddleware whole-run budget (E31).~~ done — `--max-runtime` (E31)
-16. .ch zone pull via SWITCH TSIG (once/24h) → whole-TLD input.
-17. E28 --pre-filter A-existence sweep + volume measurement.
-18. E29 CSV enrichment (journal-backed column append).
-19. E32 daily delta timer (Tranco refresh + new-domain diff vs journal).
-20. ~~E32 journal-only stats; delete the ad-hoc JSON path; parity check.~~ done at `f38d7ae`, `29135c6` (T16 delta query in scanstore/delta.go; runs ledger reads the journal; no ad-hoc stats script remains)
-21. E32 lead scoring v1 (workspace-certain × gcp × Tranco rank).
-22. GoReleaser wiring so future releases ship binaries (tap stays
+15. .ch zone pull via SWITCH TSIG (once/24h) → whole-TLD input.
+16. E28 --pre-filter A-existence sweep + volume measurement.
+17. E29 CSV enrichment (journal-backed column append).
+18. E32 daily delta timer (Tranco refresh + new-domain diff vs journal).
+19. ~~E32 journal-only stats; delete the ad-hoc JSON path; parity check.~~ done at `f38d7ae`, `29135c6` (T16 delta query in scanstore/delta.go; runs ledger reads the journal; no ad-hoc stats script remains)
+20. E32 lead scoring v1 (workspace-certain × gcp × Tranco rank).
+21. GoReleaser wiring so future releases ship binaries (tap stays
     source-build until then).
-23. asciinema/GIF demo for the README (E20 leftover).
-24. AGENTS: jq-shim gotcha.
-25. AGENTS: census pointer row (params + runbook link).
-26. README: link docs/census.md from the bulk/limitations section.
-27. E22 full re-audit: go-cqrs-lite + cqrs-htmx (premise flipped).
-28. E22: re-verify all 22 audit citations vs HEAD; fix drift.
-29. E22: re-screenshot the audit index; href check.
-30. IPv6 `--resolver` handling check (IPv4-only tested).
-31. TXT truncation investigation (cloudflare "cannot unmarshal" class).
+22. asciinema/GIF demo for the README (E20 leftover).
+23. AGENTS: jq-shim gotcha.
+24. AGENTS: census pointer row (params + runbook link).
+25. README: link docs/census.md from the bulk/limitations section.
+26. E22 full re-audit: go-cqrs-lite + cqrs-htmx (premise flipped).
+27. E22: re-verify all 22 audit citations vs HEAD; fix drift.
+28. E22: re-screenshot the audit index; href check.
+29. IPv6 `--resolver` handling check (IPv4-only tested).
+30. TXT truncation investigation (cloudflare "cannot unmarshal" class).
     ~~34. docs-gates cache-key investigation + ETag-if-polled (31.5).~~ **Won't implement — moot — docs-gates extracted as a standalone binary.**
-32. Nominet DAA email (owner action; draft exists).
-33. SWITCH TSIG pull automation script.
-34. ccTLD data-use constraint review note (23.4).
-35. Watch tonight's 03:17 UTC scheduled Soak (first cron firing).
-36. Wave-manifest sha256 verification step before each wave launch.
-37. Census db backup cadence before waves (≈1.2 GiB at 1M events).
+31. Nominet DAA email (owner action; draft exists).
+32. SWITCH TSIG pull automation script.
+33. ccTLD data-use constraint review note (23.4).
+34. Watch tonight's 03:17 UTC scheduled Soak (first cron firing).
+35. Wave-manifest sha256 verification step before each wave launch.
+36. Census db backup cadence before waves (≈1.2 GiB at 1M events).
     ~~41. unbound.log rotation for multi-hour waves.~~ **Won't implement — per-instance log files (LOG_FILE derives from the conf basename) sidestep rotation; revisit only if one instance runs multi-week.**
-38. mixed-TLD sustained qps measurement → possible w6 sweet spot.
-39. Post-census journal-compaction decision (ROADMAP parked item).
-40. Consumer propagation sweep for v0.1.0 (likely zero consumers).
+37. mixed-TLD sustained qps measurement → possible w6 sweet spot.
+38. Post-census journal-compaction decision (ROADMAP parked item).
+39. Consumer propagation sweep for v0.1.0 (likely zero consumers).
     ~~45. Retract-note dry run (documentation-only emergency procedure).~~ done — rehearsed 2026-11-13, both paths in docs/release-recovery.md
-41. Coverage re-measure after E24 churn (baseline drift).
-42. GPG signing policy for agent commits (owner decision).
-43. BuildFlow#56 fleet fix (owner approval gate).
-44. FEATURES.md refresh (census tooling, delta query, tap, soak CI).
+40. Coverage re-measure after E24 churn (baseline drift).
+41. GPG signing policy for agent commits (owner decision).
+42. BuildFlow#56 fleet fix (owner approval gate).
+43. FEATURES.md refresh (census tooling, delta query, tap, soak CI).
 
 ## g) Questions I cannot answer myself
 
