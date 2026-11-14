@@ -49,10 +49,14 @@ T15 final → closing report.
       probe post-census); ask folded into the owner-decision package.
       Owner go pending; the stamp MUST land before wave C's binary is
       built.
-- [ ] U2/U1 live smoke on a census.db SNAPSHOT (never the live db):
-      `replay --audit-excluded wave:tranco1m-a --format jsonl` vs the
-      ledger's per-run counts, `runs --format jsonl` full IDs, and pin
-      the ULID-vs-lowercase-wave-name edge (02-05 §f7/§f41/§f42).
+- [x] U2/U1 live smoke on a census.db SNAPSHOT (2026-11-14 02:31, the
+      tranco1m-b-complete-20261113-1647 snapshot, sha256-verified +
+      integrity ok): `replay --audit-excluded wave:tranco1m-a` expanded
+      5 runs (bare form byte-identical), 75,255/202,443 findings exit 0,
+      unknown token exits 2 naming the token, `runs --format jsonl`
+      full 26-char IDs + wave/resumed_from/counts on all 17 runs;
+      ULID-vs-lowercase edge pinned in the resolveAuditExcluded doc
+      comment.
 - [ ] File-size headroom: scanstore_test.go (346/350) and
       cli_scan_test.go (344/350) — split before the next addition so the
       zeroed debt stays zero (02-05 §f43/§f44).

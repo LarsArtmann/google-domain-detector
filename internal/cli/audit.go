@@ -112,8 +112,9 @@ func validateAuditFlags(f ReplayFlags) error {
 // resolveAuditExcluded expands each comma-separated token into run IDs via
 // the journal's run summaries: "wave:NAME" expands to every run stamped
 // with that wave, a bare token matching a run ID stays as-is, and a bare
-// token matching a wave name expands like wave:NAME (wave names cannot
-// collide with run IDs). Summaries are first-started order, so wave
+// token matching a wave name expands like wave:NAME (a bare token can
+// never be ambiguous: run IDs are uppercase ULIDs, wave names lowercase —
+// no string can match both). Summaries are first-started order, so wave
 // expansion reads chronologically; anything unknown is a usage error
 // naming the token. Journal-only by design: the audit must stay independent
 // of the projection read models (Boot-composed, no host).
