@@ -216,6 +216,20 @@ func walkRuns(ctx context.Context, store event.Store, runFilter string) (Replay,
 	return out, nil
 }
 
+// RunSummaries reads every run summary from the journal alone, in
+// first-started order. It is the journal-only counterpart of ListRuns:
+// Boot-composed reads (replay, the supersession audit) resolve runs and
+// waves through it instead of the projection read models, which only the
+// started projection host maintains.
+func RunSummaries(ctx context.Context, sys *system.System) ([]RunSummary, error) {
+	replay, err := walkRuns(ctx, sys.EventStore(), "")
+	if err != nil {
+		return nil, err
+	}
+
+	return replay.Runs, nil
+}
+
 // ResumeSource answers "what did this run already observe?" for --resume:
 // the resolved run identity plus the set of domain names it recorded. The
 // set holds only domain-name keys, so memory stays proportional to the

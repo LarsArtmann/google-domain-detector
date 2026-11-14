@@ -13,6 +13,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   excluded run, the mechanical proof that correction passes covered the
   poisoned supersessions (findings are data: exit 0 either way, counts
   on stderr; unknown run IDs fail the audit instead of reporting clean).
+  Exclusions also accept wave names (bare or `wave:NAME`), expanded from
+  the journal's run stamps — the audit stays independent of projection
+  read models.
 - `replay --since RUN_ID`: delta mode reporting exactly the domains whose
   Workspace/GCP verdict flipped since an earlier run (adopted/left counts
   on stderr, all output formats incl. streaming jsonl). Errored lookups

@@ -288,11 +288,13 @@ journal).
 ```bash
 gdd replay --event-store census.db --audit-excluded RUN1,RUN2
 gdd replay --event-store census.db --audit-excluded RUN1 --format jsonl   # one finding per line
+gdd replay --event-store census.db --audit-excluded wave:tranco1m-a       # a whole wave (bare names too)
 ```
 
 Findings are data, not failure: exit 0 either way, gates assert the
-stderr count. Unknown run IDs FAIL the audit — a typo must not report
-clean. The 2026-11-13 self-review found two supersession gaps by hand
+stderr count. Unknown run IDs or wave names FAIL the audit — a typo must
+not report clean. Exclusions resolve from the journal's run stamps, not
+the projection read models. The 2026-11-13 self-review found two supersession gaps by hand
 (the 6 c4/c5 false-NX outside the nxfix manifest; the pilot's ~946 NX
 superseding healthy wave-A verdicts, §d2/d3 of the 08-57 report) —
 this command is that check, never hand-rolled again.

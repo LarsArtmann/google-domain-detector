@@ -240,7 +240,8 @@ which is paperwork only the account holder can sign:
       `buildflow format --check` pipeline 20 success / 0 failed.
 - [ ] Poller: per-rank-band unknown-rate expectations (calibrate on
       wave B's ~2.8% pass-1 vs wave A's 1.53%).
-- [ ] `--audit-excluded`: accept wave NAMES in addition to run IDs.
+- [x] `--audit-excluded`: accept wave NAMES in addition to run IDs.
+      (2026-11-14: bare or `wave:NAME`, journal-resolved, exit 2 on unknown.)
 - [ ] io-history-ratchet: `--profile-io` investigation (56 files vs
       median 10 — a memo layer may have stopped eliminating I/O).
 - [ ] `incoming/outgoing-num-tcp` contention measurement post-B

@@ -23,7 +23,7 @@ type ReplayFlags struct {
 	EventStore    string `env:"EVENT_STORE" flag:"event-store" help:"SQLite event store written by scan --event-store"`
 	Run           string `flag:"run" help:"Rebuild this run ID (default: the most recent run)"`
 	Since         string `flag:"since" help:"Diff mode: report only domains whose verdict flipped since this run ID (the adoption/departure signal)"`
-	AuditExcluded string `flag:"audit-excluded" help:"Supersession audit: list every domain whose last journal observation comes from one of these comma-separated run IDs (the poison check; --run/--since/--only must be unset)"`
+	AuditExcluded string `flag:"audit-excluded" help:"Supersession audit: list every domain whose last journal observation comes from one of these comma-separated run IDs or wave names (bare or wave:NAME; the poison check; --run/--since/--only must be unset)"`
 	Format        string `default:"table" flag:"format" help:"Output format" values:"table,json,csv,tsv,markdown,yaml,toml,jsonl"`
 	Only          string `default:"all" flag:"only" help:"Report only matching domains" values:"all,workspace,gcp,google"`
 	Color         string `default:"auto" flag:"color" help:"Terminal colors for table output" values:"auto,always,never"`
@@ -359,8 +359,6 @@ func runReplayAudit(ctx context.Context, f ReplayFlags, stdout, stderr io.Writer
 		return err
 	}
 
-	excluded := parseRunList(f.AuditExcluded)
-
 	format, err := output.ParseFormat(f.Format)
 	if err != nil {
 		return err
@@ -371,12 +369,35 @@ func runReplayAudit(ctx context.Context, f ReplayFlags, stdout, stderr io.Writer
 		return err
 	}
 
-	audit, sys, err := auditJournalFindings(ctx, f.EventStore, excluded)
+	sys, err := scanstore.Boot(ctx, f.EventStore)
 	if err != nil {
-		return err
+		return fmt.Errorf("open event store %s: %w", f.EventStore, err)
 	}
 
 	defer func() { _ = sys.Close() }()
+
+	excluded, err := resolveAuditExcluded(ctx, sys, f.AuditExcluded)
+	if err != nil {
+		if errors.Is(err, scanstore.ErrNoRuns) {
+			return fmt.Errorf("%s: %w", f.EventStore, err)
+		}
+
+		return err
+	}
+
+	audit, err := scanstore.AuditSupersession(ctx, sys, excluded)
+	if err != nil {
+		switch {
+		case errors.Is(err, scanstore.ErrNoRuns):
+			return fmt.Errorf("%s: %w", f.EventStore, err)
+		case errors.Is(err, scanstore.ErrUnknownRun):
+			// Belt and braces: the resolver above only admits journal-known
+			// IDs, so this fires only on a resolver/audit disagreement.
+			return fmt.Errorf("excluded run not found in %s: %w", f.EventStore, err)
+		default:
+			return err
+		}
+	}
 
 	_, _ = fmt.Fprintf(stderr, "supersession audit: %d of %d domain(s) last observed by an excluded run%s\n",
 		len(audit.Findings), audit.TotalDomains, byRunSuffix(excluded, audit.Findings))
@@ -420,31 +441,71 @@ func validateAuditFlags(f ReplayFlags) error {
 	return nil
 }
 
-// auditJournalFindings boots the journal-only reader and runs the
-// supersession audit, mapping the scanstore sentinels to user-facing
-// failures the way the replay run modes do. The caller closes the system.
-func auditJournalFindings(
-	ctx context.Context,
-	eventStore string,
-	excluded []string,
-) (scanstore.SupersessionAudit, *system.System, error) {
-	sys, err := scanstore.Boot(ctx, eventStore)
+// resolveAuditExcluded expands each comma-separated token into run IDs via
+// the journal's run summaries: "wave:NAME" expands to every run stamped
+// with that wave, a bare token matching a run ID stays as-is, and a bare
+// token matching a wave name expands like wave:NAME (wave names cannot
+// collide with run IDs). Summaries are first-started order, so wave
+// expansion reads chronologically; anything unknown is a usage error
+// naming the token. Journal-only by design: the audit must stay independent
+// of the projection read models (Boot-composed, no host).
+func resolveAuditExcluded(ctx context.Context, sys *system.System, raw string) ([]string, error) {
+	runs, err := scanstore.RunSummaries(ctx, sys)
 	if err != nil {
-		return scanstore.SupersessionAudit{}, nil, fmt.Errorf("open event store %s: %w", eventStore, err)
+		return nil, err
 	}
 
-	audit, err := scanstore.AuditSupersession(ctx, sys, excluded)
+	runsByID := make(map[string]struct{}, len(runs))
+	runsByWave := make(map[string][]string)
 
-	switch {
-	case err == nil:
-		return audit, sys, nil
-	case errors.Is(err, scanstore.ErrNoRuns):
-		return scanstore.SupersessionAudit{}, nil, fmt.Errorf("%s: %w", eventStore, err)
-	case errors.Is(err, scanstore.ErrUnknownRun):
-		return scanstore.SupersessionAudit{}, nil, fmt.Errorf("excluded run not found in %s: %w", eventStore, err)
-	default:
-		return scanstore.SupersessionAudit{}, nil, err
+	for _, run := range runs {
+		runsByID[run.RunID] = struct{}{}
+
+		if run.Wave != "" {
+			runsByWave[run.Wave] = append(runsByWave[run.Wave], run.RunID)
+		}
 	}
+
+	resolved := make([]string, 0, len(runsByID))
+	seen := make(map[string]struct{}, len(runsByID))
+
+	add := func(id string) {
+		if _, dup := seen[id]; dup {
+			return
+		}
+
+		seen[id] = struct{}{}
+		resolved = append(resolved, id)
+	}
+
+	for token := range strings.SplitSeq(raw, ",") {
+		token = strings.TrimSpace(token)
+		if token == "" {
+			continue
+		}
+
+		wave, isWave := strings.CutPrefix(token, "wave:")
+		if !isWave {
+			if _, isID := runsByID[token]; isID {
+				add(token)
+
+				continue
+			}
+
+			wave, isWave = token, true
+		}
+
+		ids, known := runsByWave[wave]
+		if !known {
+			return nil, usageError(fmt.Errorf("%w: %q", errAuditExcludedUnknown, token))
+		}
+
+		for _, id := range ids {
+			add(id)
+		}
+	}
+
+	return resolved, nil
 }
 
 // byRunSuffix summarizes the findings per excluded run in the order the

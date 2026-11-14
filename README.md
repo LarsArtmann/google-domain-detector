@@ -89,7 +89,7 @@ google-domain-detector replay --event-store scans.db            # latest run, no
 google-domain-detector replay --event-store scans.db --run ID   # any earlier run
 google-domain-detector show acme.com --event-store scans.db     # one domain's full history
 google-domain-detector runs --event-store scans.db              # the run ledger
-google-domain-detector replay --event-store scans.db --audit-excluded ID1,ID2   # poison check
+google-domain-detector replay --event-store scans.db --audit-excluded ID1,ID2   # poison check (wave names work too)
 google-domain-detector scan --resume latest --event-store scans.db domains.txt  # skip what's done
 ```
 
@@ -130,13 +130,14 @@ are last-observation-wins, so "the bad run's verdicts are superseded" is
 a per-domain claim — the audit proves it mechanically:
 
 ```bash
-google-domain-detector replay --event-store scans.db --audit-excluded <run-id>[,<run-id>...]
+google-domain-detector replay --event-store scans.db --audit-excluded <run-id-or-wave>[,<...>]
 ```
 
-lists every domain whose latest observation comes from an excluded run.
-Findings are data, not failure: exit 0 either way, the stderr count is
-what a gate asserts. Unknown run IDs fail the audit instead of silently
-reporting clean.
+lists every domain whose latest observation comes from an excluded run
+(a run ID, a wave name, or `wave:NAME` — a wave expands to every run
+stamped with it). Findings are data, not failure: exit 0 either way, the
+stderr count is what a gate asserts. Unknown run IDs or wave names fail
+the audit instead of silently reporting clean.
 
 ## Honest limitations
 

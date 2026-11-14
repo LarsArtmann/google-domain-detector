@@ -14,4 +14,5 @@ var (
 
 	errAuditExcludedCombination = errors.New("--audit-excluded audits the whole journal; drop --run/--since/--only")
 	errAuditExcludedEmpty       = errors.New("--audit-excluded needs at least one run ID")
+	errAuditExcludedUnknown     = errors.New("--audit-excluded token matches no run ID or wave name")
 )
