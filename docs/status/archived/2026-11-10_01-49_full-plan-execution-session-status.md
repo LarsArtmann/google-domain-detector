@@ -189,13 +189,13 @@ TimeoutMiddleware, FormatsForShape (=T23), error taxonomy (DONE via T10).
 9. T11 scanstore sink retry/backoff + ctrl-C test + 100k bench (G4).
 10. T12 show/runs commands (de-ghost read models).
 11. T13 go-output polish (--color, SetFooter, Title, AddRowChecked).
-12. T15 WithDoctorCheck preflight.
+~~12. T15 WithDoctorCheck preflight.~~ done — doctor dns-resolver + ranges-feed checks (internal/cli/doctor.go)
 13. T16 nom live progress.
 14. T14 README honest + install + Homebrew tap (post-tag).
 15. T18 audit upkeep (citations vs HEAD, screenshot, cqrs re-audit —
     premise flipped by scanstore).
 16. T20 lint cleanup to zero (~30 warnings incl. my new err113s).
-17. T21 cmdguard-lint CI step.
+~~17. T21 cmdguard-lint CI step.~~ done — cmdguard-lint CI step
 18. T23 registry-derived format enum (FormatsForShape).
 19. ~~T24 NXDOMAIN pre-sweep (after T9 + G4).~~ superseded — the in-scan existence oracle (resolve.LookupExistence, 2026-11-13) replaces any pre-sweep
 20. T25 CSV enrichment.
@@ -203,7 +203,7 @@ TimeoutMiddleware, FormatsForShape (=T23), error taxonomy (DONE via T10).
 22. T27 infra long-tail (TimeoutMiddleware, describe contract test,
     vendorHash.nix, freshness guard, docs-gates cache key, ETag, ROADMAP).
 23. Owner sends Nominet email + requests SWITCH TSIG keys (drafts ready).
-24. Harvest THIS report's §f into TODO_LIST (docs-gates freshness).
+~~24. Harvest THIS report's §f into TODO_LIST (docs-gates freshness).~~ done (docs-health pass harvested — the 2026-11-10 harvest section; re-harvested into the rebuilt TODO_LIST (2026-11-14 docs-health pass))
 25. BuildFlow#56: rebuild buildflow with go1.27.2 toolchain (other repo).
 26. docs/status index for discoverability.
 27. Split-brain check: my T10 edited the scanstore session's test fixture

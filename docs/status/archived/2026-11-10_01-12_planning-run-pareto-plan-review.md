@@ -130,7 +130,7 @@ _The plan file owns the detailed list; this is the ranked digest._
 1. T1: `--format` vs `-o` decision + STACK.md record (30m)
 2. T2: widen `--format` enum +yaml,toml,jsonl (45m)
 3. T3: go-atomic-write `WriteWithPerm` + UA header (45m)
-4. T4: CLI hardening bundle (60m)
+~~4. T4: CLI hardening bundle (60m)~~ done at `6fc85ab`
 5. T5: real-world validation run (90m)
 6. T6: release v0.1.0 via go-release (90m)
 
@@ -139,11 +139,11 @@ _The plan file owns the detailed list; this is the ranked digest._
 JSONLStream + scan/replay streaming paths; struck row in TODO_LIST
 Detection coverage; annotated 2026-11-10 because tokens went generic).
 8. T8: chunked input streaming (90m)
-9. T9: resume/checkpointing (90m)
-10. T10: one-shot transient retry (45m)
+~~9. T9: resume/checkpointing (90m)~~ done at `3674285`
+~~10. T10: one-shot transient retry (45m)~~ done at `49b87fc`
 
 **Polish & ops:**
-11. T11: go-output polish (60m)
+~~11. T11: go-output polish (60m)~~ done — T11 go-output polish (colors, SetFooter, Title, AddRowChecked; 2026-11-10)
 12. T12: doctor preflight (45m)
 13. T13: nom live progress (60m)
 14. T14: README install + Homebrew tap (45m, post-tag)
@@ -151,18 +151,18 @@ Detection coverage; annotated 2026-11-10 because tokens went generic).
 16. T16: audit upkeep (citations vs new HEAD, screenshot, commit headers) (45m)
 17. **T17: zone-data applications — DENIC/Nominet/SWITCH (start NOW, weeks of lead time)** (60m)
 18. T18: lint cleanup incl. err113 backlog (90m)
-19. T19: cmdguard-lint CI step (30m)
+~~19. T19: cmdguard-lint CI step (30m)~~ done — cmdguard-lint CI step (pinned clone)
 20. T20: `-o` implementation if T1 says adopt (60m)
 21. T21: cqrs re-audit post-scanstore (30m)
 
 **Tail:**
-22. T22: registry-derived enum, drift-proof (45m)
+~~22. T22: registry-derived enum, drift-proof (45m)~~ done — (T22) — render.SupportedFormats() + TestFormatEnumsMatchRegistry
 23. ~~T23: NXDOMAIN pre-sweep (90m)~~ superseded — the in-scan existence oracle (resolve.LookupExistence, 2026-11-13) replaces any pre-sweep
 24. T24: CSV enrichment (60m)
 25. T25: error-family exit codes (30m)
 26. T26: infra bundle (vendorHash.nix, describe test, freshness guard,
 docs-gates cache key) (90m)
-27. T27: ROADMAP parking (30m)
+~~27. T27: ROADMAP parking (30m)~~ done — ROADMAP.md created 2026-11-10 (direction + parked ideas)
 
 **Process debt from this run:**
 28. Diagnose the 2 unidentified failing pre-commit steps from attempt #2

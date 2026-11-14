@@ -142,11 +142,11 @@ docs/status index · post-release README install/badge work.
 **Release lane (E2 completion):**
 
 1. Annotated tag v0.1.0 at green tip (message drafted from CHANGELOG)
-2. Push tag to origin AND github
+~~2. Push tag to origin AND github~~ done — tag pushed to both remotes (13-27)
 3. `gh release create v0.1.0 --prerelease --notes-file /tmp/v0.1.0-release-notes.md`
-4. Clean-dir `go get github.com/larsartmann/google-domain-detector@v0.1.0`
+~~4. Clean-dir `go get github.com/larsartmann/google-domain-detector@v0.1.0`~~ done — scratch-dir go get + go run @v0.1.0 verified from the proxy copy
 5. Proxy check (`go list -m -versions`) + pkg.go.dev fetch trigger
-6. Watch first post-tag CI run
+~~6. Watch first post-tag CI run~~ done — first post-tag CI watched; race flake root-caused (startup-cancel) and fixed deterministically
 7. README: install section + version badge (release notes promise
    nix/Homebrew follow-ups)
 8. CHANGELOG [Unreleased] placeholders verify (Phase 8.1)
@@ -155,10 +155,10 @@ docs/status index · post-release README install/badge work.
 **Docs/truth lane:**
 10. TODO_LIST strikes: race flake, CI gofmt+soak fixes, E6 round 1,
 E7 data (docs-gates freshness pre-flight first — candidate lines)
-11. Archive /tmp/e6-* + /tmp/e7-* into reports/ (tmp reaper risk)
+~~11. Archive /tmp/e6-* + /tmp/e7-* into reports/ (tmp reaper risk)~~ done — E6/E7 artifacts archived (reports/2026-11-10-e6-memory-ab/README.md)
 12. E7 NOTES.md in reports/census/unbound/ (worker-pressure table above)
 13. E7 unbound lifecycle script (start/stop/status/restart)
-14. `git worktree remove /tmp/gdd-pret7` after E6 finishes
+~~14. `git worktree remove /tmp/gdd-pret7` after E6 finishes~~ done — worktree removed 2026-11-10
 15. docs/status index README (discoverability)
 
 **E6 completion:**
@@ -169,7 +169,7 @@ VmHWM capture both
 **Census feasibility lane (plan v3):**
 18. E8 pilot harness (slice-Nk + >2% error gate + preflight doc)
 19. E9 worker ladder 1/2/4/8 via unbound → wave params into AGENTS
-20. Unbound tuning experiment (threads/outgoing-range) before E9
+~~20. Unbound tuning experiment (threads/outgoing-range) before E9~~ **Superseded — tuning tested: cold recursion stalls ≥4 workers from upstream flow pressure — forwarder mode (Quad9) is the fix (scripts/unbound.conf, docs/census.md).**
 21. E10 recover 7 204 legacy unknowns via unbound + --resume; archive
 22. E11 finish evidence-schema stamping + ruleset bump test (G5 lane!)
 23. E12 Tranco import + frozen rank-band manifests
@@ -183,13 +183,13 @@ VmHWM capture both
 
 **Polish tail (as lanes free):**
 31. E24 lint-cleanup pass to zero (gate G5, after sibling lane lands)
-32. E25 golangci-lint + govulncheck CI steps
+~~32. E25 golangci-lint + govulncheck CI steps~~ done — E25 CI lint job
 33. E26 render unknown enum handling
 34. E27 output.FormatsForShape auto-enum + drop-blank-import contract test
 35. E30 ranges error-family exit codes (75 fetch / 65 corrupt)
 36. E31 TimeoutMiddleware whole-run budget; IPv6 --resolver check;
 vendorHash.nix extraction; ErrNoRuns store-path naming
-37. E33 cli coverage 69→90%; input-parser fuzz (CSV quoting edges)
+~~37. E33 cli coverage 69→90%; input-parser fuzz (CSV quoting edges)~~ done — 90.7% coverage + fuzz_test.go
 38. TXT truncation investigation (cloudflare unmarshal class). routed — the TODO_LIST TXT-truncation row (open there)
 39. asciinema/GIF for README (E20). routed — the TODO_LIST asciinema-demo row (open there)
 40. Consider GoReleaser cross-platform binaries for future releases
@@ -200,11 +200,11 @@ vendorHash.nix extraction; ErrNoRuns store-path naming
 (what I ran) vs `-count=5` (prior session's open question)
 43. Nightly soak CI job decision (see §g)
 44. GPG signing policy for agent commits (owner decision, parked)
-45. Consider pinning `GOTOOLCHAIN` in ci.yml if setup-go lags go.dev
-46. Add `gh run list` to session-start checklist (this session's lesson)
+~~45. Consider pinning `GOTOOLCHAIN` in ci.yml if setup-go lags go.dev~~ **Won't implement — won't implement — setup-go tracks go-version fine today; revisit only if CI lags go.dev again.**
+~~46. Add `gh run list` to session-start checklist (this session's lesson)~~ done — adopted in AGENTS.md session-start gotcha (gh run list --limit 3)
 47. Consider `-timeout 15m` in ci.yml as belt-and-braces even with soak
 gated
-48. Harvest this report's §d lessons into TODO/report annotations per
+~~48. Harvest this report's §d lessons into TODO/report annotations per~~ done — §d lessons annotated (2026-11-13 docs-health pass + this pass)
 docs-gates annotate flow
 
 ## g) QUESTIONS (cannot answer myself)

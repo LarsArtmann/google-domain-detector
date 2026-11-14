@@ -49,11 +49,12 @@ T15 final → closing report.
       `TestWaitProjectionsSettledMakesUnfoldedJournalVisible`. Library
       work; post-census (the journal is live mid-wave).
       (repo: go-cqrs-lite)
-- [ ] scanstore audit tails (docs/status/2026-11-11_17-43 §f5/§f19):
+- [ ] scanstore audit tails (docs/status/2026-11-11_17-43 §f5/§f12/§f19):
       read `sqliteengine/v4` `MapUpdate` source and confirm the
       nil-prev upsert directly (closing the inferred-from-tests loop),
-      and pin the Recorder sequential-dispatch (journal-order) contract
-      with an explicit test.
+      verify memory/sqlite fold dispatch share the task snapshot
+      (one source read), and pin the Recorder sequential-dispatch
+      (journal-order) contract with an explicit test.
 - [ ] go-cqrs-lite patch sweep when the census frees the journal
       (system v4.18 / metaengine v4.23 baseline): check for bugfix
       releases; re-verify the `foldByEvent` last-fold-wins gotcha after
@@ -70,8 +71,10 @@ T15 final → closing report.
 - [ ] Poller: per-rank-band unknown-rate expectations, calibrated on
       wave B's pass-1 (~2.8% band vs wave A's 1.53%) + bound the
       "none"-class share per band.
-- [ ] Quiet the stale LSP golangci diagnostics (IDE noise vs
-      `golangci-lint run` = 0 truth; advisory-only per AGENTS.md).
+- [ ] Quiet the stale LSP diagnostics (IDE noise vs truth; advisory-only
+      per AGENTS.md): the golangci integration's stale warnings and the
+      gopls `infertypeargs` infos (cli.go ×2, scanstore.go ×3 — trivial
+      explicit-type-arg removals if kept).
 
 ## Operational
 

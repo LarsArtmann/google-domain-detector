@@ -239,7 +239,7 @@ GitHub Release live, module proxy serving v0.1.0 (hash-verified).
 4. E24 policy layer: .golangci.yml — tagliatelle snake_case rule, err113
    test exclusion, wrapcheck first-party/ignore-sigs policy (justified
    in comments), then fix errcheck (17) for real.
-5. E24 mechanical: mnd (11 named constants), exhaustive (4 cases),
+~~5. E24 mechanical: mnd (11 named constants), exhaustive (4 cases),~~ done — golangci-lint run = 0 issues (2026-11-13); the CI lint job holds the line
    cyclop (4 extractions: ScanDomain 15 > 12), paralleltest (3),
    modernize (3), perfsprint (3), unparam (1).
 6. E24 varnamelen (16 renames: r→res, f→flags, c→counts…) — mechanical,
@@ -250,7 +250,7 @@ GitHub Release live, module proxy serving v0.1.0 (hash-verified).
    launch, record the table in the census reports dir.
 9. Homebrew tap: create homebrew-tap repo + formula from the v0.1.0
    tag (goreleaser vs manual — §g2 adjacent).
-10. pkg.go.dev propagation spot-check (fetch the pkg page) once DNS is
+~~10. pkg.go.dev propagation spot-check (fetch the pkg page) once DNS is~~ done — page live at v0.1.0 (full README, MIT, directories rendered)
     stable.
 11. E7 finish: unbound latency notes + lifecycle script (sibling's
     unbound is alive on 127.0.0.1:5353).
@@ -281,16 +281,16 @@ GitHub Release live, module proxy serving v0.1.0 (hash-verified).
     lives as the "E33 cli package coverage 69% → 90%" row in TODO_LIST's
     13-27 harvest section (binding note: this item's tokens are numeric
     and cannot bind automatically).
-30. E33 input parser fuzzing (CSV quoting/encoding edges).
+~~30. E33 input parser fuzzing (CSV quoting/encoding edges).~~ done — internal/input/fuzz_test.go
 31. ErrNoRuns error should name the store path (E31 leftover).
 32. describe contract test (E31): pin the battery output shape.
-33. vendorHash.nix extraction (E31): stop hand-editing flake.nix hashes.
+~~33. vendorHash.nix extraction (E31): stop hand-editing flake.nix hashes.~~ **Won't implement — resolved-as-deliberate-non-fix — nix-hash-fix owns hash updates (2026-11-10).**
 34. Version-freshness guard: flag docs whose pinned lib released newer
     (E31).
 35. IPv6 `--resolver` handling check (E31; only IPv4-tested).
 36. TXT truncation investigation (cloudflare "cannot unmarshal" class).
 37. E31 TimeoutMiddleware whole-run budget for huge inputs.
-38. E31 docs-gates cache-key investigation + ETag-if-polled.
+~~38. E31 docs-gates cache-key investigation + ETag-if-polled.~~ **Won't implement — moot — docs-gates extracted as a standalone binary; no cache-key/ETag surface left in this repo.**
 39. Nominet DAA email draft send (E35 owner action — needs owner).
 40. DENIC: closed-impossible; ensure E23's README reflects crt.sh-only
     fallback for .de.

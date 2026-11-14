@@ -285,16 +285,16 @@ change for existing users).
 lane) — worth a dedicated session.
 30. Audit-report freshness sweep (version-freshness guard row).
 31. `go mod tidy` sweep + govulncheck (E25 row).
-32. Input-parser fuzzing (E33).
+~~32. Input-parser fuzzing (E33).~~ done — internal/input/fuzz_test.go
 33. ~~cli coverage 69% → 90% (E33).~~ done at `f169854` (90.7% cli coverage)
-34. cmdguard-lint + golangci + govulncheck CI steps (E25).
+~~34. cmdguard-lint + golangci + govulncheck CI steps (E25).~~ done — E25 CI lint job (cmdguard-lint pinned clone + golangci + govulncheck)
 35. Own-resolver guidance doc + buffered-format bulk note.
 36. README polish: asciinema/GIF + feed-freshness note (E20).
 37. TODO_LIST rewrite pass (the census section grew mid-war; several
 sibling rows need strike-or-scope decisions).
 38. AGENTS.md: census lane summary row for "what to do after B/C"
 (point to the ledger as source of truth).
-39. Archive ritual: docs/status/ has 9 unarchived reports vs the 15
+~~39. Archive ritual: docs/status/ has 9 unarchived reports vs the 15~~ done — the 2026-11-13 bulk archive (28 reports, manifest in archived/README.md)
 cadence bar (owner permission pending, §18-45 c3).
 40. .ch SWITCH TSIG zone pull + corpus build (plan item, untouched).
 41. crt.sh .de rate-limit-aware scheduling (plan item).

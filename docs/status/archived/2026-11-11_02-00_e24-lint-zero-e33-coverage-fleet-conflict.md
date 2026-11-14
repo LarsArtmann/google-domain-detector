@@ -263,11 +263,11 @@ only after the toolchain-skew phantom has a pin or a rebuilt binary.
 18. E10 trickle round 3 (113 timeout stragglers) + findings README.
 19. servfail-stable semantics into census-gate.sh + docs/census.md.
 20. E32 daily delta timer / lead scoring.
-21. scripts/audit-freshness.sh (E31.4 comparing script).
+~~21. scripts/audit-freshness.sh (E31.4 comparing script).~~ done — scripts/audit-freshness.sh (exit 1 on drift; CI lib-freshness job)
 22. ~~crtsh-extract fixtures: committed-corpus variant.~~ won't implement — the committed fixture + the 2026-11-13 plausibility guard cover the mechanism; a second corpus adds no pinned coverage
 
 **Quality/infra backlog (either lane, low urgency):**
-23. E28 --pre-filter.
+~~23. E28 --pre-filter.~~ **Superseded — in-scan existence oracle (resolve.LookupExistence, 7b45a1b) replaces any pre-filter.**
 24. .ch SWITCH AXFR pull.
 25. IPv6 resolver behavior check.
 26. TXT truncation investigation. routed — the TODO_LIST TXT-truncation row (open there)
@@ -277,7 +277,7 @@ only after the toolchain-skew phantom has a pin or a rebuilt binary.
 30. TimeoutMiddleware (cqrs lane).
 31. Read-your-writes projection guarantee design pass (e5 above).
 32. Session-end junk-commit squash policy decision (owner).
-33. E31.4 freshness script (if the sibling doesn't take it).
+~~33. E31.4 freshness script (if the sibling doesn't take it).~~ done — scripts/audit-freshness.sh landed
 34. docs/DOMAIN_LANGUAGE.md harvest (census terms are accreting fast —
 wave, flip, servfail-stable, coverage bar all need one glossary).
 35. FEATURES.md refresh post-v0.1.0 (replay --since, --resume, --wave,

@@ -153,20 +153,20 @@ domains.
    document soaks methodology + selection-bias warnings).
 6. Strike T14 per wave as cleanups land (may be zero rounds for A if
    1.75% holds).
-7. Wire audit-freshness.sh into CI or docs-gates.
+~~7. Wire audit-freshness.sh into CI or docs-gates.~~ done — CI lib-freshness job (scripts/lib-freshness.sh)
 8. Census journal snapshot routine (destination per §g3).
 9. Stamp running binary sha256 + source commit into wave dir/NOTES.
 10. Mid-pass unknown-rate WARNING in census-wave.sh monitor loop.
 11. Verify tonight's 03:17 UTC nightly-soak cron (first scheduled fire
     was green 14m39s; tonight is the second).
-12. Retroactively eyeball the four outage-window CI runs.
+~~12. Retroactively eyeball the four outage-window CI runs.~~ done — outage-window runs reconciled (00-03 patch + nxfix supersession; ~3,450 garbage observations explained in AGENTS.md)
 13. 7 s vs 10 s per-domain timeout experiment (30-min w4 soak).
 14. w2 sustained soak only if wave A drifts above bar.
 15. 🔀 Interrupted-run stderr summary fix (cli; TODO row filed).
 16. 🔀 Runs-table metadata shutdown race (cli/scanstore; soak 3 row
     stuck "started, 0 domains", all 2 731 observations replay fine).
 17. 🔀 describe contract test (E31.2).
-18. 🔀 TimeoutMiddleware whole-run budget (E31).
+~~18. 🔀 TimeoutMiddleware whole-run budget (E31).~~ done — `--max-runtime` (E31)
 19. 🔀 E29 CSV enrichment.
 20. 🔀 varnamelen `f` policy + final buildflow format pass.
 21. Harvest/route sales-lane 19-27 §f (18 items) — theirs or by policy
@@ -177,17 +177,17 @@ domains.
     check-rows first).
 24. Retract-note dry run (routed; go-release lane).
 25. IPv6 --resolver handling check (needs v6-capable resolver).
-26. TXT truncation investigation (existing TODO row).
+~~26. TXT truncation investigation (existing TODO row).~~ **Superseded — closed with live evidence 2026-11-13 (00-03 §8) — resolver distress, not truncation.**
 27. E28 --pre-filter (plan v3; .ch AXFR feeds it).
 28. .ch SWITCH AXFR zone-pull tooling (existing TODO row).
-29. crt.sh .de rate-limit-aware scheduling (routed today).
+~~29. crt.sh .de rate-limit-aware scheduling (routed today).~~ done — crtsh-daily.sh + systemd timer
 30. reports/ durability policy decision (E1 README + census db class;
     owner policy, one decision applied everywhere).
 31. E17 export: compact verdict table + `replay --since` demo for the
     sales narrative.
 32. README: document `replay --since` (the delta/sales signal exists,
     under-marketed).
-33. E33 coverage 69→90 finish (sibling mid-flight).
+~~33. E33 coverage 69→90 finish (sibling mid-flight).~~ done — 90.7% (2026-11-13)
 34. E25 lint lane final zero-gate (sibling).
 35. Nightly soak: add a wave-A heartbeat/alert job (a stalled wave
     currently pages nobody).

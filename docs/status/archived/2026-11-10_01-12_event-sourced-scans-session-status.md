@@ -172,7 +172,7 @@ is designed but untested); SQLite journal behavior at whole-TLD scale
 7. Diagnose the 10× bulk slowdown (local stub resolver vs `--resolver
    127.0.0.1:5353` unbound/knot benchmark).
 8. Streaming replay render (chunked journal walk → writer).
-9. Streaming/chunked input loader.
+~~9. Streaming/chunked input loader.~~ done — chunked domainFeeder + input.Streamer (plan v2 T8, 4096/chunk)
 10. Harvest the ~12 entombed audit items into TODO_LIST.
 11. Ctrl-C/cancel integration test (Sink drain, partial-run replay).
 12. Whole-TLD-scale journal benchmark (100k+ synthetic events, sqlite WAL).
@@ -184,27 +184,27 @@ is designed but untested); SQLite journal behavior at whole-TLD scale
 18. ~~Table.SetFooter summary row (N domains · M workspace · K gcp).~~ done at `f1411a9`, `b07de82` (go-output T11/E19)
 19. `validate:"min=1,max=512"` on Workers.
 20. WithDoctorCheck preflight (resolver + ranges feed).
-21. WithEnvPrefix("GDD_") + shortened env tags.
+~~21. WithEnvPrefix("GDD_") + shortened env tags.~~ done at `6fc85ab`
 22. RecoveryMiddleware on the CLI.
 23. ExitError(2) for the two usage errors.
-24. WithCLICommit in nix build.
-25. WithExample/WithLong on scan.
-26. cmdguard-lint CI step.
+~~24. WithCLICommit in nix build.~~ done at `6fc85ab`
+~~25. WithExample/WithLong on scan.~~ done at `6fc85ab`
+~~26. cmdguard-lint CI step.~~ done — ci.yml lint job installs cmdguard-lint from a pinned clone, runs green
 27. Decide `--format` vs cmdguard `-o/--output` BEFORE v0.1.0 (breaking).
 28. Live progress during bulk scans.
 29. Lint-cleanup pass (~29 pre-existing golangci warnings → 0).
-30. RegisterUnknownRenderer to dissolve the cli.go JSON special-case.
-31. WithOutputFormat adoption + JSON error envelopes.
-32. AddRowChecked for the 5-column render invariant.
-33. RenderOptions.Title for markdown/html.
+~~30. RegisterUnknownRenderer to dissolve the cli.go JSON special-case.~~ done — (E26) — render init installs DTO renderers for json+jsonl; dispatch via output.RenderUnknown
+~~31. WithOutputFormat adoption + JSON error envelopes.~~ **Won't implement — decided-against with -o (T1; STACK.md decision log); error envelopes may return post-tag if a need appears.**
+~~32. AddRowChecked for the 5-column render invariant.~~ done — AddRowChecked everywhere (E19)
+~~33. RenderOptions.Title for markdown/html.~~ done — RenderOptions.Title (E19, runs ledger)
 34. describe contract test (flags/env/docs).
 35. docs/status index for discoverability.
 36. Version-freshness guard (pinned lib vs latest tag).
 37. docs-gates cached-vs-direct verdict investigation (buildflow cache).
 38. User-Agent header on the cloud.json fetch.
 39. ETag revalidation on the ranges cache.
-40. TimeoutMiddleware whole-run budget.
-41. FormatsForShape auto-enum (kills enum-drift class).
+~~40. TimeoutMiddleware whole-run budget.~~ done — `--max-runtime` (plan v3 E31): aborts at the budget, partial results render/journal/count
+~~41. FormatsForShape auto-enum (kills enum-drift class).~~ **Superseded — render.SupportedFormats() + TestFormatEnumsMatchRegistry (T22, plan v3) — explicit product contract over auto-generation.**
 42. Re-run go-cqrs-lite/cqrs-htmx audit verdicts post-scanstore.
 43. "Verified against commit X" header line on every report.
 44. Batch-retry-once for transient resolver failures.

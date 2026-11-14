@@ -197,7 +197,7 @@ owns are marked)
    inside census-gate.sh).
 6. Push the 3 unpushed commits + watch first CI run (sibling lane).
 7. ~~T22 cli coverage → 90%.~~ done at `f169854` (90.7% cli coverage, E33)
-8. audit-freshness.sh (version-pin guard).
+~~8. audit-freshness.sh (version-pin guard).~~ done — scripts/audit-freshness.sh + CI lib-freshness job
 9. T17 daily delta timer; T19 journal-only stats; T20 lead scoring.
 10. E22 re-audit: go-cqrs-lite + cqrs-htmx premise flip.
 11. BuildFlow#56 fleet rebuild (owner approval).

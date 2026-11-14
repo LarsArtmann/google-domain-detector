@@ -241,14 +241,14 @@ a distinct unknown-grade instead of clean.
 19. IPv6-only host handling audit.
 20. IDNA/punycode input support (currently rejected — fine, but document
 or implement).
-21. TXT oversized-packet handling (the cloudflare.com "cannot unmarshal"
+~~21. TXT oversized-packet handling (the cloudflare.com "cannot unmarshal"~~ **Superseded — closed with live evidence 2026-11-13 (00-03 §8): cloudflare.com's 2,539-byte TXT parses cleanly — resolver distress, not truncation; hostile-TXT sanitizer landed.**
 class may be truncation; investigate once rather than forever blame
 blocky).
 
 **Scale to whole TLDs:**
 22. DENIC RDS application (.de zone data).
 23. Nominet DAA application (.uk).
-24. SWITCH terms (.ch).
+~~24. SWITCH terms (.ch).~~ done — verified terms + public TSIG in docs/zone-data/switch-ch.md (07-46)
 25. Parked-domain pre-filter pass (A-existence sweep) before deep scan.
 26. Streaming/chunked input for 30M domains.
 27. Throughput benchmark harness + a measured qps budget document
@@ -257,14 +257,14 @@ blocky).
 **Quality/productization:**
 28. Review + docs for the concurrent session's scanstore (AGENTS.md
 architecture map, STACK.md row, my invariants section extended).
-29. golangci-lint + govulncheck CI steps.
-30. Watch the first real GitHub Actions run; fix whatever it finds.
+~~29. golangci-lint + govulncheck CI steps.~~ done — ci.yml lint job (golangci-lint v2.15.0 + govulncheck v1.9.0), first green 2026-11-13
+~~30. Watch the first real GitHub Actions run; fix whatever it finds.~~ done — soak opt-in (404dfed), gofmt drift fixed, CI green since + nightly Soak workflow
 31. cli package coverage 69% → 90+.
 32. Fuzz the input parser (CSV/quoting/encoding edge cases).
 33. Rebuild + reinstall buildflow binary; push `06d333cfa`; reinstall
 hooks across affected repos.
 34. v0.1.0 tag via go-release skill; CHANGELOG cut.
-35. Homebrew tap entry.
+~~35. Homebrew tap entry.~~ done — LarsArtmann/homebrew-tap dbaa78c (v0.1.0 tarball sha256-pinned)
 36. goreleaser or `nix run .#release` verification.
 37. FEATURES.md + ROADMAP.md (docs-health BUILD).
 38. ~~docs-health HARVEST of this report's (f) into TODO_LIST/ROADMAP — pending until the other session settles.~~ done at `b860922` — the (f) items were harvested (E20 rows live in TODO_LIST)
@@ -273,7 +273,7 @@ hooks across affected repos.
 41. `describe` output test (contract pin) once version stabilizes.
 42. `-race` in CI (currently plain `go test -race` — keep, but pin Go
 version in CI to nix's to avoid drift).
-43. Investigate `--resolver` with IPv6 addresses and hostnames (only
+~~43. Investigate `--resolver` with IPv6 addresses and hostnames (only~~ done — TestNewWithAddrQueriesIPv6Server dials a real [::1] echo server; preflight splits bracketed IPv6
 IPv4 tested).
 44. Decide GPG signing policy for agent commits (currently inconsistent).
 45. Verify the 8.8.8.8 trickle results aren't Google-DNS-specific

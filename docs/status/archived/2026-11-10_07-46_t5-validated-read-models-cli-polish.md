@@ -254,7 +254,7 @@ once/24h; verify the ~2.4M-name extraction path end-to-end).
 **Zone paperwork (owner actions):**
 22. Send the Nominet .uk application email (draft ready in
 docs/zone-data/nominet-uk.md) — weeks of lead time.
-23. Decide the .ch research-purpose question (public-interest clause vs
+~~23. Decide the .ch research-purpose question (public-interest clause vs~~ done — moot — SWITCH zone access is public TSIG (no research-clause paperwork); the pull landed 2026-11-13 (2.66M apexes)
 commercial lead-gen use) before the first .ch census wave.
 24. Drop/rewrite the stale DENIC rows in TODO_LIST (research landed:
 impossible).
@@ -262,13 +262,13 @@ impossible).
 **Quality gates:**
 25. T20 lint sweep to zero (~70 warnings; err113/wrapcheck/varnamelen/
 tagalign/cyclop/gocognit/makezero/nilnil/golines).
-26. T21 cmdguard-lint CI step.
+~~26. T21 cmdguard-lint CI step.~~ done — cmdguard-lint CI step
 27. Full `-race` suite re-run after T13 tests (the pre-T13 run was green).
 28. buildflow gate run (blocked by BuildFlow#56 toolchain skew — the
 other session owns it; keep --no-verify + direct verification).
 29. T18: refresh docs/review/* dashboards with verified-at-commit
 headers; re-audit go-cqrs-lite verdict now that it's a direct dep.
-30. cli coverage 69% → 90 (toolship §f31).
+~~30. cli coverage 69% → 90 (toolship §f31).~~ done — 90.7% (2026-11-13 batch, ~15 new tests, 3 real bugs fixed)
 
 **Docs upkeep (T17 finish):**
 31. TODO_LIST sync: strike T5/T7/T8/T9/T11/T12 + stale DENIC/Nominet
@@ -284,13 +284,13 @@ runs, streaming, retry, taxonomy).
 38. VendorHash refresh after any dependency change (nix-hash-fix).
 
 **Robustness / verification:**
-39. Fuzz the input parser (CSV quoting/encoding edges).
+~~39. Fuzz the input parser (CSV quoting/encoding edges).~~ done — internal/input/fuzz_test.go (seed corpus incl. CSV quoting/encoding edges)
 40. describe contract test (pin output shape post-release).
 41. IPv6 resolver-address handling check (--resolver only IPv4-tested).
 42. Resolver-dependency bias check (8.8.8.8 trickle results vs Quad9).
 43. TXT truncation investigation (cloudflare "cannot unmarshal" class).
-44. TimeoutMiddleware whole-run budget (T27).
-45. vendorHash.nix extraction (T27).
+~~44. TimeoutMiddleware whole-run budget (T27).~~ done — `--max-runtime` (plan v3 E31)
+~~45. vendorHash.nix extraction (T27).~~ **Won't implement — resolved-as-deliberate-non-fix — buildflow's nix-hash-fix owns hash updates; a separate vendorHash.nix adds indirection with zero gain (2026-11-10).**
 46. Version-freshness guard for audit reports (T27).
 47. GPG signing policy decision for agent commits (toolship §f44).
 

@@ -250,10 +250,10 @@ push of both remotes.
 11. .ch zone pull via SWITCH public TSIG (docs/zone-data/switch-ch.md;
     once/24h) + corpus build → feeds E28 pre-filter.
 12. NXDOMAIN/A-existence pre-sweep before whole-TLD scale (E28, gated).
-13. crt.sh .de extractor rate-limit-aware scheduling (once/day per TLD).
+~~13. crt.sh .de extractor rate-limit-aware scheduling (once/day per TLD).~~ done — crtsh-daily.sh + systemd timer (wrong-root fixed same day)
 14. Nominet DAA draft: re-surface + stage for the owner (g3).
 15. cmdguard-lint as a CI step (expect zero findings).
-16. golangci-lint + govulncheck CI steps (E25).
+~~16. golangci-lint + govulncheck CI steps (E25).~~ done — E25 CI lint job green 2026-11-13
 17. Version-freshness guard: flag audit reports whose pinned lib
     released a newer tag (extend scripts/audit-freshness.sh).
 18. Audit upkeep: re-verify docs/review/* citations vs current HEAD;

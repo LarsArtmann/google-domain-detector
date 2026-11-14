@@ -174,7 +174,7 @@ re-audit); enrichment join / dedup-by-registrant (post-census ideas).
     truth).
 36. Keep census-wave.sh's inode-safety law documented for every future
     mid-run edit (new-inode installs only).
-37. Consider a session-start lane-claim convention for concurrent
+~~37. Consider a session-start lane-claim convention for concurrent~~ **Won't implement — declined — unproven process idea; the report-header lane/red-attribution notes (§e4) are the adopted pattern.**
     agent sessions (see §e2).
 38. Docs: document jsonl-growth as the primary wave-liveness signal,
     poller lines as secondary (see §e4 / 01-38 §e6).

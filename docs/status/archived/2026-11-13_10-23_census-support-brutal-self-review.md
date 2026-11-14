@@ -196,7 +196,7 @@ production data get one star.
 6. T15 census report (per-TLD stats, excluded-run pins, supersession
    accounting) archived under reports/census/.
 7. Post-C full-1M coverage reconciliation vs the Tranco freeze.
-8. E10 stable-SERVFAIL assessment for the 92 nxfix residuals (owner).
+~~8. E10 stable-SERVFAIL assessment for the 92 nxfix residuals (owner).~~ **Superseded — nxfix closed the residual question (0.42%, 19/20 NX verified; gate carries --servfail-stable).**
 9. Wave watchdog + heartbeat file (blocked until census-wave.sh is
    editable again post-B).
 10. Immutable per-wave script copies at launch (sha256 recorded) — same
@@ -220,9 +220,9 @@ production data get one star.
 23. `buildflow format` re-verify under new formatter fingerprints.
 24. dprint remote plugins → local wasm paths (cold-run hang risk).
 25. io-history-ratchet: `--profile-io` investigation (56 vs median 10).
-26. cmdguard-lint + golangci + govulncheck CI steps (E25).
+~~26. cmdguard-lint + golangci + govulncheck CI steps (E25).~~ done — E25 CI lint job
 27. go mod tidy sweep + govulncheck.
-28. Input-parser fuzzing (E33).
+~~28. Input-parser fuzzing (E33).~~ done — fuzz_test.go
 29. cli coverage 69% → 90% (E33). <!-- fresh:skip already tracked: TODO_LIST E33 row harvested from the 08-57 report -->
 30. Oracle unit test against a REAL resolver in CI (skip offline).
 31. Census binary provenance: consider stamping wave-launched binaries'
@@ -235,9 +235,9 @@ production data get one star.
 35. Dual-instance resolver topology + measured rates into NOTES.md.
 36. Post-mortem synthesis: one canonical false-NX narrative doc.
 37. Oracle error honesty: dialed address standardized in errors (e6).
-38. docs-gates audit-all/cadence red items (sibling lane).
+~~38. docs-gates audit-all/cadence red items (sibling lane).~~ done (docs-health pass this pass — the 2026-11-14 docs-health AUDIT pulled the audit-all detail and resolved the corpus)
 39. Audit-report freshness sweep (version-freshness guard row).
-40. Status-report archive ritual (owner permission pending).
+~~40. Status-report archive ritual (owner permission pending).~~ done — 2026-11-13 bulk archive (28 reports, manifest in archived/README.md)
 41. TODO_LIST rewrite pass (census section grew mid-war).
 42. AGENTS.md census-lane "after B/C" pointer row (ledger as truth).
 43. `incoming/outgoing-num-tcp` contention measurement post-B (NOTES).

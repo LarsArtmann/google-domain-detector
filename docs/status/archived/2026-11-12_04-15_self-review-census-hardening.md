@@ -170,7 +170,7 @@ lane, per owner request. Live state embedded at the bottom.
 9. 7 s vs 10 s timeout soak (§f13) — only between waves or after C.
 10. w2 sustained soak (§f14) — only if a wave drifts above bar.
 11. Nightly wave-heartbeat alert job (§f35) — blocked on §g2 channel.
-12. audit-freshness into docs-gates proper (CI-only today).
+~~12. audit-freshness into docs-gates proper (CI-only today).~~ **Won't implement — docs-gates was extracted as a standalone binary with its own gates; embedding it into buildflow would duplicate the battery.**
 13. Census db snapshot rotation policy (snapshots dir will grow ~33 MB
     per wave — fine for 3 waves, needs a policy by E17).
 14. E17 export: compact verdict table + `replay --since` demo (§f31).
@@ -191,7 +191,7 @@ lane, per owner request. Live state embedded at the bottom.
     by the bumping lane — verify once with `nix build` when a lane
     next touches nix (do not take the strike on trust; see e1).
 25. IPv6 --resolver handling check (§f25).
-26. TXT truncation investigation (existing TODO row).
+~~26. TXT truncation investigation (existing TODO row).~~ **Superseded — closed with live evidence (00-03 §8).**
 27. E28 --pre-filter + .ch SWITCH AXFR tooling (existing rows).
 28. crt.sh .de rate-limit-aware scheduling (routed earlier).
 29. reports/ durability policy beyond local tarballs (§g3).

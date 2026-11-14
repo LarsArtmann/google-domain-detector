@@ -224,11 +224,11 @@ was fixed before this report (build green at write time).
 
 1. Commit + push the E24 batch (build green NOW; explicit paths).
 2. varnamelen `f` policy decision (§g1) → encode or rename.
-3. scanstore fixes (coordinate with sibling): contextcheck ctx
+~~3. scanstore fixes (coordinate with sibling): contextcheck ctx~~ done — golangci-lint run = 0 issues (2026-11-13); suppressions rationale-at-site
    pass-through, gocritic singleCaseSwitch, godoclint, cyclop
    LoadResumeSource (13→≤12), views omitempty, unparam failedResult.
-4. `runReplay` cyclop 15: extract resolve-run + stream sections.
-5. gocognit `runScan` 38: extract resume-skip, event-store-attach,
+~~4. `runReplay` cyclop 15: extract resolve-run + stream sections.~~ done — runReplay split (mapReplayError + streaming/buffered; replay.go 255 lines)
+~~5. gocognit `runScan` 38: extract resume-skip, event-store-attach,~~ done — runScan phases extracted (cli.go 237 lines post-split)
    render phases.
 6. gocognit `domainFeeder.next` 30: extract per-streamer drain loop.
 7. ~~gocognit `TestQueryReadModelsRoundTrip` 30: table/subtest split.~~ done at `399385a` (golangci-lint driven to zero)
@@ -241,17 +241,17 @@ was fixed before this report (build green at write time).
 13. AGENTS.md: record the findings-JSON lint procedure + LSP-staleness
     gotcha.
 14. E25: add golangci-lint CI step (pinned action SHA).
-15. E25: add govulncheck CI step.
+~~15. E25: add govulncheck CI step.~~ done — govulncheck v1.9.0 in the CI lint job
 16. E25: `-timeout 15m` belt in ci.yml Test step.
 17. E25/owner: nightly GDD_SOAK=1 scheduled workflow (sibling §g1).
-18. E25: consider GOTOOLCHAIN pin in ci.yml (sibling item 45).
+~~18. E25: consider GOTOOLCHAIN pin in ci.yml (sibling item 45).~~ **Won't implement — won't implement — setup-go tracks fine; revisit if CI lags go.dev.**
 19. Owner infra: rebuild buildflow binary for the 1.27.2 floor
     (BuildFlow#56) — unblocks pre-commit hook + buildflow-format lint
     steps (§g3).
 20. ~~E22: verified-at headers on the 22 status reports.~~ won't implement — mechanized by the docs-gates freshness gate (extracted 2026-11-03) which flags stale pinned versions mechanically
 21. E22: cqrs-htmx/go-cqrs-lite re-audit cycle.
 22. E33: CLI coverage 69→90% (targeted cli.go tests).
-23. E33: input-parser fuzz target (CSV quoting edges).
+~~23. E33: input-parser fuzz target (CSV quoting edges).~~ done — internal/input/fuzz_test.go
 24. Homebrew tap: formula + LarsArtmann/homebrew-tap repo + README
     Install section update.
 25. reports/ durability: decide negation-pattern vs docs/ move; fix the
@@ -261,7 +261,7 @@ was fixed before this report (build green at write time).
 27. E7 NOTES.md belongs to the sibling; verify it lands, don't write it.
 28. Nightly-soak decision record in ROADMAP once owner answers.
 29. Consumer sweep for v0.1.0 (go-ecosystem-upgrade; likely none).
-30. docs-gates full run post-batch (freshness after TODO strikes).
+~~30. docs-gates full run post-batch (freshness after TODO strikes).~~ done (docs-health pass this pass — docs-gates full run 2026-11-14)
 31. CHANGELOG [Unreleased]: decide whether lint/refactor work gets an
     Unreleased section (internal-only → probably no).
 32. Retire `docs/status` index drift check (README.md index freshness).
@@ -291,7 +291,7 @@ was fixed before this report (build green at write time).
 46. pty/progress smoke after progress.go const changes (behavior
     unchanged, but the redraw interval is now a const — sanity run).
 47. `go-cqrs-lite` version pin review (auto-upgrade daemon may bump).
-48. Release-notes "Homebrew tap planned" — deliver or soften wording.
+~~48. Release-notes "Homebrew tap planned" — deliver or soften wording.~~ done — tap live (dbaa78c); README Install carries brew install
 49. Cross-check `.golangci.yml` against a future auto-configure rewrite
     (project exceptions are policy; expect review on regeneration).
 50. Session-close ritual: docs-gates + race + push + status-report

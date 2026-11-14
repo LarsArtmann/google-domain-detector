@@ -125,13 +125,13 @@ Legend: [S] session-new · [T] pre-existing TODO_LIST · [G] gate debt
 17. [S] Focused `-race` spot-check on scan/input packages for the new helpers (buildflow's race run passed; cheap extra confidence)
 18. [S] Add a scan test naming the `existence = resolve.Exists` assumption on the oracle-inconclusive path
 19. [S] Add a test pinning `dialDNS` closes the conn on `bindDeadline` failure (the leak fix is untested)
-20. [S] Table/fuzz permutations for `detectMode` (blank lines × EOF × CSV-header × CRLF)
+~~20. [S] Table/fuzz permutations for `detectMode` (blank lines × EOF × CSV-header × CRLF)~~ done — TestParseLeadingBlankLinesBeforePlainAndCSV + the fuzz seed corpus cover the detectMode permutations
 
 **Gate debts (pre-existing, now tracked)**
 21. [G] AGENTS.md diet 330 → ≤220 (tracked, TODO line 194; fold in items 8+9)
 22. [G] file-size-check: split 9 oversized files by concern (cli.go, replay.go, scanstore.go + 6 test files)
 23. [G] docs-cadence archive ritual: verify struck rows → git mv 14+ reports to docs/status/archived/ with live-remainder banners
-24. [G] Pull docs-gates `audit-all` detail (only cadence was pulled; freshness red detail unseen)
+~~24. [G] Pull docs-gates `audit-all` detail (only cadence was pulled; freshness red detail unseen)~~ done (docs-health pass this pass — audit-all detail pulled and resolved (the 113-item corpus))
 25. [G] Rebuild/refresh buildflow binary to clear the BuildFlow#56 pre-commit blocker
 26. [G] Run buildflow FULL mode (golangci-lint-auto-configure was blocklisted in fast) to confirm config freshness
 27. [G] `buildflow format` re-verify after oxfmt/dprint fingerprint drift (tracked TODO 199-200)
@@ -147,7 +147,7 @@ Legend: [S] session-new · [T] pre-existing TODO_LIST · [G] gate debt
 35. [T] M365/Exchange fingerprints (outlook MX/SPF includes) — classify-only addition
 36. [T] Enrichment join: imprint/contact crawl top-N or company-master-data cross-ref (robots/ToS care)
 37. [T] Dedup by registrant/organization for portfolio clusters (needs zone/WHOIS data)
-38. [T] asciinema/GIF for the README (with T14/README work)
+38. [T] asciinema/GIF for the README (with T14/README work) **→ open TODO_LIST row (asciinema demo / GIF, plan v3 E20)**
 39. [T] Feed-freshness/UA integration note once README install section lands
 40. [T] nxfix-complete snapshot re-extraction + `replay --audit-excluded` 948-domain diff (TODO 189-191)
 41. [T] Census T16 (unblocks CRM replay-based delta rescans; retires the CRM diff script)
@@ -157,7 +157,7 @@ Legend: [S] session-new · [T] pre-existing TODO_LIST · [G] gate debt
 45. [T] CRM M11 delta-rescan migration path once T16 lands (AGENTS.md downstream pointer)
 
 **Polish**
-46. [S] Clear the 5 gopls `infertypeargs` infos (cli.go ×2, scanstore.go ×3) — trivial explicit-type-arg removals
+46. [S] Clear the 5 gopls `infertypeargs` infos (cli.go ×2, scanstore.go ×3) — trivial explicit-type-arg removals **→ the TODO_LIST LSP-noise row owns the gopls infertypeargs class**
 47. [S] Document the accepted-4 in a code-review checklist line (post-diet)
 48. [S] Baseline doc: re-verify against art-dupl after item 1 lands (update if any group changes)
 49. [S] Consider `slices.Compact`-style modernization sweep over remaining manual seen-map loops repo-wide (only if any exist outside render.go — unverified)

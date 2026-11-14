@@ -206,11 +206,11 @@ first real wave. This report covers this session only.
     stuck "started, 0 domains" while all 2 731 observations replay
     fine).
 18. 🔀 describe contract test (E31.2).
-19. 🔀 TimeoutMiddleware whole-run budget (E31).
+~~19. 🔀 TimeoutMiddleware whole-run budget (E31).~~ done — `--max-runtime` (E31)
 20. 🔀 E29 CSV enrichment.
 21. 🔀 varnamelen `f` policy decision + final buildflow format pass
     (their own §b).
-22. Harvest/route the sales-lane 19-27 report's 18 unharvested §f
+~~22. Harvest/route the sales-lane 19-27 report's 18 unharvested §f~~ done — sales-lane items struck won't-implement (2026-11-13 pass + this pass closes the remainder)
     items (or their session does; docs-gates audit-all red on it).
 23. ~~Harvest the E24 reports' 8 unharvested items (same class).~~ docs-health pass 2026-11-13: the 19-08 report's lint items annotated this sweep (done at `399385a` / superseded / won't)
 24. Retract-note dry run (row routed; go-release lane).
@@ -220,7 +220,7 @@ first real wave. This report covers this session only.
     TODO row exists).
 27. E28 `--pre-filter` (plan v3; deferred earlier).
 28. `.ch` SWITCH AXFR zone pull tooling (census zone-inputs).
-29. crt.sh `.de` extractor rate-limit-aware scheduling (once/day/TLD).
+~~29. crt.sh `.de` extractor rate-limit-aware scheduling (once/day/TLD).~~ done — scripts/crtsh-daily.sh + systemd timer (wrong-root fixed 2026-11-13)
 30. Durability policy for gitignored reports/ generally (E1 README
     referenced by release notes suffers the same gap — sibling
     flagged it; decide once, apply everywhere).
