@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/larsartmann/go-cqrs-lite/command/v4"
+	"github.com/larsartmann/go-cqrs-lite/id/v4"
 	"github.com/larsartmann/go-cqrs-lite/metaengine/v4"
 	"github.com/larsartmann/go-cqrs-lite/systemscenario/v4"
 
@@ -214,6 +215,94 @@ func assertResults(t *testing.T, got, want []classify.Result) {
 			if got[i].Evidences[j] != want[i].Evidences[j] {
 				t.Errorf("result %d evidence %d = %+v, want %+v", i, j, got[i].Evidences[j], want[i].Evidences[j])
 			}
+		}
+	}
+}
+
+// TestRecorderDispatchesInJournalOrder pins the Recorder's sequential
+// dispatch contract: commands from one Recorder land in the journal in
+// dispatch order. Observable through last-wins: three runs observe the
+// same domain in order (ok, failed, ok); the surviving observation must
+// be the LAST dispatch (a reordered dispatch could let the middle
+// failure win), and run summaries must list the runs in dispatch
+// (first-started) order.
+func TestRecorderDispatchesInJournalOrder(t *testing.T) {
+	t.Parallel()
+
+	ctx := context.Background()
+	dsn := filepath.Join(t.TempDir(), "scans.db")
+
+	writer, err := scanstore.Open(ctx, dsn)
+	if err != nil {
+		t.Fatalf("open store: %v", err)
+	}
+
+	recorder := scanstore.NewRecorder(writer)
+
+	runIDs := []id.StreamID{scanstore.NewRunID(), scanstore.NewRunID(), scanstore.NewRunID()}
+
+	// Runs 1 and 3 see the domain healthy; run 2 sees it fail. If the
+	// journal order ever diverged from dispatch order, the last-wins
+	// fold could keep the failure.
+	perRun := []classify.Result{
+		workspaceResult("order.example"),
+		failedResult(),
+		workspaceResult("order.example"),
+	}
+
+	for i, runID := range runIDs {
+		if err := recorder.StartScan(ctx, runID, "", "", 1, 0, 4); err != nil {
+			t.Fatalf("start run %d: %v", i, err)
+		}
+
+		if err := recorder.Observe(ctx, runID, perRun[i]); err != nil {
+			t.Fatalf("observe run %d: %v", i, err)
+		}
+
+		if err := recorder.CompleteScan(ctx, runID, time.Second, classify.Count(perRun[i:i+1])); err != nil {
+			t.Fatalf("complete run %d: %v", i, err)
+		}
+	}
+
+	if err := writer.GracefulClose(ctx); err != nil {
+		t.Fatalf("close writer: %v", err)
+	}
+
+	reader, err := scanstore.Boot(ctx, dsn)
+	if err != nil {
+		t.Fatalf("boot reader: %v", err)
+	}
+
+	defer func() { _ = reader.Close() }()
+
+	results, err := scanstore.ReplayJournal(ctx, reader, "")
+	if err != nil {
+		t.Fatalf("replay: %v", err)
+	}
+
+	if len(results.Results) != 1 {
+		t.Fatalf("replayed %d domains, want 1", len(results.Results))
+	}
+
+	if last := results.Results[0]; len(last.Evidences) == 0 {
+		t.Errorf("last-wins kept the failed observation (run 2) — journal order diverged from dispatch order")
+	}
+
+	summaries, err := scanstore.RunSummaries(ctx, reader)
+	if err != nil {
+		t.Fatalf("run summaries: %v", err)
+	}
+
+	if len(summaries) != len(runIDs) {
+		t.Fatalf("got %d run summaries, want %d", len(summaries), len(runIDs))
+	}
+
+	for i, summary := range summaries {
+		if summary.RunID != runIDs[i].Get() {
+			t.Errorf(
+				"summary %d = run %s, want %s (first-started order must match dispatch order)",
+				i, summary.RunID, runIDs[i],
+			)
 		}
 	}
 }

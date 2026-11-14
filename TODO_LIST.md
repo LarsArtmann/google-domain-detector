@@ -71,12 +71,16 @@ T15 final → closing report.
       `TestWaitProjectionsSettledMakesUnfoldedJournalVisible`. Library
       work; post-census (the journal is live mid-wave).
       (repo: go-cqrs-lite)
-- [ ] scanstore audit tails (docs/status/2026-11-11_17-43 §f5/§f12/§f19):
-      read `sqliteengine/v4` `MapUpdate` source and confirm the
-      nil-prev upsert directly (closing the inferred-from-tests loop),
-      verify memory/sqlite fold dispatch share the task snapshot
-      (one source read), and pin the Recorder sequential-dispatch
-      (journal-order) contract with an explicit test.
+- [x] scanstore audit tails CLOSED (2026-11-14 03:02, source-read
+      evidence): MapUpdate nil-prev upsert confirmed directly in
+      sqliteengine v4.8.0 (planned.go runTxReadModifyWrite: ErrNoRows
+      → prev nil → update(nil), single immediate tx); fold dispatch is
+      engine-agnostic core (metaengine planner.go foldByEvent:168 +
+      assignPlan:339 — memory and sqlite consume the same plan);
+      Recorder journal-order contract pinned by
+      TestRecorderDispatchesInJournalOrder (ok/failed/ok sequence must
+      survive last-wins; RunSummaries first-started order must match
+      dispatch order). scanstore lint 0, suite green, file 328/350.
 - [ ] go-cqrs-lite patch sweep when the census frees the journal
       (system v4.18 / metaengine v4.23 baseline): check for bugfix
       releases; re-verify the `foldByEvent` last-fold-wins gotcha after

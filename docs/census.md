@@ -382,10 +382,10 @@ regenerated with each 24 h SWITCH pull — re-verify before launch).
   ≈ 8 days. Gate + snapshot between batches; T14 loop on any FAIL.
 - **Gate params:** pilot = 10k slice of batch 1 into a THROWAWAY store
   (diagnostic-store law), `census-gate.sh` bar = measured unknown rate
-  + margin. Expect HIGHER unknowns than tranco's 2.3–2.8 % bands: a raw
-  zone carries parked/dead domains tranco's popularity ranking filters
-  out. Calibrate the poller's GDD_WARN_PCT from the pilot, not from
-  tranco numbers.
+  - margin. Expect HIGHER unknowns than tranco's 2.3–2.8 % bands: a raw
+    zone carries parked/dead domains tranco's popularity ranking filters
+    out. Calibrate the poller's GDD_WARN_PCT from the pilot, not from
+    tranco numbers.
 - **Binary:** fresh PROVENANCE-stamped build; if the RulesetV2 stamp is
   approved (owner-decision #2), it must land BEFORE batch 1 — the .ch
   zone results will be compared against the tranco .ch slice.
