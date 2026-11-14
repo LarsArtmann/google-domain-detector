@@ -13,6 +13,10 @@ Last refreshed: 2026-11-10 (pre-v0.1.0).
   bounded worker pool with per-domain timeouts and NXDOMAIN short-circuit.
 - Workspace verdicts: MX to google.com/googlemail.com → **certain**;
   SPF include / DKIM → **likely** (free Gmail "send as" never upgraded).
+- Microsoft 365 fingerprints (evidence-only): MX under
+  mail.protection.outlook.com and SPF include of spf.protection.outlook.com
+  are recorded as `microsoft`-platform evidence so one scan paints the full
+  email-stack picture — Microsoft evidence never upgrades a Google verdict.
 - GCP verdicts: CNAMEs to run.app / appspot.com / web.app / firebaseapp.com
   / cloudfunctions.net / googlehosted.com / storage.googleapis.com, NS under
   googledomains.com, and A/AAAA inside the published `cloud.json` GCP

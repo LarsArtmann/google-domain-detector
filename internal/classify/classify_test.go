@@ -46,12 +46,15 @@ func TestClassifyMX(t *testing.T) {
 			[]string{"aspmx.l.google.com.", "alt1.aspmx.l.google.com.", "alt2.aspmx.l.google.com."},
 			3,
 		},
-		"googlemail legacy":    {[]string{"aspmx2.googlemail.com.", "aspmx3.googlemail.com."}, 2},
-		"mixed with foreign":   {[]string{"aspmx.l.google.com.", "mail.protection.outlook.com."}, 1},
-		"outlook only":         {[]string{"mail.protection.outlook.com."}, 0},
-		"mimecast only":        {[]string{"eu1.mimecast.com."}, 0},
-		"googleLooksAlike":     {[]string{"aspmx.l.google.com.evil.example."}, 0},
-		"not google subdomain": {[]string{"google.com."}, 0},
+		"googlemail legacy": {[]string{"aspmx2.googlemail.com.", "aspmx3.googlemail.com."}, 2},
+		"mixed google + microsoft": {
+			[]string{"aspmx.l.google.com.", "mail.protection.outlook.com."},
+			2,
+		},
+		"outlook only (microsoft evidence)": {[]string{"mail.protection.outlook.com."}, 1},
+		"mimecast only":                     {[]string{"eu1.mimecast.com."}, 0},
+		"googleLooksAlike":                  {[]string{"aspmx.l.google.com.evil.example."}, 0},
+		"not google subdomain":              {[]string{"google.com."}, 0},
 	}
 
 	for name, tc := range tests {
@@ -82,14 +85,14 @@ func TestClassifyTXT(t *testing.T) {
 		want   []EvidenceKind
 	}{
 		"plain include": {"v=spf1 include:_spf.google.com ~all", []EvidenceKind{EvidenceSPFGoogle}},
-		"with other includes": {
+		"with microsoft includes": {
 			"v=spf1 include:spf.protection.outlook.com include:_spf.google.com -all",
-			[]EvidenceKind{EvidenceSPFGoogle},
+			[]EvidenceKind{EvidenceSPFGoogle, EvidenceSPFMicrosoft},
 		},
 		"uppercase version": {"V=SPF1 include:_spf.google.com ALL", []EvidenceKind{EvidenceSPFGoogle}},
 		"wrong spf version": {"v=spf10 include:_spf.google.com ~all", nil},
 		"include is-prefix": {"v=spf1 include:_spf.google.com.evil.example ~all", nil},
-		"no include":        {"v=spf1 include:spf.protection.outlook.com ~all", nil},
+		"microsoft include": {"v=spf1 include:spf.protection.outlook.com ~all", []EvidenceKind{EvidenceSPFMicrosoft}},
 		"verification":      {"google-site-verification=abc123", []EvidenceKind{EvidenceSiteVerification}},
 		"dkim txt":          {"v=DKIM1; k=rsa; p=MIIB", nil},
 		"google domainkey":  {"v=DKIM1; k=rsa; p=abc", nil},

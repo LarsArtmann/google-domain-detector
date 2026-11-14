@@ -22,6 +22,10 @@ const (
 	// PlatformGoogle is generic Google usage that implies neither of the two
 	// commercial platforms (e.g. Search Console verification).
 	PlatformGoogle Platform = "google"
+	// PlatformMicrosoft is Microsoft 365 — recorded so one scan paints the
+	// full email-stack picture. It is NOT a Google platform: Microsoft
+	// evidence never upgrades a Google verdict.
+	PlatformMicrosoft Platform = "microsoft"
 )
 
 // Weight is how directly the record proves platform use.
@@ -49,6 +53,12 @@ const (
 	// EvidenceDKIMGoogle: a TXT record exists at google._domainkey.<domain>
 	// — the Gmail DKIM selector is configured (Workspace, likely).
 	EvidenceDKIMGoogle EvidenceKind = "dkim_google"
+	// EvidenceMXMicrosoft: MX hosts under mail.protection.outlook.com — mail
+	// for the domain is delivered to Microsoft 365.
+	EvidenceMXMicrosoft EvidenceKind = "mx_microsoft"
+	// EvidenceSPFMicrosoft: SPF policy includes spf.protection.outlook.com —
+	// the domain authorizes Microsoft 365 to send its mail.
+	EvidenceSPFMicrosoft EvidenceKind = "spf_microsoft"
 	// EvidenceCNAMERunApp: canonical name under run.app — Cloud Run service.
 	EvidenceCNAMERunApp EvidenceKind = "cname_run_app"
 	// EvidenceCNAMEAppspot: canonical name under appspot.com — App Engine app.
@@ -174,6 +184,13 @@ func ClassifyMX(host string, records []*net.MX) []Evidence {
 				Host: host, Record: target,
 			})
 		}
+
+		if isMicrosoftMX(target) {
+			out = append(out, Evidence{
+				Kind: EvidenceMXMicrosoft, Platform: PlatformMicrosoft, Weight: WeightStrong,
+				Host: host, Record: target,
+			})
+		}
 	}
 
 	return out
@@ -188,6 +205,13 @@ func ClassifyTXT(host string, records []string) []Evidence {
 		if spfIncludesGoogle(record) {
 			out = append(out, Evidence{
 				Kind: EvidenceSPFGoogle, Platform: PlatformWorkspace, Weight: WeightWeak,
+				Host: host, Record: record,
+			})
+		}
+
+		if spfIncludesMicrosoft(record) {
+			out = append(out, Evidence{
+				Kind: EvidenceSPFMicrosoft, Platform: PlatformMicrosoft, Weight: WeightWeak,
 				Host: host, Record: record,
 			})
 		}
@@ -292,6 +316,18 @@ func ClassifyIPs(host string, ips []net.IP, gcp *ranges.Set) []Evidence {
 // spfIncludesGoogle reports whether the TXT record is an SPF policy whose
 // include set covers Google's _spf.google.com.
 func spfIncludesGoogle(record string) bool {
+	return spfIncludes(record, "_spf.google.com")
+}
+
+// spfIncludesMicrosoft reports whether the TXT record is an SPF policy whose
+// include set covers Microsoft 365's spf.protection.outlook.com.
+func spfIncludesMicrosoft(record string) bool {
+	return spfIncludes(record, "spf.protection.outlook.com")
+}
+
+// spfIncludes reports whether the TXT record is an SPF policy whose include
+// set covers parent (itself or any subdomain).
+func spfIncludes(record, parent string) bool {
 	fields := strings.Fields(record)
 	if len(fields) == 0 || !strings.EqualFold(fields[0], "v=spf1") {
 		return false
@@ -303,12 +339,19 @@ func spfIncludesGoogle(record string) bool {
 			continue
 		}
 
-		if isSubdomainOf(normalizeHost(include), "_spf.google.com") || normalizeHost(include) == "_spf.google.com" {
+		target := normalizeHost(include)
+		if isSubdomainOf(target, parent) || target == parent {
 			return true
 		}
 	}
 
 	return false
+}
+
+// isMicrosoftMX reports whether the MX target is Microsoft 365's mail
+// protection fleet (tenant MXs are subdomains of mail.protection.outlook.com).
+func isMicrosoftMX(target string) bool {
+	return isSubdomainOf(target, "mail.protection.outlook.com") || target == "mail.protection.outlook.com"
 }
 
 func normalizeHost(host string) string {
