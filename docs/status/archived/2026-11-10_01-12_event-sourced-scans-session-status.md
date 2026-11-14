@@ -179,44 +179,44 @@ is designed but untested); SQLite journal behavior at whole-TLD scale
 12. README: fix "one line per domain" JSON claim.
 13. README installation section (audit item 31).
 14. Widen `--format` enum to yaml/toml/jsonl.
-15. go-atomic-write adoption in `ranges.writeCache` (+STACK.md row).
-16. `--color auto|always|never` via go-output ColorMode.
-17. ~~Table.SetFooter summary row (N domains · M workspace · K gcp).~~ done at `f1411a9`, `b07de82` (go-output T11/E19)
-18. `validate:"min=1,max=512"` on Workers.
-19. WithDoctorCheck preflight (resolver + ranges feed).
+    ~~15. go-atomic-write adoption in `ranges.writeCache` (+STACK.md row).~~ done at `417afc7`
+15. `--color auto|always|never` via go-output ColorMode.
+16. ~~Table.SetFooter summary row (N domains · M workspace · K gcp).~~ done at `f1411a9`, `b07de82` (go-output T11/E19)
+17. `validate:"min=1,max=512"` on Workers.
+18. WithDoctorCheck preflight (resolver + ranges feed).
     ~~21. WithEnvPrefix("GDD_") + shortened env tags.~~ done at `6fc85ab`
-20. RecoveryMiddleware on the CLI.
-21. ExitError(2) for the two usage errors.
+19. RecoveryMiddleware on the CLI.
+20. ExitError(2) for the two usage errors.
     ~~24. WithCLICommit in nix build.~~ done at `6fc85ab`
     ~~25. WithExample/WithLong on scan.~~ done at `6fc85ab`
     ~~26. cmdguard-lint CI step.~~ done — ci.yml lint job installs cmdguard-lint from a pinned clone, runs green
-22. Decide `--format` vs cmdguard `-o/--output` BEFORE v0.1.0 (breaking).
-23. Live progress during bulk scans.
-24. Lint-cleanup pass (~29 pre-existing golangci warnings → 0).
+21. Decide `--format` vs cmdguard `-o/--output` BEFORE v0.1.0 (breaking).
+22. Live progress during bulk scans.
+23. Lint-cleanup pass (~29 pre-existing golangci warnings → 0).
     ~~30. RegisterUnknownRenderer to dissolve the cli.go JSON special-case.~~ done — (E26) — render init installs DTO renderers for json+jsonl; dispatch via output.RenderUnknown
     ~~31. WithOutputFormat adoption + JSON error envelopes.~~ **Won't implement — decided-against with -o (T1; STACK.md decision log); error envelopes may return post-tag if a need appears.**
     ~~32. AddRowChecked for the 5-column render invariant.~~ done — AddRowChecked everywhere (E19)
     ~~33. RenderOptions.Title for markdown/html.~~ done — RenderOptions.Title (E19, runs ledger)
-25. describe contract test (flags/env/docs).
-26. docs/status index for discoverability.
-27. Version-freshness guard (pinned lib vs latest tag).
-28. docs-gates cached-vs-direct verdict investigation (buildflow cache).
-29. User-Agent header on the cloud.json fetch.
-30. ETag revalidation on the ranges cache.
+24. describe contract test (flags/env/docs).
+25. docs/status index for discoverability.
+26. Version-freshness guard (pinned lib vs latest tag).
+27. docs-gates cached-vs-direct verdict investigation (buildflow cache).
+28. User-Agent header on the cloud.json fetch.
+29. ETag revalidation on the ranges cache.
     ~~40. TimeoutMiddleware whole-run budget.~~ done — `--max-runtime` (plan v3 E31): aborts at the budget, partial results render/journal/count
     ~~41. FormatsForShape auto-enum (kills enum-drift class).~~ **Superseded — render.SupportedFormats() + TestFormatEnumsMatchRegistry (T22, plan v3) — explicit product contract over auto-generation.**
-31. Re-run go-cqrs-lite/cqrs-htmx audit verdicts post-scanstore.
-32. "Verified against commit X" header line on every report.
-33. Batch-retry-once for transient resolver failures.
-34. `--jsonl` streaming scan output. — RESOLVED-DONE (landed as render
+30. Re-run go-cqrs-lite/cqrs-htmx audit verdicts post-scanstore.
+31. "Verified against commit X" header line on every report.
+32. Batch-retry-once for transient resolver failures.
+33. `--jsonl` streaming scan output. — RESOLVED-DONE (landed as render
     JSONLStream + scan/replay streaming paths; struck row in TODO_LIST
     Detection coverage; annotated 2026-11-10 because tokens went generic).
-35. CSV enrichment mode (append verdict columns to input CSV).
-36. Pre-filter pass (A-record existence sweep) before whole-TLD scans.
-37. catalog wiring when the journal grows external consumers.
-38. StrictApply decision revisit when a second event type lands on Domain
+34. CSV enrichment mode (append verdict columns to input CSV).
+35. Pre-filter pass (A-record existence sweep) before whole-TLD scans.
+36. catalog wiring when the journal grows external consumers.
+37. StrictApply decision revisit when a second event type lands on Domain
     streams.
-39. v0.1.0 release + homebrew tap (go-release skill).
+38. v0.1.0 release + homebrew tap (go-release skill).
 
 ## g) Questions I cannot answer myself
 

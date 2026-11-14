@@ -42,7 +42,7 @@ func Domain() system.DomainConfig {
 				Apply:   applyScanRun,
 			}))
 
-			mustRegister(system.RegisterCommand[RecordObservationCmd, DomainState](sys, CmdObserve,
+			mustRegister(system.RegisterCommand(sys, CmdObserve,
 				func(cmdCtx context.Context, cmd RecordObservationCmd) system.Op[DomainState] {
 					return system.Execute(cmdCtx, cmd.StreamID(), StreamTypeDomain,
 						func(_ DomainState, v event.Version) ([]event.Event, error) {
@@ -67,7 +67,7 @@ func Domain() system.DomainConfig {
 						})
 				}))
 
-			mustRegister(system.RegisterCommand[StartScanCmd, ScanRunState](sys, CmdStartScan,
+			mustRegister(system.RegisterCommand(sys, CmdStartScan,
 				func(cmdCtx context.Context, cmd StartScanCmd) system.Op[ScanRunState] {
 					return system.Execute(cmdCtx, cmd.StreamID(), StreamTypeScanRun,
 						func(s ScanRunState, v event.Version) ([]event.Event, error) {
@@ -94,7 +94,7 @@ func Domain() system.DomainConfig {
 						})
 				}))
 
-			mustRegister(system.RegisterCommand[CompleteScanCmd, ScanRunState](sys, CmdCompleteScan,
+			mustRegister(system.RegisterCommand(sys, CmdCompleteScan,
 				func(cmdCtx context.Context, cmd CompleteScanCmd) system.Op[ScanRunState] {
 					return system.Execute(cmdCtx, cmd.StreamID(), StreamTypeScanRun,
 						func(s ScanRunState, v event.Version) ([]event.Event, error) {

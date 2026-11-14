@@ -146,7 +146,7 @@ pass-1 (~2.8% band vs A's 1.53%) + bound the "none" share per band.
 18. Audit upkeep: docs/review/libs index render proof.
 19. Audit upkeep: go-cqrs-lite/cqrs-htmx verdict re-audit (event-store
 work may have flipped premises).
-20. STACK.md row for go-codec as a declared direct dependency.
+~~20. STACK.md row for go-codec as a declared direct dependency.~~ done — the STACK.md go-codec row landed (stack table + the 2026-11-13 declared-direct-dependency decision line; swept commit 1dbf7ce)
 21. CHANGELOG Unreleased coherence check before the next tag.
 22. Full `-race` suite once on the settled HEAD (one lane at a time).
 23. asciinema demo / GIF for the README (E20).

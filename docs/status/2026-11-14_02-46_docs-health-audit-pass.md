@@ -170,6 +170,7 @@ audit's lint fix included; CI has not yet seen it.
 ## f) UP TO 50 THINGS TO GET DONE NEXT
 
 **Census critical path (single-flight, in order):**
+
 1. Watch wave B to completion (~14:45-16:00); watchdog/heartbeat.
 2. On B exit: read the wrapper stderr summary → run-id file.
 3. Verify B's auto-gate PASS (`--manifest --expect-skip 96215`).
@@ -193,72 +194,72 @@ audit's lint fix included; CI has not yet seen it.
 
 **Code (single-flight-free):**
 16. U2/U1 live smoke on a census.db SNAPSHOT: audit wave-names vs
-    per-run ledger counts; `runs --format jsonl` full IDs; pin the
-    ULID-vs-lowercase-wave-name edge.
+per-run ledger counts; `runs --format jsonl` full IDs; pin the
+ULID-vs-lowercase-wave-name edge.
 17. Land the sibling's in-flight test split (their lane — coordinate,
-    don't collide): cli_scan_stream_test.go et al.
+don't collide): cli_scan_stream_test.go et al.
 18. File-size headroom: scanstore_test.go (346/350) and
-    cli_scan_test.go (344/350) — split before the next addition.
+cli_scan_test.go (344/350) — split before the next addition.
 19. Full `-race ./...` once on the settled pushed HEAD (one lane).
 20. Push the queued commits (5+) and watch CI green on the exact HEAD
-    (release law) — owner-called.
+(release law) — owner-called.
 21. STACK.md go-codec row — verify the sibling's swept row (1dbf7ce)
-    matches the stack-selection decision record format.
+matches the stack-selection decision record format.
 22. scanstore audit tails: read `sqliteengine/v4` `MapUpdate` source;
-    verify memory/sqlite fold dispatch share the task snapshot; pin
-    the Recorder sequential-dispatch contract with a test.
+verify memory/sqlite fold dispatch share the task snapshot; pin
+the Recorder sequential-dispatch contract with a test.
 23. Clear the gopls `infertypeargs` infos or quiet the integration
-    (cli.go ×2, scanstore.go ×3) + the stale golangci LSP warnings.
+(cli.go ×2, scanstore.go ×3) + the stale golangci LSP warnings.
 24. io-surface info: internal/ranges/ranges.go:265 os.ReadFile TOCTOU
-    (open + handle instead of stat-then-read) — info severity, decide
-    fix-or-accept.
+(open + handle instead of stat-then-read) — info severity, decide
+fix-or-accept.
 25. shellcheck warnings in census scripts (census-gate.sh SC2034
-    unused var; census-wave.sh quote findings) — tidy or suppress with
-    rationale.
+unused var; census-wave.sh quote findings) — tidy or suppress with
+rationale.
 
 **Docs:**
 26. BUILD docs/DOMAIN_LANGUAGE.md (the missing must-have: verdicts,
-    evidence-only payloads, supersession, waves, rulesets — from
-    classify/scanstore usage).
+evidence-only payloads, supersession, waves, rulesets — from
+classify/scanstore usage).
 27. Audit upkeep: re-shoot docs/review/libs index render proof.
 28. Audit upkeep: re-audit go-cqrs-lite/cqrs-htmx verdicts vs current
-    pins (the sibling's sweep touched go-cqrs-lite.md — re-check).
+pins (the sibling's sweep touched go-cqrs-lite.md — re-check).
 29. Verify the sibling's ROADMAP sweep (1dbf7ce) kept the ownership
-    matrix clean (no TODO/ROADMAP duplication re-introduced).
+matrix clean (no TODO/ROADMAP duplication re-introduced).
 30. CHANGELOG Unreleased coherence before the next tag (the daemon
-    keeps landing entries; verify vs git log at tag-prep time).
+keeps landing entries; verify vs git log at tag-prep time).
 31. Add the audit-round-trip recipe to docs/census.md (declined for
-    AGENTS.md at cap — census.md owns recipes) if a second session
-    needs it.
+AGENTS.md at cap — census.md owns recipes) if a second session
+needs it.
 32. Re-run the full docs-gates battery after the sibling's test-split
-    landing (their edits touch TODO_LIST prose the gates replay).
+landing (their edits touch TODO_LIST prose the gates replay).
 
 **Owner decisions (the 02-18 package, reply by number):**
 33. #1 wave-C launch mode (attended recommended).
 34. #2 RulesetV2 stamp (YES recommended).
 35. #3 poisonfix-25 launch (YES recommended).
 36. #4 www-strip rescan-in-C — reconcile against the 2026-11-12
-    census.md decision first (policy decided; rescan is the open bit).
-37. #5 GPG signing policy.
+census.md decision first (policy decided; rescan is the open bit).
+37. #5 GPG signing policy. **→ routed - owner-package ask #5 (docs/planning/2026-11-14_02-18-owner-decision-package.md); the TODO_LIST owner-gates pointer covers it**
 38. #6 BuildFlow#56 fleet rebuild approval (the hook still fails valid
-    commits on the tidy demand).
+commits on the tidy demand).
 39. #7 Nominet .uk email send (draft ready).
 40. #8 M365 surface + DKIM probe (post-census, render-side tally).
 
 **Post-census / parked:**
 41. Kith CRM: confirm delta retirement onto `replay --since` (repo: crm).
 42. go-cqrs-lite projectionhost settled-API (the repo-local
-    WaitProjectionsSettled is the reference).
+WaitProjectionsSettled is the reference).
 43. go-cqrs-lite patch sweep + foldByEvent re-verification.
 44. zone-ch scan (2.66M apexes) after Tranco frees single-flight.
 45. asciinema demo / GIF for the README.
 46. io-history-ratchet `--profile-io` investigation (56 vs median 10).
 47. TCP contention measurement post-B (`incoming/outgoing-num-tcp`).
 48. Poller rank-band unknown-rate expectations (calibrate on B pass-1;
-    bound the "none" share).
+bound the "none" share).
 49. Lead scoring / daily delta timer framing (ROADMAP direction 3).
 50. Next docs-health pass after the census closes (the archive ritual
-    for the 8 open reports; the 02-05/02-18 generation will age).
+for the 8 open reports; the 02-05/02-18 generation will age).
 
 ## g) QUESTIONS I CANNOT FIGURE OUT MYSELF
 

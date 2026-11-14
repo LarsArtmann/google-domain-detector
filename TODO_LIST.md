@@ -119,12 +119,12 @@ T15 final → closing report.
       bypassed (--no-verify + direct gate runs) until rebuilt. Verify
       via direct gates.
 - [x] Audit upkeep (2026-11-10 library audit): citation verification
-  green (2026-11-13); libs index render proof RE-SHOT 2026-11-14 02:40
-  (balanced tags, 22/22 .md links resolve, 43 KB self-contained);
-  go-cqrs-lite verdict re-audited — the do-not-adopt verdict's own
-  revisit trigger FIRED on the census directive, doc updated
-  (ADOPTED, pins all latest, nothing to sweep); cqrs-htmx exclusion
-  re-verified as still-correct (no HTTP/HTMX surface in a CLI).
+      green (2026-11-13); libs index render proof RE-SHOT 2026-11-14 02:40
+      (balanced tags, 22/22 .md links resolve, 43 KB self-contained);
+      go-cqrs-lite verdict re-audited — the do-not-adopt verdict's own
+      revisit trigger FIRED on the census directive, doc updated
+      (ADOPTED, pins all latest, nothing to sweep); cqrs-htmx exclusion
+      re-verified as still-correct (no HTTP/HTMX surface in a CLI).
 - [ ] Owner-decision package (00-42 plan R5): WRITTEN —
       docs/planning/2026-11-14_02-18-owner-decision-package.md (8 asks,
       table + options + recommendation each: attended-vs-auto-chain,
