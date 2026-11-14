@@ -102,7 +102,7 @@ Related near-miss (not quite fucked up, worth logging): I launched attempt 3 whi
 30. Confirm smartd stable post-reboot (ps shows it up; the 2026-08-18 silent-death class precedent says verify, don't assume).
 31. Swap posture: 48G/62G used post-reboot — decide drain or leave.
 32. PMA (auto-commit daemon) memory: hit 90% of its 16G MemoryMax during the storm — review its MemoryMax/MemoryHigh budget.
-33. Identify what drove load 1034 in the boot storm (unanswered §d item). **→ ROUTED to host ops: the load-1034 boot-storm attribution is a host-level investigation (the report itself asks the owner whether host repair is in agent lane, §g3); no repo-side action exists; revisit only if the owner answers it into our lane.**
+33. Identify what drove load 1034 in the boot storm (unanswered §d item). **→ ROUTED to host ops: the load-1034 boot-storm attribution is a host-level investigation (the report itself asks the owner whether host repair is in agent lane, §g3); no repo-side action exists; revisit only if the owner answers it into our lane. ANSWERED 16:40 same day from the live second storm: the driver is the agent fleet itself — ~15 concurrent crush-0.101.0 sessions at 16–28% CPU each (18 users on the host, plus kith-crm) saturating CPU into load ~1000; it is CPU saturation, NOT memory pressure (memory PSI avg10 0.10% during the spike vs ≥20% before the morning's oomd kills) — recurrence risk for waves is fleet concurrency, and the scan rides it fine (DNS polls are I/O-bound; the timeout budget absorbs the latency).**
 34. GPU GTT 60G alert — decide if action needed or alert threshold tune.
 
 **Docs / provenance upkeep:**
