@@ -90,6 +90,10 @@ func runEnrich(ctx context.Context, f EnrichFlags, stdin io.Reader, stdout, stde
 
 	defer func() { _ = sys.Close() }()
 
+	if err := scanstore.WaitProjectionsSettled(ctx, sys); err != nil {
+		return fmt.Errorf("event store %s: %w", f.EventStore, err)
+	}
+
 	writer := csv.NewWriter(stdout)
 	defer writer.Flush()
 

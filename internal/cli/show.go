@@ -61,6 +61,10 @@ func runShow(ctx context.Context, f ShowFlags, args []string, stdout, stderr io.
 
 	defer func() { _ = sys.Close() }()
 
+	if err := scanstore.WaitProjectionsSettled(ctx, sys); err != nil {
+		return fmt.Errorf("event store %s: %w", f.EventStore, err)
+	}
+
 	view, found, err := scanstore.LatestObservation(ctx, sys, dom.String())
 	if err != nil {
 		return err
