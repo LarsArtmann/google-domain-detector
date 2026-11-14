@@ -364,3 +364,32 @@ row is the relevant bound — workers ≤ 2 plus cleanup loops, always.
 nxfix wave sustained 4.0–4.6 dom/s at w4/10s over 22 136 domains, and
 wave B confirmed the same rate early. This is the calibrated bulk path;
 the UDP forwarder rows above are older measurements.
+
+## zone-ch launch prep (R3, drafted 2026-11-14 — slot: post-wave-C + poisonfix)
+
+Input: `reports/census/zone-data/zone-ch.txt` — 2,660,632 unique
+registrable apexes, sha256 `f845b4713740bdad…` (MANIFEST.sha256,
+regenerated with each 24 h SWITCH pull — re-verify before launch).
+
+- **Store: separate `reports/census/zone-ch.db`**, not census.db — keeps
+  the tranco journal replay-fast (G4: 100k events replay in ~2 s;
+  2.7M+ domains would tax every tranco replay) and gives the .ch lane
+  its own gates/snapshots. Cross-dataset answers = two replays.
+- **Batching: 6 × ~450k** (`split -l 450000` + per-batch manifest),
+  one wave-gated batch at a time (~33 h each at the calibrated
+  3.8–4.6 dom/s, w4/10s through the TCP-upstream forwarder 127.0.0.1:5354;
+  never w8 through a forwarder — fabricated no-evidence class). Total
+  ≈ 8 days. Gate + snapshot between batches; T14 loop on any FAIL.
+- **Gate params:** pilot = 10k slice of batch 1 into a THROWAWAY store
+  (diagnostic-store law), `census-gate.sh` bar = measured unknown rate
+  + margin. Expect HIGHER unknowns than tranco's 2.3–2.8 % bands: a raw
+  zone carries parked/dead domains tranco's popularity ranking filters
+  out. Calibrate the poller's GDD_WARN_PCT from the pilot, not from
+  tranco numbers.
+- **Binary:** fresh PROVENANCE-stamped build; if the RulesetV2 stamp is
+  approved (owner-decision #2), it must land BEFORE batch 1 — the .ch
+  zone results will be compared against the tranco .ch slice.
+- **Disk:** ≈ 10.5 GiB projected (3.9 KB/domain measured on census.db
+  at 245k streams); host had 215 G free at drafting.
+- All standing laws apply: real-upstream pre-flight, detached wrapper +
+  watchdog, single-flight pgrep, snapshot on completion.

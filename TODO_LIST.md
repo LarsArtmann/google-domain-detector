@@ -36,9 +36,11 @@ T15 final → closing report.
   (docs/zone-data/nominet-uk.md). Sending the email + MiTek ID
   verification = OWNER action; scanning follows the Files.com
   credentials.
-- [ ] Scan `zone-ch.txt` (2,660,632 unique apexes, sha256 in
-      reports/census/zone-data/MANIFEST.sha256) when the Tranco waves
-      free the single-flight; gate params per the 00-42 plan (R3).
+- [ ] Scan `zone-ch.txt` (2,660,632 apexes) when the Tranco waves free
+      the single-flight — LAUNCH PREP DONE (R3.1/R3.2, 2026-11-14:
+      docs/census.md "zone-ch launch prep": separate zone-ch.db,
+      6 × 450k batches ≈ 8 days, pilot-gated, ~10.5 GiB, post-C slot;
+      re-verify the manifest sha before launch).
 
 ## Code & library
 
@@ -94,10 +96,15 @@ T15 final → closing report.
       timeout 0.6-1.1%, servfail 0.05-0.5%, zero cancels. Poller bar
       (GDD_WARN_PCT) sits above these — no alarms expected at this
       rate.
-- [ ] Quiet the stale LSP diagnostics (IDE noise vs truth; advisory-only
-      per AGENTS.md): the golangci integration's stale warnings and the
-      gopls `infertypeargs` infos (cli.go ×2, scanstore.go ×3 — trivial
-      explicit-type-arg removals if kept).
+- [x] Stale LSP diagnostics quieted (2026-11-14 02:55): the 5 gopls
+      `infertypeargs` infos resolved — 3 were REAL (scanstore.go
+      RegisterCommand explicit type args inferable from the handler
+      literal; removed, build+tests green), 2 in cli.go were phantom
+      positions from a pre-refactor layout (gone after LSP restart).
+      Remaining panel warns are golangci-LSP integration artifacts
+      contradicted by the gate (`golangci-lint run` = 0 issues);
+      projections.go warns are sibling lane, advisory-only per
+      AGENTS.md.
 
 ## Operational
 
