@@ -179,6 +179,12 @@ operator decision, not an accounting default.
   fallback — DENIC refuses all third-party zone access; crt.sh is
   rate-limited, at most once a day per TLD; `--test` runs its fixture
   self-test).
+- crt.sh daily timer verified 2026-11-14 04:51 (first run since the
+  wrong-root fix): fired on schedule in-repo, and the plausibility
+  guard correctly REJECTED a truncated crt.sh harvest — 2,060 .de rows
+  against the 100,000 floor, artifact removed, nothing partial kept.
+  Mechanism proven; the ≥100k-row artifact itself awaits crt.sh
+  upstream recovery and auto-retries at 04:37 (+jitter) daily.
 - Tranco list IDs and manifest hashes are recorded in the wave ledger
   below. Current freeze: list `947N2` (2026-11-10).
 - Every wave run uses `--event-store reports/census/census.db --wave

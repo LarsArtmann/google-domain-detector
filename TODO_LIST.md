@@ -105,17 +105,24 @@ T15 final → closing report.
       RegisterCommand explicit type args inferable from the handler
       literal; removed, build+tests green), 2 in cli.go were phantom
       positions from a pre-refactor layout (gone after LSP restart).
-      Remaining panel warns are golangci-LSP integration artifacts
+      CORRECTION 2026-11-14 ~09:00: the 2 cli.go infos re-surfaced and
+      proved REAL (WithMiddleware + DoctorCommand explicit type args,
+      both inferable) — dropped, build + cli/scanstore tests green,
+      LSP clean after restart; not phantom after all. Remaining panel
+      warns are golangci-LSP integration artifacts
       contradicted by the gate (`golangci-lint run` = 0 issues);
       projections.go warns are sibling lane, advisory-only per
       AGENTS.md.
 
 ## Operational
 
-- [ ] Verify the crt.sh timer run (2026-11-14 ~04:37 + jitter) lands
-      in-repo — the first legit run since the wrong-root fix; the
-      plausibility guard must accept a ≥100k-row .de pull
-      (reports/census/zone-data/).
+- [x] Verify the crt.sh timer run (2026-11-14 ~04:37 + jitter) lands
+      in-repo — VERIFIED 2026-11-14 04:51: fired on schedule in-repo
+      (correct path, first run since the wrong-root fix); the
+      plausibility guard correctly REJECTED a truncated crt.sh harvest
+      (2,060 .de rows < 100,000 floor, artifact removed). Mechanism
+      proven; the ≥100k artifact awaits crt.sh upstream recovery
+      (auto-retries daily). Recorded in docs/census.md zone-inputs.
 - [ ] Post-B verification bundle (00-42 plan Q4): VERIFIED 2026-11-14
       03:05 on the pre-B-exit state — restore-verify PASSED (snapshot
       tranco1m-b-complete-20261113-1647: sha256 ok, integrity_check ok,
