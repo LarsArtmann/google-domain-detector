@@ -426,7 +426,14 @@ which is paperwork only the account holder can sign:
       server (looping responder, atomic diagnostics); `[::1]:53`
       live-resolver gotcha in AGENTS.md; wave preflight splits bracketed
       IPv6 host:port correctly.
-- [ ] TXT truncation investigation (cloudflare "cannot unmarshal" class).
+- [x] ~~TXT truncation investigation (cloudflare "cannot unmarshal" class).~~
+      superseded: closed with live evidence 2026-11-13 (00-03 report §8) —
+      cloudflare.com's 2,539-byte TXT response parses cleanly through the
+      healthy forwarder (full SPF + site-verification evidence, zero
+      errors); the historical failures were resolver-distress artifacts,
+      not a truncation bug. The record-content family is additionally
+      hardened by the hostile-TXT UTF-8 sanitizer (scan-boundary coercion
+      + CBOR decode repair, landed 2026-11-13/14).
 - [x] vendorHash.nix extraction — resolved-as-deliberate-non-fix:
       buildflow's nix-hash-fix already owns hash updates; a separate
       vendorHash.nix adds indirection with zero behavior gain (decided
