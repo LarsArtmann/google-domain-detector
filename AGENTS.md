@@ -132,16 +132,14 @@ dep set changes or a new first-party lib is considered.
 - **Census binary provenance = the embedded VCS stamp** (`go version -m`),
   not `version` ("dev"); builds aren't byte-reproducible across dirs —
   record stamp + sha256 (`reports/census/unbound/PROVENANCE.md`).
-- **crtsh-daily.sh wrong-root bug (fixed 2026-11-13):** the default data
-  dir resolved OUTSIDE the repo into `/home/lars/projects/reports/census/
-  zone-data` (a REAL sibling project — never delete that tree). Fixed
-  path + plausibility guard (de ≥100k rows, `GDD_MIN_ROWS` override),
-  branch-tested via the fixture; real verification = the next 04:37
-  timer run landing in-repo. Lesson: test the LITERAL path string a
-  script embeds, not a canonicalized equivalent.
+- **crtsh-daily.sh wrong-root bug (fixed 2026-11-13):** the default data dir
+  resolved OUTSIDE the repo into `/home/lars/projects/reports/census/zone-data`
+  (a REAL sibling project — never delete that tree). Fixed + plausibility guard
+  (de ≥100k rows, `GDD_MIN_ROWS`); real verification = next 04:37 timer in-repo.
+  Lesson: test the LITERAL embedded path string, not a canonicalized equivalent.
 - **Snapshot the journal with `sqlite3 <db> ".backup '<dest>'"`**
-  (scripts/census-snapshot.sh) — WAL-consistent mid-run; a plain copy
-  misses/stale-reads the -wal.
+  (scripts/census-snapshot.sh) — WAL-consistent mid-run; plain copies
+  miss/stale-read the -wal.
 - `DomainObservedPayload` carries evidence only, never verdicts — verdicts
   are derived by `classify.Result` methods (split-brain rule for every
   event payload).
@@ -150,10 +148,9 @@ dep set changes or a new first-party lib is considered.
   every journal fold) and its stdout render line refused — wedging the
   wave 4.5 h. Defense: encode-side UTF-8 coercion at the scan boundary
   (`classify.SanitizeEvidence`/`scan.sanitizeResult`, evidence copied not
-  mutated) and before `event.New`, decode-side CBOR repair
-  (`scanstore/cborsanitize.go`, fixture-pinned; journal stays
-  append-only). Route NEW payload-carrying event types through the
-  repair wrapper.
+  mutated) and before `event.New`; decode-side CBOR repair
+  (`scanstore/cborsanitize.go`, fixture-pinned; journal append-only).
+  Route NEW payload-carrying event types through the repair wrapper.
 - Observation streams are per-domain (stream ID = domain name); run
   streams hold started/completed only. Replay keeps the LAST observation
   per domain per run and boots WITHOUT the projection host. Scan output
@@ -162,15 +159,13 @@ dep set changes or a new first-party lib is considered.
 - cqrs-lint: findings dispositioned inline with rationale at their site;
   F005/F007 anchor to the alphabetically FIRST scanstore file.
 - **Read models lag the journal — folds live in projection workers, not
-  dispatch** (2026-11-14, proven by experiment): a journal tail recorded
-  without a running host (Boot-shaped writer, unclean close) is invisible
-  to read-model queries until the next `Open`'s staggered workers drain.
-  `Open` + immediate `ListRuns` deterministically saw ZERO runs on an
-  unfoldled journal. Every read-model command (runs, show, enrich) MUST
-  call `scanstore.WaitProjectionsSettled` after `Open`, before its first
-  query — recording paths must NOT (their workers do the folding).
-  `--resume` is immune (journal walk via Boot). Library-level fix
-  (projectionhost settled-API) is a TODO row, post-census.
+  dispatch** (2026-11-14, proven): a journal tail recorded without a
+  running host is invisible to read-model queries until the next `Open`'s
+  staggered workers drain (`Open` + immediate `ListRuns` deterministically
+  saw ZERO runs). Every read-model command (runs, show, enrich) MUST call
+  `scanstore.WaitProjectionsSettled` after `Open`, before its first
+  query; recording paths must NOT. `--resume` is immune (journal walk
+  via Boot). Library-level settled-API is a TODO row, post-census.
 - Event payloads use `event.Instant` (not `time.Time` — CBOR epoch
   encoding drops timezones, C013) and every `event.New` stamps
   `event.WithSchemaVersion(1)` (D013). New events must follow both.
@@ -181,23 +176,22 @@ dep set changes or a new first-party lib is considered.
   `--resume <run-id>`, and `census-gate.sh --manifest` catches gaps (exit 4).
 - Raising the go.mod `go` directive can break the INSTALLED buildflow
   binary (its analyzers run the Go they were built with — 2026-11-10
-  toolchain.skew). `go.mod` floor is `go 1.27.2` and tidy ENFORCES it
+  toolchain.skew). The floor is `go 1.27.2` and tidy ENFORCES it
   (go-cqrs-lite v4 tags); do NOT follow go-version-auto-configure's
-  "major.minor only" advice. BuildFlow#56: go1.27.0-built binaries block
-  the pre-commit hook — verify via direct gates and `--no-verify` for
-  docs-only commits.
+  "major.minor only" advice. BuildFlow#56: go1.27.0 binaries block the
+  pre-commit hook — verify via direct gates, `--no-verify` for docs-only.
 - docs-gates verdicts can differ between the pre-commit hook and a direct
   run (the hook runs `--build-mode pre-commit --staged-only` and stashes
   unstaged changes) — diagnose red-hook/green-direct with a direct run.
-- Session start: run `gh run list --limit 3` before acting (the v0.1.0 tag
-  sat on red CI for hours unnoticed). Release law: local green gates do
-  NOT substitute for CI green on the exact pushed commit — tag only after
-  the push-triggered CI run completes green; CI's race suite uses
+- Session start: `gh run list --limit 3` before acting (the v0.1.0 tag
+  sat on red CI unnoticed). Release law: local green gates do NOT
+  substitute for CI green on the exact pushed commit — tag only after
+  the push-triggered CI run completes green; CI race suite uses
   `-timeout 20m` (runners ~1.5–2× slower than local).
-- gh's Go-resolved DNS dies intermittently on this host while SSH keeps
-  working (2026-11-10): retry later or bypass with the documented
-  `curl --resolve api.github.com:443:<IP>` + token pattern; SSH pushes are
-  unaffected.
+- gh's Go-resolved DNS dies intermittently on this host (2026-11-10)
+  while SSH keeps working: retry later or bypass with the documented
+  `curl --resolve api.github.com:443:<IP>` + token pattern; SSH pushes
+  are unaffected.
 - BuildFlow's result cache replays FAILED step results verbatim — re-run
   with `BUILDFLOW_NO_RESULT_CACHE=1 -s <step>`; never two concurrent
   `-race ./...` lanes on this host (phantom failures).
