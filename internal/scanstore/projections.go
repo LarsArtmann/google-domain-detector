@@ -2,12 +2,22 @@ package scanstore
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"strings"
 	"time"
 
 	"github.com/larsartmann/go-cqrs-lite/projectionhost/v4"
 	"github.com/larsartmann/go-cqrs-lite/system/v4"
+)
+
+var (
+	// errProjectionWorkerFailed marks a worker that exhausted its restart
+	// budget mid-catch-up; the read model is likely incomplete.
+	errProjectionWorkerFailed = errors.New("projection worker failed while catching up")
+	// errProjectionsUnsettled marks a timeout waiting for the workers to
+	// drain; read-model queries would race the fold.
+	errProjectionsUnsettled = errors.New("projections did not settle within the catch-up budget")
 )
 
 // projectionCatchUpBudget bounds how long a read command waits for the
@@ -43,11 +53,12 @@ func WaitProjectionsSettled(ctx context.Context, sys *system.System) error {
 			case projectionhost.WorkerLive, projectionhost.WorkerStopped:
 				// Settled: tailing live, or drained to the head and exited.
 			case projectionhost.WorkerFailed:
-				return fmt.Errorf("projection %s failed while catching up (restarts %d): %s",
-					w.Name, w.Restarts, w.LastError)
-			default:
-				// WorkerIdle: staggered start has not launched it yet.
-				// WorkerRunning/WorkerDraining/WorkerBackoff: still folding.
+				return fmt.Errorf("%w: %s (restarts %d): %s",
+					errProjectionWorkerFailed, w.Name, w.Restarts, w.LastError)
+			case projectionhost.WorkerIdle, projectionhost.WorkerRunning,
+				projectionhost.WorkerBackoff, projectionhost.WorkerDraining:
+				// Idle: staggered start has not launched it yet. The rest:
+				// still folding.
 				settled = false
 			}
 		}
@@ -56,13 +67,13 @@ func WaitProjectionsSettled(ctx context.Context, sys *system.System) error {
 			return nil
 		}
 
-		if ctx.Err() != nil {
-			return fmt.Errorf("projection catch-up canceled: %w", ctx.Err())
+		if err := ctx.Err(); err != nil {
+			return fmt.Errorf("projection catch-up canceled: %w", err)
 		}
 
 		if time.Now().After(deadline) {
-			return fmt.Errorf("projections did not settle within %s: %s",
-				projectionCatchUpBudget, workerStatesSummary(states))
+			return fmt.Errorf("%w after %s: %s",
+				errProjectionsUnsettled, projectionCatchUpBudget, workerStatesSummary(states))
 		}
 
 		select {
@@ -74,12 +85,11 @@ func WaitProjectionsSettled(ctx context.Context, sys *system.System) error {
 }
 
 func workerStatesSummary(states []projectionhost.WorkerState) string {
-	summary := ""
-	var summarySb77 strings.Builder
-	for _, w := range states {
-		summarySb77.WriteString(fmt.Sprintf("%s=%s(processed=%d) ", w.Name, w.Status, w.Processed))
-	}
-	summary += summarySb77.String()
+	var summary strings.Builder
 
-	return summary
+	for _, w := range states {
+		fmt.Fprintf(&summary, "%s=%s(processed=%d) ", w.Name, w.Status, w.Processed)
+	}
+
+	return summary.String()
 }

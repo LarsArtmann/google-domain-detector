@@ -15,7 +15,6 @@ import (
 	"github.com/larsartmann/google-domain-detector/internal/scanstore"
 )
 
-//nolint:golines // fleet golines pads/reorders tags against the project tagalign policy; tags cannot wrap (see .golangci.yml)
 type RunsFlags struct {
 	EventStore string `env:"EVENT_STORE" flag:"event-store" help:"SQLite event store written by scan --event-store"`
 	Format     string `                  flag:"format"      help:"Output format"                                    default:"table" values:"table,json,csv,tsv,markdown,yaml,toml,jsonl"`
@@ -160,14 +159,14 @@ func runJSONFrom(r scanstore.RunView) runJSON {
 	}
 }
 
-func renderRunsJSON(w io.Writer, runs []scanstore.RunView, format output.Format) error {
+func renderRunsJSON(stdout io.Writer, runs []scanstore.RunView, format output.Format) error {
 	dtOs := make([]runJSON, 0, len(runs))
 	for _, r := range runs {
 		dtOs = append(dtOs, runJSONFrom(r))
 	}
 
 	if format == output.FormatJSON {
-		enc := jsontext.NewEncoder(w)
+		enc := jsontext.NewEncoder(stdout)
 
 		return json.MarshalEncode(enc, dtOs)
 	}
@@ -178,7 +177,7 @@ func renderRunsJSON(w io.Writer, runs []scanstore.RunView, format output.Format)
 			return fmt.Errorf("encode run %s: %w", dto.RunID, err)
 		}
 
-		if _, err := fmt.Fprintf(w, "%s\n", line); err != nil {
+		if _, err := fmt.Fprintf(stdout, "%s\n", line); err != nil {
 			return fmt.Errorf("write run line: %w", err)
 		}
 	}
