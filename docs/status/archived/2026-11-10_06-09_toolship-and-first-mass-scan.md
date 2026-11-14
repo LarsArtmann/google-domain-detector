@@ -283,7 +283,7 @@ IPv4 tested).
 46. Session handoff protocol with the concurrent agent (who owns what
 plan numbers; TODO_LIST merge).
 47. Decide whether reports/ stays gitignored or gets a README pointer.
-48. Mirror-push policy: auto-push both remotes from the daemon, or a
+48. Mirror-push policy: auto-push both remotes from the daemon, or a **→ owner-set policy — AGENTS.md Git remotes law (push to both) + the release law own it; no daemon auto-push**
 pre-push gate like the website repo's.
 
 ## g) Questions I cannot answer myself

@@ -184,18 +184,18 @@ lane, per owner request. Live state embedded at the bottom.
 19. 🔀 cli/scanstore: runs-table metadata shutdown race (soak-3 row).
     <!-- fresh:skip sibling-scoped pending owner policy -->
 20. 🔀 E29 CSV enrichment; TimeoutMiddleware; describe contract test.
-21. 🔀 Harvest sales-lane 19-27 §f (18 items) — owner policy §g1.
-22. 🔀 Harvest E24 02-00/19-08 §f (8 items) — same.
+    ~~21. 🔀 Harvest sales-lane 19-27 §f (18 items) — owner policy §g1.~~ done — the 19-27 sales-lane items struck won't-implement (2026-11-13 pass; this pass closed the remainder)
+21. 🔀 Harvest E24 02-00/19-08 §f (8 items) — same.
     <!-- fresh:skip sibling-scoped pending owner policy -->
-23. flake vendorHash vs cmdguard v5.1.0: TODO row already struck [x]
+22. flake vendorHash vs cmdguard v5.1.0: TODO row already struck [x]
     by the bumping lane — verify once with `nix build` when a lane
     next touches nix (do not take the strike on trust; see e1).
-24. IPv6 --resolver handling check (§f25).
+23. IPv6 --resolver handling check (§f25).
     ~~26. TXT truncation investigation (existing TODO row).~~ **Superseded — closed with live evidence (00-03 §8).**
-25. E28 --pre-filter + .ch SWITCH AXFR tooling (existing rows).
-26. crt.sh .de rate-limit-aware scheduling (routed earlier).
-27. reports/ durability policy beyond local tarballs (§g3).
-28. Sibling 17-43 cqrs-event-sourcing-audit-status: read + route its
+24. E28 --pre-filter + .ch SWITCH AXFR tooling (existing rows).
+25. crt.sh .de rate-limit-aware scheduling (routed earlier).
+26. reports/ durability policy beyond local tarballs (§g3).
+27. Sibling 17-43 cqrs-event-sourcing-audit-status: read + route its
     §f when its lane goes quiet (policy §g1).
 
 ## g) QUESTIONS (cannot answer myself)
