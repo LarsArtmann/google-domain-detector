@@ -68,8 +68,12 @@ T15 final → closing report.
       `Host.WaitUntilSettled`) so consumers don't hand-roll poll loops —
       this repo's interim is `scanstore.WaitProjectionsSettled`
       (projections.go), pinned by
-      `TestWaitProjectionsSettledMakesUnfoldedJournalVisible`. Library
-      work; post-census (the journal is live mid-wave).
+      `TestWaitProjectionsSettledMakesUnfoldedJournalVisible`. ISSUE
+      DRAFT READY (2026-11-14 ~09:05):
+      docs/review/2026-11-14_08-55-projectionhost-settled-api-issue-draft.md
+      (gap verified at v4.7.1 — no settled/catch-up method;
+      CheckStaleness/LagDuration are time-based; filing is owner-gated).
+      Library work; post-census (the journal is live mid-wave).
       (repo: go-cqrs-lite)
 - [x] scanstore audit tails CLOSED (2026-11-14 03:02, source-read
       evidence): MapUpdate nil-prev upsert confirmed directly in
@@ -81,14 +85,19 @@ T15 final → closing report.
       TestRecorderDispatchesInJournalOrder (ok/failed/ok sequence must
       survive last-wins; RunSummaries first-started order must match
       dispatch order). scanstore lint 0, suite green, file 328/350.
-- [ ] go-cqrs-lite patch sweep when the census frees the journal
-      (system v4.18 / metaengine v4.23 baseline): check for bugfix
-      releases; re-verify the `foldByEvent` last-fold-wins gotcha after
-      any bump (go-ecosystem-upgrade owns the sweep).
-      (repo: go-cqrs-lite)
+- [x] go-cqrs-lite patch sweep READ-ONLY CHECK 2026-11-14 ~09:00:
+      system v4.18.0 and metaengine v4.23.0 are both the LATEST
+      published versions — no bugfix releases to sweep; pins already
+      at latest. The foldByEvent last-fold-wins re-verify obligation on
+      any future bump stays in AGENTS.md (go-ecosystem-upgrade owns it;
+      the journal-touching bump itself waits for post-census).
 - [ ] asciinema demo / GIF for the README (plan v3 E20).
-- [ ] io-history-ratchet: `--profile-io` investigation (56 files vs
-      median 10 — a memo layer may have stopped eliminating I/O).
+- [x] io-history-ratchet `--profile-io` investigation (2026-11-14
+      ~09:00): full-gate profile on a CLEAN tree = 27 spawns, 3 files
+      hashed, 49 writes — normal. The 56-file measurement was dirty-tree
+      cache-key hashing (the sibling session's uncommitted test splits
+      at measurement time), not a memo-layer regression. Expected
+      behavior, no fix.
 - [ ] `incoming/outgoing-num-tcp` contention measurement post-B
       (are 150 ever contended at w8? → reports/census/unbound/NOTES.md).
 - [x] Poller rank-band expectations CALIBRATED on live wave-B pass-1
@@ -150,6 +159,11 @@ T15 final → closing report.
       table + options + recommendation each: attended-vs-auto-chain,
       RulesetV2, poisonfix go, www-strip, GPG, BuildFlow#56 rebuild,
       Nominet email, M365 surface). Owner answers pending.
-- [ ] Kith CRM delta rescans: confirm the CRM side can retire its own
-      diff logic in favor of `replay --since` deltas (T16 landed; the
-      plan pointer says this retires at T16). (repo: crm)
+- [x] Kith CRM delta rescans: CONFIRMED from this side 2026-11-14
+      ~09:10 — `replay --since` is shipped and pinned by tests
+      (cli_replay_test.go: exact-delta json/jsonl, unknown run ID must
+      fail), so the CRM plan's own delta logic can retire in favor of
+      replay --since per the AGENTS.md downstream pointer. The crm-side
+      edit is deferred: that repo has a live session (dirty status
+      files, 08:42 report) — write fence; hand the confirm to the crm
+      session/owner instead of trampling.

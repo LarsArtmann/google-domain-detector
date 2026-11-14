@@ -27,12 +27,12 @@ wait for that drain.
 
 ### What the API already offers, and why it is not enough
 
-| Existing API                       | Why it does not answer "am I caught up?"                                                            |
-| ---------------------------------- | --------------------------------------------------------------------------------------------------- |
-| `Status() []WorkerState`           | Exposes states, but the consumer must poll and interpret them (the loop below).                      |
-| `CheckStaleness(maxStaleness)`     | Wall-clock staleness since last processed — an idle-but-behind worker can look fine; not position-based. |
-| `LagDuration()` / `LagPerProjection()` | Time since the worker's most recent event, not distance to the journal head.                      |
-| `RegisterAndWait`                  | Covers registration-time drain only; does not help an `Open` on an already-registered host.          |
+| Existing API                           | Why it does not answer "am I caught up?"                                                                 |
+| -------------------------------------- | -------------------------------------------------------------------------------------------------------- |
+| `Status() []WorkerState`               | Exposes states, but the consumer must poll and interpret them (the loop below).                          |
+| `CheckStaleness(maxStaleness)`         | Wall-clock staleness since last processed — an idle-but-behind worker can look fine; not position-based. |
+| `LagDuration()` / `LagPerProjection()` | Time since the worker's most recent event, not distance to the journal head.                             |
+| `RegisterAndWait`                      | Covers registration-time drain only; does not help an `Open` on an already-registered host.              |
 
 ### What consumers hand-roll today (the loop every consumer rewrites)
 
