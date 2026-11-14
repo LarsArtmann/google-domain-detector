@@ -1,9 +1,21 @@
 # go-cqrs-lite — adoption & utilization review
 
 > Reviewed: 2026-11-09 · Module: `github.com/larsartmann/go-cqrs-lite` (monorepo, 90+ modules)
-> Status in google-domain-detector: **NOT IN MODULE GRAPH** (not adopted)
+> Status in google-domain-detector: **ADOPTED 2026-11-09, LOAD-BEARING** (see update below)
 > Audited checkout: `/home/lars/projects/go-cqrs-lite` @ `7f88d0618` (2026-11-09, 50 commits ahead of newest tag `systemscenario/v4.3.0`)
 > Consumer repo state at review: google-domain-detector @06cad49 (2026-11-09) — verdicts are point-in-time; re-verify citations against HEAD before relying on them
+>
+> **UPDATE 2026-11-14 — the revisit trigger below FIRED; the original
+> verdict is obsolete history.** The owner's 2026-11-09 census directive
+> made persistent per-domain scan history a core requirement and
+> go-cqrs-lite is now the census's spine (`internal/scanstore`:
+> system/v4 composition root, metaengine sqlite engine,
+> projectionhost; journal + replay + supersession audit). Pins CURRENT
+> at 2026-11-14: system v4.18.0, sqliteengine v4.8.0, projectionhost
+> v4.7.1, event v4.15.2, command v4.14.1, projectionadapter v4.6.2 —
+> all latest, nothing to sweep. Interim consumer-side piece:
+> `scanstore.WaitProjectionsSettled` (library settled-API TODO row,
+> post-census upstream work).
 
 ## Verdict
 
