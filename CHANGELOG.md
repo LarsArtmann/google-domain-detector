@@ -29,9 +29,26 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - Nightly `Soak` workflow runs the opt-in 100k-event journal soak
   (GDD_SOAK=1) on a schedule; CI's race step now carries `-timeout 20m`
   (runners are slower than local and the 10m default panicked mid-suite).
+- `runs --format` full enum (registry-pinned like scan/replay): data
+  formats (json, jsonl, csv, tsv, yaml, toml) carry FULL 26-char run IDs
+  plus the raw run fields (run_id, started_at, completed, resumed_from,
+  wave, counts); table/markdown keep short IDs for humans. The run-count
+  footer stays gated to table/markdown so data formats remain pure rows.
+- Microsoft 365 fingerprints as evidence-only records: `mx_microsoft`
+  (MX under mail.protection.outlook.com, strong) and `spf_microsoft`
+  (SPF include of spf.protection.outlook.com, weak) so one scan paints
+  the full email-stack picture. Microsoft evidence never upgrades a
+  Google verdict (pinned by tests); journal payload schema stays v1.
 
 ### Fixed
 
+- Read models could serve a stale — or deterministically EMPTY — ledger
+  right after opening a journal whose projections had not caught up
+  (folds live in projection workers, not dispatch; an `Open` + immediate
+  query raced the staggered catch-up drain). `runs`, `show`, and `enrich`
+  now wait for the workers to settle (`scanstore.WaitProjectionsSettled`)
+  before their first query; recording paths are unaffected and `--resume`
+  is immune (it walks the journal directly).
 - `replay` run listings were silently truncated at 100 runs: metaengine
   `Scan` caps results at 100 unless told otherwise, and `ListRuns` (the
   `--resume`/`--run` selection surface) passed no limit — a journal with

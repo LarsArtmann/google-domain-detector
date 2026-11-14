@@ -10,11 +10,13 @@ inventory in [FEATURES](FEATURES.md).
    Tranco top-1M scanned through the user-scoped unbound resolver, in
    gated waves, journaled end to end, producing per-TLD coverage numbers
    and the verdict-flip delta feed — the sales signal.
-2. **Whole-TLD reach**: .ch via the verified SWITCH TSIG pull, .uk via the
-   Nominet DAA application, .de via Tranco + crt.sh fallback (DENIC
-   refuses zone access outright — resolved-impossible 2026-11-10).
+2. **Whole-TLD reach**: .ch via the verified SWITCH TSIG pull (input
+   ready), .uk via the Nominet DAA application (owner draft ready),
+   .de via Tranco + the daily crt.sh fallback (DENIC refuses zone
+   access outright — resolved-impossible 2026-11-10).
 3. **Daily-driver UX**: doctor preflights (done), live progress (done),
-   scoped exit codes (done); next: daily delta timer, lead scoring.
+   scoped exit codes (done), delta query (done); next: daily delta
+   timer, lead scoring.
 
 ## Parked ideas (not refined — do not treat as commitments)
 
@@ -30,10 +32,15 @@ inventory in [FEATURES](FEATURES.md).
   denial of existence (AD bit with NSEC), an NXDOMAIN could be upgraded
   from "cache-dependent claim" to "verified fact" — needs the own-recursive
   resolver from the census to be worth prototyping.
-- **IPv6 resolver-address handling** for `--resolver` (only IPv4-tested so
-  far — TODO_LIST harvest row).
-- **GoReleaser binaries** — cross-platform release binaries beyond the nix + Homebrew-tap paths (E28 idea, 2026-11-11).
-- **Homebrew tap** — post-tag distribution; formula via goreleaser or
-  manual homebrew-tap repo (TODO_LIST Operational row).
-- **Verdict-flip alerting** (daily digest of delta-query output) — after
-  the delta query exists (census T16/E18).
+- **Enrichment join**: imprint/contact crawl for the top-N matches
+  (legal care: robots/ToS) or company-master-data cross-ref — post-census
+  (06-09 §f12).
+- **Dedup by registrant/organization** for portfolio-owned domain clusters
+  — needs zone/WHOIS data first (06-09 §f13).
+- **Prospects output mode**: domains → company-plausible names for
+  outreach lists — needs scoping before anyone promises it
+  (19-27 §f43); the detector proves *domains*, not companies.
+- **GoReleaser binaries** — cross-platform release binaries beyond the
+  nix + Homebrew-tap paths (E28 idea, 2026-11-11).
+- **Verdict-flip alerting** (daily digest of delta-query output) — the
+  delta query exists (`replay --since`); the digest/timer is unrefined.
