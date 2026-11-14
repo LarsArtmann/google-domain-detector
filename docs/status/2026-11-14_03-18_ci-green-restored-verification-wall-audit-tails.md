@@ -255,11 +255,22 @@ single-flight held (exactly one `gdd scan` at every check).
 
 17. Full buildflow gate once more after the glossary landed (docs-gates
     freshness/annotate vs DOMAIN_LANGUAGE.md).
+    → DONE 2026-11-14 08:5x: fresh-cache full gate PASS, exit 0 confirmed
+    via cached replay (BUILDFLOW_NO_RESULT_CACHE omitted on the confirm
+    run); remaining warns all documented non-fixes.
 18. shellcheck SC2034 in census-gate.sh (post-B only — gate frozen
     until then; new-inode install).
 19. `buildflow -s go-auto-upgrade --fix` evaluation on the json-v1
     audit findings (provenance_test.go) — decide fix vs documented
     non-fix.
+    → DONE 2026-11-14 09:0x: FIX applied manually — 4 test files
+    (audit_test, cli_scan_test, cli_scan_stream_test, provenance_test)
+    moved to encoding/json/v2; sinks are string-only reads and the
+    flagged time.Duration fixture field is never serialized, so the
+    tool's conservative skip didn't apply. Packages green, gofmt clean,
+    json-v1 findings 26→0. The remaining 21 suggest-lo-* findings are a
+    DOCUMENTED NON-FIX: samber/lo is not a go.mod dependency and adding
+    it for style sugar is a stack decision, not hygiene.
 20. scanstore_test.go at 328/350 — fine now; pre-split before any
     addition >22 lines.
 21. go-cqrs-lite patch sweep re-check post-census (pins verified latest
