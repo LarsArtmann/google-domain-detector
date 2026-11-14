@@ -21,11 +21,11 @@ single-flight held (exactly one `gdd scan` at every check).
    Verified local lint = 0 (golangci 2.15.0, same as CI), pushed both
    remotes, CI green since.
 2. **FULL buildflow gate end-to-end: PASS (exit 0), twice** (fresh run
-   + cached re-run for exit-code confirmation). Remaining gate findings
-   are all advisory warns in documented non-fix territory
-   (go-version-auto-configure vs the cqrs floor, vulnix nixpkgs-level
-   CVEs, lychee 403 on an external site, shellcheck on the FROZEN
-   census scripts, inline-vendorHash style suggestion).
+   - cached re-run for exit-code confirmation). Remaining gate findings
+     are all advisory warns in documented non-fix territory
+     (go-version-auto-configure vs the cqrs floor, vulnix nixpkgs-level
+     CVEs, lychee 403 on an external site, shellcheck on the FROZEN
+     census scripts, inline-vendorHash style suggestion).
 3. **`buildflow format`: no-op** — formatter fingerprint drift already
    resolved; tree byte-identical after the run.
 4. **vendorHash verified TRUE by `nix build`** (not just the gate): the
