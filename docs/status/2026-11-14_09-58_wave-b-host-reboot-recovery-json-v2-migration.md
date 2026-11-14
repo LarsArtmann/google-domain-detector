@@ -65,6 +65,7 @@ Related near-miss (not quite fucked up, worth logging): I launched attempt 3 whi
 ## f) UP TO 50 THINGS WE SHOULD GET DONE NEXT
 
 **Census chain (the critical path):**
+
 1. Heartbeat attempt 3 every ~30 min until ~07:00 Nov 15 (single-flight = 1, jsonl growing, watchdog silent).
 2. On B exit: verify wrapper auto-gate PASS (`--manifest --expect-skip 96215`) + snapshot bundle.
 3. Extract attempt 2's run id from the journal into the census ledger (audit provenance).
@@ -101,7 +102,7 @@ Related near-miss (not quite fucked up, worth logging): I launched attempt 3 whi
 30. Confirm smartd stable post-reboot (ps shows it up; the 2026-08-18 silent-death class precedent says verify, don't assume).
 31. Swap posture: 48G/62G used post-reboot — decide drain or leave.
 32. PMA (auto-commit daemon) memory: hit 90% of its 16G MemoryMax during the storm — review its MemoryMax/MemoryHigh budget.
-33. Identify what drove load 1034 in the boot storm (unanswered §d item).
+33. Identify what drove load 1034 in the boot storm (unanswered §d item). **→ ROUTED to host ops: the load-1034 boot-storm attribution is a host-level investigation (the report itself asks the owner whether host repair is in agent lane, §g3); no repo-side action exists; revisit only if the owner answers it into our lane.**
 34. GPU GTT 60G alert — decide if action needed or alert threshold tune.
 
 **Docs / provenance upkeep:**
