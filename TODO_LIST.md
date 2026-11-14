@@ -208,8 +208,14 @@ which is paperwork only the account holder can sign:
       poisoned domains, NOT the expected 948 — the hand-derived list was
       stale (nxfix superseded the pool); tranco1m-a-poisonfix.txt
       regenerated from the audit output verbatim.
-- [ ] `runs --format` support (jsonl with FULL run IDs — the truncated
-      12-char table forced raw SQL during the poisonfix derivation).
+- [x] ~~`runs --format` support (jsonl with FULL run IDs — the truncated
+      12-char table forced raw SQL during the poisonfix derivation).~~ done at `467edec`: full --format enum on `runs` (registry-pinned); table/markdown keep short IDs, every data format carries FULL IDs plus raw run fields (run_id/started_at/completed/resumed_from/wave/counts); data purity pinned — the run-count footer no longer leaks into csv (same fix applied to the supersession audit table).
+- [ ] go-cqrs-lite projectionhost: ship a settled/catch-up API (e.g.
+      `Host.WaitUntilSettled` or a `System` helper) so consumers don't
+      hand-roll poll loops — this repo's interim is
+      `scanstore.WaitProjectionsSettled` (projections.go), pinned by
+      `TestWaitProjectionsSettledMakesUnfoldedJournalVisible`. Library
+      work; post-census (the journal is live mid-wave).
 - [ ] file-size debt blocks a green full `buildflow` gate (9 files over
       the 350-line cap, error severity, all pre-dating 2026-11-13):
       cli_test.go 1763, cli.go 769, coverage_test.go 577,
@@ -349,8 +355,8 @@ which is paperwork only the account holder can sign:
       `--max-runtime` flag (applyRunBudget, plan v3 E31): aborts the run at
       the budget, partial results still render, journal, and count;
       interrupted-unscanned summary line reports the gap.
-- [ ] Consider output.FormatsForShape to auto-generate the flag values
-      enum from registered formats — plan v3 E27.
+- [x] ~~Consider output.FormatsForShape to auto-generate the flag values
+      enum from registered formats — plan v3 E27.~~ superseded: `render.SupportedFormats()` + `TestFormatEnumsMatchRegistry` (T22, plan v3) already pin every `--format` values tag to the registry in both directions while keeping the format set an explicit product contract — auto-generation would also pull in bystander formats registered by other in-process go-output consumers (cmdguard's tree/markup).
 
 ## Pareto plan execution (docs/planning/2026-11-10_00-50_*)
 
@@ -501,9 +507,15 @@ which is paperwork only the account holder can sign:
       post-census idea (06-09 §f12).
 - [ ] Dedup by registrant/organization for portfolio-owned domain
       clusters — needs zone/WHOIS data first (06-09 §f13).
-- [ ] M365/Exchange fingerprints (outlook MX/SPF includes) — one scanner,
+- [x] ~~M365/Exchange fingerprints (outlook MX/SPF includes) — one scanner,
       full email-stack picture; detection-rule addition, classify-only
-      (06-09 §f14).
+      (06-09 §f14).~~ done at `5fab996`: `mx_microsoft` (MX under
+      mail.protection.outlook.com, strong) + `spf_microsoft` (SPF include
+      of spf.protection.outlook.com, weak) as `microsoft`-platform
+      evidence; label-boundary-safe (evil-twin + bare-apex cases
+      table-tested); verdict invariance pinned (Microsoft evidence never
+      upgrades a Google verdict); Counts deliberately untouched (journal
+      payload schema stays at v1 mid-census).
 - [x] SWITCH terms (.ch) — done: verified terms + public TSIG access in
       docs/zone-data/switch-ch.md (report 07-46).
 - [x] golangci-lint + govulncheck CI steps — done: ci.yml `lint` job

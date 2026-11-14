@@ -161,6 +161,16 @@ dep set changes or a new first-party lib is considered.
   parsed result SETS, never raw bytes.
 - cqrs-lint: findings dispositioned inline with rationale at their site;
   F005/F007 anchor to the alphabetically FIRST scanstore file.
+- **Read models lag the journal — folds live in projection workers, not
+  dispatch** (2026-11-14, proven by experiment): a journal tail recorded
+  without a running host (Boot-shaped writer, unclean close) is invisible
+  to read-model queries until the next `Open`'s staggered workers drain.
+  `Open` + immediate `ListRuns` deterministically saw ZERO runs on an
+  unfoldled journal. Every read-model command (runs, show, enrich) MUST
+  call `scanstore.WaitProjectionsSettled` after `Open`, before its first
+  query — recording paths must NOT (their workers do the folding).
+  `--resume` is immune (journal walk via Boot). Library-level fix
+  (projectionhost settled-API) is a TODO row, post-census.
 - Event payloads use `event.Instant` (not `time.Time` — CBOR epoch
   encoding drops timezones, C013) and every `event.New` stamps
   `event.WithSchemaVersion(1)` (D013). New events must follow both.
