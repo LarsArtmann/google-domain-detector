@@ -287,31 +287,31 @@ GitHub Release live, module proxy serving v0.1.0 (hash-verified).
     ~~33. vendorHash.nix extraction (E31): stop hand-editing flake.nix hashes.~~ **Won't implement — resolved-as-deliberate-non-fix — nix-hash-fix owns hash updates (2026-11-10).**
 30. Version-freshness guard: flag docs whose pinned lib released newer
     (E31).
-31. IPv6 `--resolver` handling check (E31; only IPv4-tested).
-32. TXT truncation investigation (cloudflare "cannot unmarshal" class).
-33. E31 TimeoutMiddleware whole-run budget for huge inputs.
+    ~~31. IPv6 `--resolver` handling check (E31; only IPv4-tested).~~ done — RESOLVED 2026-11-13 (commit cb205ba): --resolver IPv6 proven end to end (address-mapping table + real query to a one-shot responder on [::1]); bare v6 literals bracketed, bracketed host:port passes through; pinned in resolve/cli tests, FEATURES.md documents it.
+31. TXT truncation investigation (cloudflare "cannot unmarshal" class).
+32. E31 TimeoutMiddleware whole-run budget for huge inputs.
     ~~38. E31 docs-gates cache-key investigation + ETag-if-polled.~~ **Won't implement — moot — docs-gates extracted as a standalone binary; no cache-key/ETag surface left in this repo.**
-34. Nominet DAA email draft send (E35 owner action — needs owner).
-35. DENIC: closed-impossible; ensure E23's README reflects crt.sh-only
+33. Nominet DAA email draft send (E35 owner action — needs owner).
+34. DENIC: closed-impossible; ensure E23's README reflects crt.sh-only
     fallback for .de.
-36. Retract-note dry run: document (not execute) the exact `retract
+35. Retract-note dry run: document (not execute) the exact `retract
     v0.1.0` sequence for emergencies (CHANGELOG already carries it).
-37. Add `-timeout` budget note to AGENTS testing section (CI runners
+36. Add `-timeout` budget note to AGENTS testing section (CI runners
     are ~1.5–2× slower than local for the race suite).
-38. AGENTS.md release section: add the "CI green before tag" law (from
+37. AGENTS.md release section: add the "CI green before tag" law (from
     today's §d1).
-39. Document the DNS-outage curl --resolve workaround in AGENTS env
+38. Document the DNS-outage curl --resolve workaround in AGENTS env
     notes (it WILL recur).
-40. Move E1 finding prose into a tracked docs/ location (reports/ is
+39. Move E1 finding prose into a tracked docs/ location (reports/ is
     gitignored; the README there survives only locally).
-41. E23 crt.sh extractor (code half) + fixture test + README bulk docs.
-42. Investigate why resolv.conf's `9.9.9.9` fallback wasn't honored
+40. E23 crt.sh extractor (code half) + fixture test + README bulk docs.
+41. Investigate why resolv.conf's `9.9.9.9` fallback wasn't honored
     during the outage (glibc timeout stacking) — system-level fix or
     hosts pin (needs §g2).
-43. asciinema demo recording (E20 leftover).
-44. Consider output.FormatsForShape-driven dynamic help text (post-E27;
+42. asciinema demo recording (E20 leftover).
+43. Consider output.FormatsForShape-driven dynamic help text (post-E27;
     cmdguard values tags are static — only help text could derive).
-45. E34 BuildFlow#56: push the toolchain-bump branch in the BuildFlow
+44. E34 BuildFlow#56: push the toolchain-bump branch in the BuildFlow
     repo, rebuild, reinstall hooks (owner approval gate).
 
 ## g) Questions I cannot answer myself

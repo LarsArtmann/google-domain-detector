@@ -191,7 +191,7 @@ headless Chromium render (palette/structure verified programmatically).
 **Repo hygiene observed during the session (not mine, worth tracking):**
 26. Resolve the 2 error-severity cqrs-lint findings in `internal/scanstore/events.go` (unknown-event folding) — currently the gate's flakiest red risk.
 27. vendorHash in flake.nix is stale vs go.mod (nix-checker warning) — the other session's dep additions; nix-hash-fix when they finish.
-28. docs-gates cached-vs-direct verdict disagreement — investigate cache keying.
+~~28. docs-gates cached-vs-direct verdict disagreement — investigate cache keying.~~ done — RESOLVED 2026-11-14: not a cache-keying bug — AGENTS.md documents the root cause; the pre-commit hook runs --build-mode pre-commit --staged-only while a direct run uses the full build, so verdicts legitimately differ; diagnose with a direct run.
 29. flake treefmt check failing (nix-flake-check warning).
 30. The ~29 pre-existing golangci warnings (err113 ×N, wrapcheck, varnamelen, tagalign, cyclop ×2) predate the audit; a lint-cleanup pass would zero them.
 31. README lacks an installation section (go-structure-linter info).

@@ -256,7 +256,7 @@ only after the toolchain-skew phantom has a pin or a rebuilt binary.
 13. Describe contract test (E31.2) — unblocked since the tree compiles.
 
 **Census lane (sibling's — listed for completeness, OFF-LIMITS to me):**
-14. Their E16 loop landed (f21c845) but CI is red — fix belongs to them.
+14. Their E16 loop landed (f21c845) but CI is red — fix belongs to them. **→ ROUTED: the E16 fix belongs to the owning repo/session, not this one; this repo has been CI-green on every pushed HEAD since (consecutive green runs through 2026-11-14), so the red lane here is gone.**
 15. Sustained-w8 Quad9 soak before wave A launch.
 16. G6 pilot (5k tranco1m-a slice through census-gate).
 17. Wave A/B/C execution (~7h/27h/34h) → E17 census report.

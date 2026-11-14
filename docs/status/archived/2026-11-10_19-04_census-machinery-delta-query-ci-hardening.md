@@ -215,30 +215,30 @@ tail (f1/f3/f42–f45, tap, soak workflow, E22 headers, TODO truth pass).
 21. GoReleaser wiring so future releases ship binaries (tap stays
     source-build until then).
 22. asciinema/GIF demo for the README (E20 leftover).
-23. AGENTS: jq-shim gotcha.
-24. AGENTS: census pointer row (params + runbook link).
-25. README: link docs/census.md from the bulk/limitations section.
-26. E22 full re-audit: go-cqrs-lite + cqrs-htmx (premise flipped).
-27. E22: re-verify all 22 audit citations vs HEAD; fix drift.
-28. E22: re-screenshot the audit index; href check.
-29. IPv6 `--resolver` handling check (IPv4-only tested).
-30. TXT truncation investigation (cloudflare "cannot unmarshal" class).
+    ~~23. AGENTS: jq-shim gotcha.~~ done — LANDED in AGENTS.md Gotchas: jq on this host is a SHIM (breaks on relative paths, no auto-iterate, select drops null rows) — count with // defaults or wc -l.
+23. AGENTS: census pointer row (params + runbook link).
+24. README: link docs/census.md from the bulk/limitations section.
+25. E22 full re-audit: go-cqrs-lite + cqrs-htmx (premise flipped).
+26. E22: re-verify all 22 audit citations vs HEAD; fix drift.
+27. E22: re-screenshot the audit index; href check.
+    ~~29. IPv6 `--resolver` handling check (IPv4-only tested).~~ done — RESOLVED 2026-11-13 (commit cb205ba): --resolver IPv6 proven end to end (address-mapping table + real query to a one-shot responder on [::1]); bare v6 literals bracketed, bracketed host:port passes through; pinned in resolve/cli tests, FEATURES.md documents it.
+28. TXT truncation investigation (cloudflare "cannot unmarshal" class).
     ~~34. docs-gates cache-key investigation + ETag-if-polled (31.5).~~ **Won't implement — moot — docs-gates extracted as a standalone binary.**
-31. Nominet DAA email (owner action; draft exists).
-32. SWITCH TSIG pull automation script.
-33. ccTLD data-use constraint review note (23.4).
-34. Watch tonight's 03:17 UTC scheduled Soak (first cron firing).
-35. Wave-manifest sha256 verification step before each wave launch.
-36. Census db backup cadence before waves (≈1.2 GiB at 1M events).
+29. Nominet DAA email (owner action; draft exists).
+30. SWITCH TSIG pull automation script.
+31. ccTLD data-use constraint review note (23.4).
+32. Watch tonight's 03:17 UTC scheduled Soak (first cron firing).
+33. Wave-manifest sha256 verification step before each wave launch.
+34. Census db backup cadence before waves (≈1.2 GiB at 1M events).
     ~~41. unbound.log rotation for multi-hour waves.~~ **Won't implement — per-instance log files (LOG_FILE derives from the conf basename) sidestep rotation; revisit only if one instance runs multi-week.**
-37. mixed-TLD sustained qps measurement → possible w6 sweet spot.
-38. Post-census journal-compaction decision (ROADMAP parked item).
-39. Consumer propagation sweep for v0.1.0 (likely zero consumers).
+35. mixed-TLD sustained qps measurement → possible w6 sweet spot.
+36. Post-census journal-compaction decision (ROADMAP parked item).
+37. Consumer propagation sweep for v0.1.0 (likely zero consumers).
     ~~45. Retract-note dry run (documentation-only emergency procedure).~~ done — rehearsed 2026-11-13, both paths in docs/release-recovery.md
-40. Coverage re-measure after E24 churn (baseline drift).
-41. GPG signing policy for agent commits (owner decision).
-42. BuildFlow#56 fleet fix (owner approval gate).
-43. FEATURES.md refresh (census tooling, delta query, tap, soak CI).
+38. Coverage re-measure after E24 churn (baseline drift).
+39. GPG signing policy for agent commits (owner decision).
+40. BuildFlow#56 fleet fix (owner approval gate).
+41. FEATURES.md refresh (census tooling, delta query, tap, soak CI).
 
 ## g) Questions I cannot answer myself
 

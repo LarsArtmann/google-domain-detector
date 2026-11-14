@@ -286,7 +286,7 @@ runs, streaming, retry, taxonomy).
 **Robustness / verification:**
 ~~39. Fuzz the input parser (CSV quoting/encoding edges).~~ done — internal/input/fuzz_test.go (seed corpus incl. CSV quoting/encoding edges)
 40. describe contract test (pin output shape post-release).
-41. IPv6 resolver-address handling check (--resolver only IPv4-tested).
+~~41. IPv6 resolver-address handling check (--resolver only IPv4-tested).~~ done — RESOLVED 2026-11-13 (commit cb205ba): the --resolver IPv6 path is proven end to end — address-mapping table plus a real query to a one-shot responder on [::1]; bare v6 literals get bracketed, bracketed host:port passes through; pinned in resolve and cli coverage tests, documented in FEATURES.md.
 42. Resolver-dependency bias check (8.8.8.8 trickle results vs Quad9).
 43. TXT truncation investigation (cloudflare "cannot unmarshal" class).
 ~~44. TimeoutMiddleware whole-run budget (T27).~~ done — `--max-runtime` (plan v3 E31)
