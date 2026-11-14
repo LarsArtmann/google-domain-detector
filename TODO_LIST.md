@@ -42,13 +42,13 @@ T15 final → closing report.
 
 ## Code & library
 
-- [ ] M365 ruleset provenance + surface (owner decisions, 02-05 report
-      §g1/§g2): the mx_microsoft/spf_microsoft evidence landed under
-      `CurrentRuleset = RulesetV1` with no bump — decide RulesetV2 stamp
-      before wave C (recommendation: yes; A/B journals predate Microsoft
-      evidence) vs V1-extension rationale; and the user-facing surface
-      (evidence-only vs Counts tally / `MicrosoftVerdict()`), plus the
-      DKIM microsoft selector probe (plan or park).
+- [ ] M365 ruleset provenance + surface (owner decisions): DECISION
+      PACKAGE READY — analysis + execution plan in
+      docs/review/2026-11-14_02-18-ruleset-v2-m365-provenance-decision.md
+      (recommendation: stamp RulesetV2 before wave C; surface + DKIM
+      probe post-census); ask folded into the owner-decision package.
+      Owner go pending; the stamp MUST land before wave C's binary is
+      built.
 - [ ] U2/U1 live smoke on a census.db SNAPSHOT (never the live db):
       `replay --audit-excluded wave:tranco1m-a --format jsonl` vs the
       ledger's per-run counts, `runs --format jsonl` full IDs, and pin
@@ -113,11 +113,11 @@ T15 final → closing report.
   green; REMAINING: re-shoot the docs/review/libs index render
   proof and re-audit the go-cqrs-lite/cqrs-htmx verdicts (their
   event-store work may flip the premise).
-- [ ] Owner-decision package (00-42 plan R5): ONE doc, one ask, with
-      options + recommendation each — attended vs auto-chained wave-C
-      launch (open since 21-15 §g1), GPG signing policy for agent
-      commits, BuildFlow#56 rebuild approval, Nominet email send,
-      poisonfix-25 launch go.
+- [ ] Owner-decision package (00-42 plan R5): WRITTEN —
+      docs/planning/2026-11-14_02-18-owner-decision-package.md (8 asks,
+      table + options + recommendation each: attended-vs-auto-chain,
+      RulesetV2, poisonfix go, www-strip, GPG, BuildFlow#56 rebuild,
+      Nominet email, M365 surface). Owner answers pending.
 - [ ] Kith CRM delta rescans: confirm the CRM side can retire its own
       diff logic in favor of `replay --since` deltas (T16 landed; the
       plan pointer says this retires at T16). (repo: crm)
