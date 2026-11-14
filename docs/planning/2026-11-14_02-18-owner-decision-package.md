@@ -51,16 +51,15 @@ proof is mechanical: `replay --audit-excluded <4 run IDs>` → 0 poisoned.
 I hold this as the last census write; say go (can ride with #1's
 answer).
 
-## 4. www-strip policy
+## 4. www-strip rescan slot (policy already decided)
 
-Wave A recorded 26 inputs like `www.edu.cn` — hostname with a `www`
-prefix on a registrable domain. Two readings: malformed input (skip) or
-normalizable (scan `edu.cn`). The journal already carries them as
-scanned/errored under their literal form; normalizing means a policy in
-`internal/domain` (pure function, table-tested) and a correction note —
-NOT a journal rewrite. Recommendation: normalize + rescan the 26 inside
-wave C's pass (they are single domains; cost ≈ zero), document in
-`docs/DOMAIN_LANGUAGE.md` if present or the input docs.
+The POLICY is closed — docs/census.md records the 2026-11-12 decision:
+www-prefixed inputs are normalized to the bare registrable suffix and
+scanned. The only open piece is execution: wave A recorded 26 such
+inputs under their literal form; rescanning them under the normalized
+form inside wave C's pass costs ≈ zero (26 domains) and aligns the
+journal with the decided policy. Recommendation: fold the rescan into
+wave C. Say go / leave it.
 
 ## 5. GPG signing policy for agent commits
 
