@@ -3,6 +3,7 @@ package scanstore
 import (
 	"context"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/larsartmann/go-cqrs-lite/projectionhost/v4"
@@ -74,9 +75,11 @@ func WaitProjectionsSettled(ctx context.Context, sys *system.System) error {
 
 func workerStatesSummary(states []projectionhost.WorkerState) string {
 	summary := ""
+	var summarySb77 strings.Builder
 	for _, w := range states {
-		summary += fmt.Sprintf("%s=%s(processed=%d) ", w.Name, w.Status, w.Processed)
+		summarySb77.WriteString(fmt.Sprintf("%s=%s(processed=%d) ", w.Name, w.Status, w.Processed))
 	}
+	summary += summarySb77.String()
 
 	return summary
 }

@@ -149,6 +149,7 @@ func TestRunsJSONArrayFormat(t *testing.T) {
 	}
 
 	seen := map[string]bool{}
+
 	for _, row := range rows {
 		id, _ := row["run_id"].(string)
 		seen[id] = true

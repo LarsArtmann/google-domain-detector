@@ -18,8 +18,8 @@ import (
 //nolint:golines // fleet golines pads/reorders tags against the project tagalign policy; tags cannot wrap (see .golangci.yml)
 type RunsFlags struct {
 	EventStore string `env:"EVENT_STORE" flag:"event-store" help:"SQLite event store written by scan --event-store"`
-	Format     string `default:"table" flag:"format" help:"Output format" values:"table,json,csv,tsv,markdown,yaml,toml,jsonl"`
-	Color      string `default:"auto" flag:"color" help:"Terminal colors for table output" values:"auto,always,never"`
+	Format     string `                  flag:"format"      help:"Output format"                                    default:"table" values:"table,json,csv,tsv,markdown,yaml,toml,jsonl"`
+	Color      string `                  flag:"color"       help:"Terminal colors for table output"                 default:"auto"  values:"auto,always,never"`
 }
 
 // runRuns lists every recorded scan run from the read model, newest first,
@@ -69,9 +69,28 @@ func runRuns(ctx context.Context, f RunsFlags, stdout, stderr io.Writer) error {
 		return renderRunsJSON(stdout, runs, format)
 	}
 
-	shortIDs := format == output.FormatTable || format == output.FormatMarkdown
+	table, err := buildRunsTable(runs, humanFormat(format))
+	if err != nil {
+		return err
+	}
 
+	renderOpts := output.RenderOptions{Writer: stdout, ColorMode: colorMode, Title: "Scan Runs"}
+
+	return output.RenderTable(table, format, renderOpts)
+}
+
+// humanFormat reports whether the format is one of the human-readable
+// tables (allowed to truncate run IDs and carry the footer); every other
+// format is data and must stay pure and full-fidelity.
+func humanFormat(format output.Format) bool {
+	return format == output.FormatTable || format == output.FormatMarkdown
+}
+
+// buildRunsTable lays out the runs ledger. Human formats get shortened run
+// IDs; data formats get the FULL IDs.
+func buildRunsTable(runs []scanstore.RunView, shortIDs bool) (*output.Table, error) {
 	table := output.NewTable([]string{"Run", "Started", "Status", "Domains", "Workspace", "GCP", "Errors", "Wave"})
+
 	for _, run := range runs {
 		started := "unknown"
 		if !run.StartedAt.IsZero() {
@@ -105,7 +124,7 @@ func runRuns(ctx context.Context, f RunsFlags, stdout, stderr io.Writer) error {
 			strconv.Itoa(run.Counts.Errors),
 			run.Wave,
 		}); err != nil {
-			return fmt.Errorf("add row for run %s: %w", run.RunID, err)
+			return nil, fmt.Errorf("add row for run %s: %w", run.RunID, err)
 		}
 	}
 
@@ -115,9 +134,7 @@ func runRuns(ctx context.Context, f RunsFlags, stdout, stderr io.Writer) error {
 		table.SetFooter([]string{fmt.Sprintf("%d run(s)", len(runs)), "", "", "", "", "", "", ""})
 	}
 
-	renderOpts := output.RenderOptions{Writer: stdout, ColorMode: colorMode, Title: "Scan Runs"}
-
-	return output.RenderTable(table, format, renderOpts)
+	return table, nil
 }
 
 // runJSON is the machine contract of one run: raw fields only, FULL run ID,
