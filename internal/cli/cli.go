@@ -117,7 +117,7 @@ func cliOptions(version, commit string) []v5.CLIOption {
 	opts := []v5.CLIOption{
 		v5.WithCLIVersion(version),
 		v5.WithEnvPrefix("GDD_"),
-		v5.WithMiddleware[RootConfig](v5.RecoveryMiddleware[RootConfig]()),
+		v5.WithMiddleware(v5.RecoveryMiddleware[RootConfig]()),
 	}
 
 	if commit != "" {
@@ -200,7 +200,7 @@ func BuildCLI(
 	// domain preflights (dns-resolver, ranges-feed) run alongside the DI
 	// health checks; a consumer-defined "doctor" wins per the battery
 	// contract.
-	docCmd, docErr := v5.DoctorCommand[RootConfig](cli,
+	docCmd, docErr := v5.DoctorCommand(cli,
 		v5.WithDoctorCheck[RootConfig]("dns-resolver", probeDNS),
 		v5.WithDoctorCheck[RootConfig]("ranges-feed", probeRanges),
 	)
