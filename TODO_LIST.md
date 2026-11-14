@@ -116,13 +116,15 @@ T15 final → closing report.
       in-repo — the first legit run since the wrong-root fix; the
       plausibility guard must accept a ≥100k-row .de pull
       (reports/census/zone-data/).
-- [ ] Post-B verification bundle (00-42 plan Q4): auto-snapshots flowing
-      into reports/census/snapshots/ post-B (+ restore-verify one tar:
-      integrity_check + counts); census.db disk headroom for wave C +
-      zone-ch; single-flight pgrep holds through C + poisonfix; one full
-      `-race ./...` on the settled HEAD (single lane; wave B running is
-      fine); CI green on every pushed HEAD through the chain (release
-      law).
+- [ ] Post-B verification bundle (00-42 plan Q4): VERIFIED 2026-11-14
+      03:05 on the pre-B-exit state — restore-verify PASSED (snapshot
+      tranco1m-b-complete-20261113-1647: sha256 ok, integrity_check ok,
+      17 runs + 245k streams read back via runs/replay); census.db
+      headroom 961 MB vs 215 G free; single-flight held all session; one
+      full `-race ./...` GREEN (scanstore 297 s, all packages ok); CI
+      green on every pushed HEAD (4 consecutive runs). REMAINING post-B:
+      confirm auto-snapshots flow after B's exit and repeat the checks
+      on B's own snapshot.
 - [ ] BuildFlow#56 fleet fix (owner approval gate): the installed
       buildflow binary still fails valid commits (2026-11-14: its
       embedded older toolchain demands a `go mod tidy` that the repo's
