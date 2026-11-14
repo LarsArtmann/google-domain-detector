@@ -1,6 +1,6 @@
 # Code window: runs --format landed, read-model staleness root-caused, M365 fingerprints, lane handoffs
 
-**Session:** 2026-11-13 21:20 → 2026-11-14 02:15 CET (continuation of the
+**Session:** 2026-11-13 21:20 → 2026-11-14 01:38 CET (continuation of the
 21-15 resume; directive: execute the unblocked TODO rows). **HEAD
 b6f79c6, pushed to both remotes.** A sibling session worked the
 replay/audit lane concurrently (cqrs-lint follow-ups → `--audit-excluded`
