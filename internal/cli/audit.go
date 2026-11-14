@@ -43,25 +43,12 @@ func runReplayAudit(ctx context.Context, f ReplayFlags, stdout, stderr io.Writer
 
 	excluded, err := resolveAuditExcluded(ctx, sys, f.AuditExcluded)
 	if err != nil {
-		if errors.Is(err, scanstore.ErrNoRuns) {
-			return fmt.Errorf("%s: %w", f.EventStore, err)
-		}
-
-		return err
+		return mapAuditError(err, f.EventStore)
 	}
 
 	audit, err := scanstore.AuditSupersession(ctx, sys, excluded)
 	if err != nil {
-		switch {
-		case errors.Is(err, scanstore.ErrNoRuns):
-			return fmt.Errorf("%s: %w", f.EventStore, err)
-		case errors.Is(err, scanstore.ErrUnknownRun):
-			// Belt and braces: the resolver above only admits journal-known
-			// IDs, so this fires only on a resolver/audit disagreement.
-			return fmt.Errorf("excluded run not found in %s: %w", f.EventStore, err)
-		default:
-			return err
-		}
+		return mapAuditError(err, f.EventStore)
 	}
 
 	_, _ = fmt.Fprintf(stderr, "supersession audit: %d of %d domain(s) last observed by an excluded run%s\n",
@@ -89,6 +76,22 @@ func runReplayAudit(ctx context.Context, f ReplayFlags, stdout, stderr io.Writer
 		Title:     "Supersession Audit",
 		ColorMode: colorMode,
 	})
+}
+
+// mapAuditError names the event store on the audit's journal-failure
+// paths. The audit runs on the whole store, so every failure answers
+// "which store" first; ErrUnknownRun here is belt and braces (the token
+// resolver above only admits journal-known IDs, so it fires only on a
+// resolver/audit disagreement).
+func mapAuditError(err error, store string) error {
+	switch {
+	case errors.Is(err, scanstore.ErrNoRuns):
+		return fmt.Errorf("%s: %w", store, err)
+	case errors.Is(err, scanstore.ErrUnknownRun):
+		return fmt.Errorf("excluded run not found in %s: %w", store, err)
+	default:
+		return err
+	}
 }
 
 // validateAuditFlags rejects mode conflicts and an empty run list before
@@ -157,7 +160,7 @@ func resolveAuditExcluded(ctx context.Context, sys *system.System, raw string) (
 				continue
 			}
 
-			wave, isWave = token, true
+			wave = token
 		}
 
 		ids, known := runsByWave[wave]
