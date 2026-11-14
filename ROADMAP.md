@@ -49,3 +49,6 @@ inventory in [FEATURES](FEATURES.md).
   (docs/status/2026-11-11_17-43 §c/§g).
 - **Verdict-flip alerting** (daily digest of delta-query output) — the
   delta query exists (`replay --since`); the digest/timer is unrefined.
+- **Kith CRM delta retirement**: once census T16 (`replay --since`) is
+  consumer-proven, the CRM script's own diff logic retires in favor of
+  replay-based deltas (repo: crm; confirm the CRM side first).

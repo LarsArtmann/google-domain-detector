@@ -78,9 +78,6 @@ T15 final → closing report.
       releases; re-verify the `foldByEvent` last-fold-wins gotcha after
       any bump (go-ecosystem-upgrade owns the sweep).
       (repo: go-cqrs-lite)
-- [ ] STACK.md row for go-codec — a declared direct dependency since
-      cborsanitize.go (the CBOR UTF-8 repair); stack-selection owns the
-      decision record.
 - [ ] asciinema demo / GIF for the README (plan v3 E20).
 - [ ] io-history-ratchet: `--profile-io` investigation (56 files vs
       median 10 — a memo layer may have stopped eliminating I/O).
