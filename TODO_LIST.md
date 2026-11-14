@@ -57,9 +57,11 @@ T15 final → closing report.
       full 26-char IDs + wave/resumed_from/counts on all 17 runs;
       ULID-vs-lowercase edge pinned in the resolveAuditExcluded doc
       comment.
-- [ ] File-size headroom: scanstore_test.go (346/350) and
-      cli_scan_test.go (344/350) — split before the next addition so the
-      zeroed debt stays zero (02-05 §f43/§f44).
+- [x] File-size headroom pre-splits DONE (2026-11-14 02:47):
+      scanstore_test.go 346→239 (stream family → stream_test.go, 194),
+      cli_scan_test.go 336→153 (JSONL-stream family → NEW
+      cli_scan_stream_test.go, 193); vet + package tests + gofmt green;
+      the zeroed file-size debt stays zero with real headroom everywhere.
 - [ ] go-cqrs-lite projectionhost: ship a settled/catch-up API (e.g.
       `Host.WaitUntilSettled`) so consumers don't hand-roll poll loops —
       this repo's interim is `scanstore.WaitProjectionsSettled`
@@ -83,9 +85,15 @@ T15 final → closing report.
       median 10 — a memo layer may have stopped eliminating I/O).
 - [ ] `incoming/outgoing-num-tcp` contention measurement post-B
       (are 150 ever contended at w8? → reports/census/unbound/NOTES.md).
-- [ ] Poller: per-rank-band unknown-rate expectations, calibrated on
-      wave B's pass-1 (~2.8% band vs wave A's 1.53%) + bound the
-      "none"-class share per band.
+- [x] Poller rank-band expectations CALIBRATED on live wave-B pass-1
+      (2026-11-14 02:42, 133k rows joined to input ranks): unknown
+      rates 1.09% (50k-100k resumed tail) → 2.28% (100k-150k) → 2.44%
+      (150k-200k) → 2.82% (200k-250k, in progress) — the ~2.8%
+      hypothesis confirmed, ~1.5-1.8× wave A's 1.53%; "none" share
+      bounded at 47-53% per band; error mix per band ≈ nx 0.7-0.9%,
+      timeout 0.6-1.1%, servfail 0.05-0.5%, zero cancels. Poller bar
+      (GDD_WARN_PCT) sits above these — no alarms expected at this
+      rate.
 - [ ] Quiet the stale LSP diagnostics (IDE noise vs truth; advisory-only
       per AGENTS.md): the golangci integration's stale warnings and the
       gopls `infertypeargs` infos (cli.go ×2, scanstore.go ×3 — trivial
