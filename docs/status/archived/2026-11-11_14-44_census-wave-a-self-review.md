@@ -206,43 +206,43 @@ first real wave. This report covers this session only.
     stuck "started, 0 domains" while all 2 731 observations replay
     fine).
 18. 🔀 describe contract test (E31.2).
-~~19. 🔀 TimeoutMiddleware whole-run budget (E31).~~ done — `--max-runtime` (E31)
-20. 🔀 E29 CSV enrichment.
-21. 🔀 varnamelen `f` policy decision + final buildflow format pass
+    ~~19. 🔀 TimeoutMiddleware whole-run budget (E31).~~ done — `--max-runtime` (E31)
+19. 🔀 E29 CSV enrichment.
+20. 🔀 varnamelen `f` policy decision + final buildflow format pass
     (their own §b).
-~~22. Harvest/route the sales-lane 19-27 report's 18 unharvested §f~~ done — sales-lane items struck won't-implement (2026-11-13 pass + this pass closes the remainder)
+    ~~22. Harvest/route the sales-lane 19-27 report's 18 unharvested §f~~ done — sales-lane items struck won't-implement (2026-11-13 pass + this pass closes the remainder)
     items (or their session does; docs-gates audit-all red on it).
-23. ~~Harvest the E24 reports' 8 unharvested items (same class).~~ docs-health pass 2026-11-13: the 19-08 report's lint items annotated this sweep (done at `399385a` / superseded / won't)
-24. Retract-note dry run (row routed; go-release lane).
-25. IPv6 `--resolver` address handling check (E31 row; needs a v6
+21. ~~Harvest the E24 reports' 8 unharvested items (same class).~~ docs-health pass 2026-11-13: the 19-08 report's lint items annotated this sweep (done at `399385a` / superseded / won't)
+22. Retract-note dry run (row routed; go-release lane).
+23. IPv6 `--resolver` address handling check (E31 row; needs a v6
     capable resolver to test against).
-26. TXT truncation investigation (cloudflare "cannot unmarshal" class;
+24. TXT truncation investigation (cloudflare "cannot unmarshal" class;
     TODO row exists).
-27. E28 `--pre-filter` (plan v3; deferred earlier).
-28. `.ch` SWITCH AXFR zone pull tooling (census zone-inputs).
-~~29. crt.sh `.de` extractor rate-limit-aware scheduling (once/day/TLD).~~ done — scripts/crtsh-daily.sh + systemd timer (wrong-root fixed 2026-11-13)
-30. Durability policy for gitignored reports/ generally (E1 README
+25. E28 `--pre-filter` (plan v3; deferred earlier).
+26. `.ch` SWITCH AXFR zone pull tooling (census zone-inputs).
+    ~~29. crt.sh `.de` extractor rate-limit-aware scheduling (once/day/TLD).~~ done — scripts/crtsh-daily.sh + systemd timer (wrong-root fixed 2026-11-13)
+27. Durability policy for gitignored reports/ generally (E1 README
     referenced by release notes suffers the same gap — sibling
     flagged it; decide once, apply everywhere).
-31. Census E17 export: compact verdict table + delta-query demo for
+28. Census E17 export: compact verdict table + delta-query demo for
     the sales narrative.
-32. `replay --since` documentation example in README (the sales
+29. `replay --since` documentation example in README (the sales
     signal exists but is under-marketed).
-33. Coverage push E33 69→90% (sibling mid-flight; finish the half-open
+30. Coverage push E33 69→90% (sibling mid-flight; finish the half-open
     gap).
-34. E25 lint lane final gate (buildflow findings at zero, per their
+31. E25 lint lane final gate (buildflow findings at zero, per their
     02-00 report).
-35. Nightly soak workflow: consider adding a wave-A progress heartbeat
+32. Nightly soak workflow: consider adding a wave-A progress heartbeat
     job so a stalled wave pages someone.
-36. Consider a scanner-side pacing knob (`--qps`) as the structural
+33. Consider a scanner-side pacing knob (`--qps`) as the structural
     fix if forwarders keep throttling — design only after census data.
-37. Archive cadence: 15 unarchived status reports at threshold —
+34. Archive cadence: 15 unarchived status reports at threshold —
     start archiving the oldest batch (docs-gates cadence will trip at
     16).
-38. STACK.md refresh after the census tooling landed (census-wave.sh,
+35. STACK.md refresh after the census tooling landed (census-wave.sh,
     census-cleanup.sh are repo-level scripts worth a row).
-39. CHANGELOG entries for the census tooling (unreleased section).
-40. README census section link to docs/census.md once waves produce
+36. CHANGELOG entries for the census tooling (unreleased section).
+37. README census section link to docs/census.md once waves produce
     first population numbers.
 
 ## g) QUESTIONS (cannot figure out myself)

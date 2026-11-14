@@ -130,9 +130,9 @@ _The plan file owns the detailed list; this is the ranked digest._
 1. T1: `--format` vs `-o` decision + STACK.md record (30m)
 2. T2: widen `--format` enum +yaml,toml,jsonl (45m)
 3. T3: go-atomic-write `WriteWithPerm` + UA header (45m)
-~~4. T4: CLI hardening bundle (60m)~~ done at `6fc85ab`
-5. T5: real-world validation run (90m)
-6. T6: release v0.1.0 via go-release (90m)
+   ~~4. T4: CLI hardening bundle (60m)~~ done at `6fc85ab`
+4. T5: real-world validation run (90m)
+5. T6: release v0.1.0 via go-release (90m)
 
 **Scale readiness:**
 7. T7: JSONL streaming output (90m) — RESOLVED-DONE (landed as render

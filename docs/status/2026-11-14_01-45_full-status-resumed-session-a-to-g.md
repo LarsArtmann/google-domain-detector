@@ -74,6 +74,7 @@ re-audit); enrichment join / dedup-by-registrant (post-census ideas).
 ## d) TOTALLY FUCKED UP
 
 **Nothing shipped broken; four owned process misses:**
+
 1. **Report filename written from an estimated clock** (02-15 vs actual
    01:38) — a `date` call is the ritual's first step and I skipped it
    when writing that report; caught and fixed by rename within minutes,
@@ -113,6 +114,7 @@ re-audit); enrichment join / dedup-by-registrant (post-census ideas).
 ## f) UP TO 50 THINGS TO GET DONE NEXT
 
 **Census critical path (single-flight, in order):**
+
 1. Wave B completion ~15:00-16:00 → automatic gate PASS check
    (`--expect-skip 96215`).
 2. On gate FAIL: T14 cleanup loop + `census-gate.sh --manifest` reconcile.
@@ -131,29 +133,29 @@ re-audit); enrichment join / dedup-by-registrant (post-census ideas).
 
 **Code work (unblocked; mind sibling lanes):**
 12. Branch green when the sibling's wave-names + file-split land —
-    then verify `--audit-excluded wave:NAME` end-to-end on the real
-    journal.
+then verify `--audit-excluded wave:NAME` end-to-end on the real
+journal.
 13. Review the sibling's file-split for the 350-line gate (9 files →
-    focused files; their split-in-progress already shows the pattern).
+focused files; their split-in-progress already shows the pattern).
 14. Library: go-cqrs-lite `projectionhost` settled-API (post-census
-    window; this repo's `WaitProjectionsSettled` is the reference).
+window; this repo's `WaitProjectionsSettled` is the reference).
 15. io-history-ratchet `--profile-io` investigation (56 files vs median 10).
 16. `incoming/outgoing-num-tcp` contention measurement post-B → NOTES.md.
 17. Poller rank-band unknown-rate expectations calibrated on wave B's
-    pass-1 (~2.8% band vs A's 1.53%) + bound the "none" share per band.
+pass-1 (~2.8% band vs A's 1.53%) + bound the "none" share per band.
 18. Audit upkeep: docs/review/libs index render proof.
 19. Audit upkeep: go-cqrs-lite/cqrs-htmx verdict re-audit (event-store
-    work may have flipped premises).
+work may have flipped premises).
 20. STACK.md row for go-codec as a declared direct dependency.
 21. CHANGELOG Unreleased coherence check before the next tag.
 22. Full `-race` suite once on the settled HEAD (one lane at a time).
 23. asciinema demo / GIF for the README (E20).
 24. `pgrep -f 'gdd[^ ]* scan'` = exactly ONE scan through C + poisonfix
-    (single-flight law enforcement between waves).
+(single-flight law enforcement between waves).
 
 **Zone-data track:**
 25. Scan `zone-ch.txt` (2,660,632 apexes) when Tranco frees the
-    single-flight.
+single-flight.
 26. Nominet .uk email — OWNER (draft ready).
 27. .de daily crt.sh fallback continues (row 10 verifies the timer).
 
@@ -166,22 +168,22 @@ re-audit); enrichment join / dedup-by-registrant (post-census ideas).
 31. Enrichment join (imprint/contact crawl or master-data cross-ref).
 32. Dedup by registrant/organization (needs zone/WHOIS data).
 33. Kith CRM delta rescans: retire the CRM diff logic in favor of
-    `replay`-based deltas now that T16 exists (confirm CRM side).
+`replay`-based deltas now that T16 exists (confirm CRM side).
 
 **Hygiene / process:**
 34. Another docs-health HARVEST cycle over TODO_LIST (90+ [x] rows).
 35. Quiet/fix the stale LSP golangci diagnostics (IDE noise vs 0-issue
-    truth).
+truth).
 36. Keep census-wave.sh's inode-safety law documented for every future
-    mid-run edit (new-inode installs only).
+mid-run edit (new-inode installs only).
 ~~37. Consider a session-start lane-claim convention for concurrent~~ **Won't implement — declined — unproven process idea; the report-header lane/red-attribution notes (§e4) are the adopted pattern.**
-    agent sessions (see §e2).
+agent sessions (see §e2).
 38. Docs: document jsonl-growth as the primary wave-liveness signal,
-    poller lines as secondary (see §e4 / 01-38 §e6).
+poller lines as secondary (see §e4 / 01-38 §e6).
 39. After the sibling's split lands: re-check `golangci-lint run` = 0
-    across all packages (lint gates travel with moved code).
+across all packages (lint gates travel with moved code).
 40. Keep CHANGELOG current for the runs-format + staleness-fix features
-    (user-facing surface changed this window).
+(user-facing surface changed this window).
 
 ## g) QUESTIONS I CANNOT FIGURE OUT MYSELF
 

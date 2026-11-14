@@ -100,8 +100,8 @@ byte-identical to HEAD `e1f5160`). The honest nearest-miss, written down so it c
 1. ~~Answer the 3 intake questions in §g.~~ won't implement — the owner's sales lane (crm/docs/sales/ playbook), outside this repo's TODO
 2. ~~Define what "GCP expertise" is being sold as: which 1–2 of {cost optimization, migration,~~ won't implement — the owner's sales lane (crm/docs/sales/ playbook), outside this repo's TODO
    Go-on-GCP development, event-sourcing architecture, Nix/GitOps on GCP, SRE}.
-~~3. Decide target market scope (local/EU/global) and working language.~~ **Won't implement — owner's sales lane (crm/docs/sales/ playbook), outside this repo's TODO.**
-4. Set weekly hours budget for sales vs building, and a minimum engagement size.
+   ~~3. Decide target market scope (local/EU/global) and working language.~~ **Won't implement — owner's sales lane (crm/docs/sales/ playbook), outside this repo's TODO.**
+3. Set weekly hours budget for sales vs building, and a minimum engagement size.
 
 **Positioning & offer (skill Steps 1–3):**
 5. ~~Write the one-paragraph positioning statement (Dunford 5 steps).~~ won't implement — the owner's sales lane (crm/docs/sales/ playbook), outside this repo's TODO

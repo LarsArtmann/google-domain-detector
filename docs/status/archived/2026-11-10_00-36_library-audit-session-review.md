@@ -165,19 +165,19 @@ headless Chromium render (palette/structure verified programmatically).
 3. `validate:"min=1,max=512"` on `Workers` flag (S).
 4. `WithDoctorCheck`: resolver reachability + ranges-feed fetch preflight (S-M).
 5. `NewExitError(2, …)` for the two usage errors (S).
-~~6. `WithEnvPrefix("GDD_")` + shorten env tags (S).~~ done at `6fc85ab`
-7. `RecoveryMiddleware` on the CLI (S).
-8. `--color auto|always|never` flag via `ParseColorMode`/`RenderOptions.ColorMode` (S).
-9. ~~`Table.SetFooter` summary row ("N domains · M workspace · K gcp") (S).~~ done at `f1411a9`, `b07de82` (go-output T11/E19)
-~~10. `AddRowChecked` for the 5-column invariant (S).~~ done — render.Table AddRowChecked + runs-ledger rows propagate add errors (E19/T11 go-output polish, 2026-11-10)
-~~11. `RenderOptions.Title` for markdown/html (S).~~ done — RenderOptions.Title, markdown pinned by test; html not registered in this binary (E19)
-12. nom live progress during scan (M).
-13. `WithOutputFormat` adoption + JSON error envelopes (M; breaking flag rename — cheapest now).
-14. `WithCLICommit` injected alongside version in nix build (S).
-~~15. `WithExample`/`WithLong` on scan (S).~~ done at `6fc85ab`
-16. cmdguard-lint as CI step (free, expected 0 findings).
-17. Optional: scoped go-error-family adoption in `internal/ranges` for exit codes 75/65 (S).
-18. Optional: `RegisterUnknownRenderer(FormatJSON, dto)` to dissolve the cli.go JSON special-case (S, cosmetic).
+   ~~6. `WithEnvPrefix("GDD_")` + shorten env tags (S).~~ done at `6fc85ab`
+6. `RecoveryMiddleware` on the CLI (S).
+7. `--color auto|always|never` flag via `ParseColorMode`/`RenderOptions.ColorMode` (S).
+8. ~~`Table.SetFooter` summary row ("N domains · M workspace · K gcp") (S).~~ done at `f1411a9`, `b07de82` (go-output T11/E19)
+   ~~10. `AddRowChecked` for the 5-column invariant (S).~~ done — render.Table AddRowChecked + runs-ledger rows propagate add errors (E19/T11 go-output polish, 2026-11-10)
+   ~~11. `RenderOptions.Title` for markdown/html (S).~~ done — RenderOptions.Title, markdown pinned by test; html not registered in this binary (E19)
+9. nom live progress during scan (M).
+10. `WithOutputFormat` adoption + JSON error envelopes (M; breaking flag rename — cheapest now).
+11. `WithCLICommit` injected alongside version in nix build (S).
+    ~~15. `WithExample`/`WithLong` on scan (S).~~ done at `6fc85ab`
+12. cmdguard-lint as CI step (free, expected 0 findings).
+13. Optional: scoped go-error-family adoption in `internal/ranges` for exit codes 75/65 (S).
+14. Optional: `RegisterUnknownRenderer(FormatJSON, dto)` to dissolve the cli.go JSON special-case (S, cosmetic).
 
 **Audit upkeep & repair:**
 19. Re-verify all project-side citations after the concurrent session lands; annotate drift.

@@ -215,5 +215,5 @@ explicit approval.
   through the recursive forwarder fabricates a no-evidence class, plan §10
   erratum), and the reports/2026-11-09-tranco-de-ch-uk CSVs (gitignored).
 - Sales artifacts: crm/docs/research/2026-11-10_google-scan-sales-targets.html
-  + crm/docs/sales/. Census T16 landed: CRM delta logic retires in favor of
-  `replay --since` deltas.
+  - crm/docs/sales/. Census T16 landed: CRM delta logic retires in favor of
+    `replay --since` deltas.

@@ -239,79 +239,79 @@ GitHub Release live, module proxy serving v0.1.0 (hash-verified).
 4. E24 policy layer: .golangci.yml — tagliatelle snake_case rule, err113
    test exclusion, wrapcheck first-party/ignore-sigs policy (justified
    in comments), then fix errcheck (17) for real.
-~~5. E24 mechanical: mnd (11 named constants), exhaustive (4 cases),~~ done — golangci-lint run = 0 issues (2026-11-13); the CI lint job holds the line
+   ~~5. E24 mechanical: mnd (11 named constants), exhaustive (4 cases),~~ done — golangci-lint run = 0 issues (2026-11-13); the CI lint job holds the line
    cyclop (4 extractions: ScanDomain 15 > 12), paralleltest (3),
    modernize (3), perfsprint (3), unparam (1).
-6. E24 varnamelen (16 renames: r→res, f→flags, c→counts…) — mechanical,
+5. E24 varnamelen (16 renames: r→res, f→flags, c→counts…) — mechanical,
    test after each package.
-7. E25 CI: add cmdguard-lint (expect 0) + golangci-lint + govulncheck
+6. E25 CI: add cmdguard-lint (expect 0) + golangci-lint + govulncheck
    steps after E24; watch first run.
-8. E6 memory A/B: rebuild the pre-T7 binary from 4235e02^, PID-safe
+7. E6 memory A/B: rebuild the pre-T7 binary from 4235e02^, PID-safe
    launch, record the table in the census reports dir.
-9. Homebrew tap: create homebrew-tap repo + formula from the v0.1.0
+8. Homebrew tap: create homebrew-tap repo + formula from the v0.1.0
    tag (goreleaser vs manual — §g2 adjacent).
-~~10. pkg.go.dev propagation spot-check (fetch the pkg page) once DNS is~~ done — page live at v0.1.0 (full README, MIT, directories rendered)
-    stable.
-11. E7 finish: unbound latency notes + lifecycle script (sibling's
-    unbound is alive on 127.0.0.1:5353).
-12. E8 pilot harness: slice-Nk script + error-rate gate + pre-flight doc.
-13. E9 throughput bench: workers 8/16/32/64 on a 10k slice via unbound
+   ~~10. pkg.go.dev propagation spot-check (fetch the pkg page) once DNS is~~ done — page live at v0.1.0 (full README, MIT, directories rendered)
+   stable.
+9. E7 finish: unbound latency notes + lifecycle script (sibling's
+   unbound is alive on 127.0.0.1:5353).
+10. E8 pilot harness: slice-Nk script + error-rate gate + pre-flight doc.
+11. E9 throughput bench: workers 8/16/32/64 on a 10k slice via unbound
     → wave params into AGENTS.
-14. E10 recover the 7,204 legacy unknowns via unbound + `--resume`.
-15. E11 finish C02: evidence-schema version + ruleset ID stamped in
+12. E10 recover the 7,204 legacy unknowns via unbound + `--resume`.
+13. E11 finish C02: evidence-schema version + ruleset ID stamped in
     events (+ bump-rule test) — BEFORE any census wave (G6).
-16. E12 Tranco full-list import + frozen wave manifests.
-17. E13 wave A (1–100k) behind the G6 pilot gate; resume skips observed.
-18. E14 wave B (100k–500k) + gate.
-19. E15 wave C (500k–1M) + gate → full census.
-20. E16 unknown-cleanup loop per wave (<0.5% unknown).
-21. E17 census report (journal-derived, per-TLD stats) archived.
-22. E18 delta query: verdict flips between runs + `--since` + fixtures.
-23. .ch zone pull via SWITCH TSIG (once/24h; exact command documented)
+14. E12 Tranco full-list import + frozen wave manifests.
+15. E13 wave A (1–100k) behind the G6 pilot gate; resume skips observed.
+16. E14 wave B (100k–500k) + gate.
+17. E15 wave C (500k–1M) + gate → full census.
+18. E16 unknown-cleanup loop per wave (<0.5% unknown).
+19. E17 census report (journal-derived, per-TLD stats) archived.
+20. E18 delta query: verdict flips between runs + `--since` + fixtures.
+21. .ch zone pull via SWITCH TSIG (once/24h; exact command documented)
     → census input; feeds E28.
-24. E28 NXDOMAIN/A-existence pre-sweep `--pre-filter` + volume
+22. E28 NXDOMAIN/A-existence pre-sweep `--pre-filter` + volume
     measurement — re-verify NXDOMAINs per the E1 finding (fresh cache!).
-25. E29 CSV enrichment mode (journal-backed column append).
-26. E22 audit upkeep: verified-at-commit headers ×22 + citation re-check.
-27. E22 cqrs re-audit: go-cqrs-lite/cqrs-htmx verdicts after their
+23. E29 CSV enrichment mode (journal-backed column append).
+24. E22 audit upkeep: verified-at-commit headers ×22 + citation re-check.
+25. E22 cqrs re-audit: go-cqrs-lite/cqrs-htmx verdicts after their
     event-store work (premise flipped).
-28. E32 daily delta timer + journal-only stats (delete the ad-hoc JSON
+26. E32 daily delta timer + journal-only stats (delete the ad-hoc JSON
     path) + lead scoring v1.
-29. E33 cli coverage 69% → 90%. — RESOLVED-INTO-TODO 2026-11-10:
+27. E33 cli coverage 69% → 90%. — RESOLVED-INTO-TODO 2026-11-10:
     lives as the "E33 cli package coverage 69% → 90%" row in TODO_LIST's
     13-27 harvest section (binding note: this item's tokens are numeric
     and cannot bind automatically).
-~~30. E33 input parser fuzzing (CSV quoting/encoding edges).~~ done — internal/input/fuzz_test.go
-31. ErrNoRuns error should name the store path (E31 leftover).
-32. describe contract test (E31): pin the battery output shape.
-~~33. vendorHash.nix extraction (E31): stop hand-editing flake.nix hashes.~~ **Won't implement — resolved-as-deliberate-non-fix — nix-hash-fix owns hash updates (2026-11-10).**
-34. Version-freshness guard: flag docs whose pinned lib released newer
+    ~~30. E33 input parser fuzzing (CSV quoting/encoding edges).~~ done — internal/input/fuzz_test.go
+28. ErrNoRuns error should name the store path (E31 leftover).
+29. describe contract test (E31): pin the battery output shape.
+    ~~33. vendorHash.nix extraction (E31): stop hand-editing flake.nix hashes.~~ **Won't implement — resolved-as-deliberate-non-fix — nix-hash-fix owns hash updates (2026-11-10).**
+30. Version-freshness guard: flag docs whose pinned lib released newer
     (E31).
-35. IPv6 `--resolver` handling check (E31; only IPv4-tested).
-36. TXT truncation investigation (cloudflare "cannot unmarshal" class).
-37. E31 TimeoutMiddleware whole-run budget for huge inputs.
-~~38. E31 docs-gates cache-key investigation + ETag-if-polled.~~ **Won't implement — moot — docs-gates extracted as a standalone binary; no cache-key/ETag surface left in this repo.**
-39. Nominet DAA email draft send (E35 owner action — needs owner).
-40. DENIC: closed-impossible; ensure E23's README reflects crt.sh-only
+31. IPv6 `--resolver` handling check (E31; only IPv4-tested).
+32. TXT truncation investigation (cloudflare "cannot unmarshal" class).
+33. E31 TimeoutMiddleware whole-run budget for huge inputs.
+    ~~38. E31 docs-gates cache-key investigation + ETag-if-polled.~~ **Won't implement — moot — docs-gates extracted as a standalone binary; no cache-key/ETag surface left in this repo.**
+34. Nominet DAA email draft send (E35 owner action — needs owner).
+35. DENIC: closed-impossible; ensure E23's README reflects crt.sh-only
     fallback for .de.
-41. Retract-note dry run: document (not execute) the exact `retract
+36. Retract-note dry run: document (not execute) the exact `retract
     v0.1.0` sequence for emergencies (CHANGELOG already carries it).
-42. Add `-timeout` budget note to AGENTS testing section (CI runners
+37. Add `-timeout` budget note to AGENTS testing section (CI runners
     are ~1.5–2× slower than local for the race suite).
-43. AGENTS.md release section: add the "CI green before tag" law (from
+38. AGENTS.md release section: add the "CI green before tag" law (from
     today's §d1).
-44. Document the DNS-outage curl --resolve workaround in AGENTS env
+39. Document the DNS-outage curl --resolve workaround in AGENTS env
     notes (it WILL recur).
-45. Move E1 finding prose into a tracked docs/ location (reports/ is
+40. Move E1 finding prose into a tracked docs/ location (reports/ is
     gitignored; the README there survives only locally).
-46. E23 crt.sh extractor (code half) + fixture test + README bulk docs.
-47. Investigate why resolv.conf's `9.9.9.9` fallback wasn't honored
+41. E23 crt.sh extractor (code half) + fixture test + README bulk docs.
+42. Investigate why resolv.conf's `9.9.9.9` fallback wasn't honored
     during the outage (glibc timeout stacking) — system-level fix or
     hosts pin (needs §g2).
-48. asciinema demo recording (E20 leftover).
-49. Consider output.FormatsForShape-driven dynamic help text (post-E27;
+43. asciinema demo recording (E20 leftover).
+44. Consider output.FormatsForShape-driven dynamic help text (post-E27;
     cmdguard values tags are static — only help text could derive).
-50. E34 BuildFlow#56: push the toolchain-bump branch in the BuildFlow
+45. E34 BuildFlow#56: push the toolchain-bump branch in the BuildFlow
     repo, rebuild, reinstall hooks (owner approval gate).
 
 ## g) Questions I cannot answer myself

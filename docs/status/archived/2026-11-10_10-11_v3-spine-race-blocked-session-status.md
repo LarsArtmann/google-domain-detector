@@ -199,17 +199,17 @@ infra + owner actions). G5 sibling-lane tasks deliberately untouched.
     feeds E28).
 21. E24 lint zero (after G5 lane lands; policy calls on tagliatelle
     snake_case + err113 style).
-~~22. E25 CI: cmdguard-lint + golangci + govulncheck.~~ done — E25 CI lint job green 2026-11-13
-~~23. E26 RegisterUnknownRenderer; E27 registry-derived enum.~~ done — E26 render DTO renderers; E27 closed superseded by T22's registry pin (01-38 §a5)
-24. E28 pre-sweep (gated on E23/.ch zone); E30 scoped exit codes.
-25. E31 infra long-tail (TimeoutMiddleware, describe contract test,
+    ~~22. E25 CI: cmdguard-lint + golangci + govulncheck.~~ done — E25 CI lint job green 2026-11-13
+    ~~23. E26 RegisterUnknownRenderer; E27 registry-derived enum.~~ done — E26 render DTO renderers; E27 closed superseded by T22's registry pin (01-38 §a5)
+22. E28 pre-sweep (gated on E23/.ch zone); E30 scoped exit codes.
+23. E31 infra long-tail (TimeoutMiddleware, describe contract test,
     vendorHash.nix, freshness guard, docs-gates cache-key probe, ETag,
     ErrNoRuns path-in-error, IPv6 --resolver check, ROADMAP.md parking
     incl. CAA watch + M365 fingerprints + registrant dedup rows).
-26. E32 census value-adds (daily delta timer, journal-only stats, lead
+24. E32 census value-adds (daily delta timer, journal-only stats, lead
     scoring); E33 coverage+fuzz; E34 BuildFlow#56 fleet fix (approval);
     E35 owner: Nominet email + GPG signing policy decision.
-27. Commit protocol fix: `tee` gate logs, immediate commits, view-before-
+25. Commit protocol fix: `tee` gate logs, immediate commits, view-before-
     edit discipline.
 
 ## g) Questions for the owner (cannot be figured out from the repo)

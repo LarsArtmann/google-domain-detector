@@ -39,7 +39,7 @@ inventory in [FEATURES](FEATURES.md).
   — needs zone/WHOIS data first (06-09 §f13).
 - **Prospects output mode**: domains → company-plausible names for
   outreach lists — needs scoping before anyone promises it
-  (19-27 §f43); the detector proves *domains*, not companies.
+  (19-27 §f43); the detector proves _domains_, not companies.
 - **GoReleaser binaries** — cross-platform release binaries beyond the
   nix + Homebrew-tap paths (E28 idea, 2026-11-11).
 - **Journal metadata evolution**: causation/actor stamps

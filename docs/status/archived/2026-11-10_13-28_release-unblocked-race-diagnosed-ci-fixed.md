@@ -142,15 +142,15 @@ docs/status index · post-release README install/badge work.
 **Release lane (E2 completion):**
 
 1. Annotated tag v0.1.0 at green tip (message drafted from CHANGELOG)
-~~2. Push tag to origin AND github~~ done — tag pushed to both remotes (13-27)
-3. `gh release create v0.1.0 --prerelease --notes-file /tmp/v0.1.0-release-notes.md`
-~~4. Clean-dir `go get github.com/larsartmann/google-domain-detector@v0.1.0`~~ done — scratch-dir go get + go run @v0.1.0 verified from the proxy copy
-5. Proxy check (`go list -m -versions`) + pkg.go.dev fetch trigger
-~~6. Watch first post-tag CI run~~ done — first post-tag CI watched; race flake root-caused (startup-cancel) and fixed deterministically
-7. README: install section + version badge (release notes promise
+   ~~2. Push tag to origin AND github~~ done — tag pushed to both remotes (13-27)
+2. `gh release create v0.1.0 --prerelease --notes-file /tmp/v0.1.0-release-notes.md`
+   ~~4. Clean-dir `go get github.com/larsartmann/google-domain-detector@v0.1.0`~~ done — scratch-dir go get + go run @v0.1.0 verified from the proxy copy
+3. Proxy check (`go list -m -versions`) + pkg.go.dev fetch trigger
+   ~~6. Watch first post-tag CI run~~ done — first post-tag CI watched; race flake root-caused (startup-cancel) and fixed deterministically
+4. README: install section + version badge (release notes promise
    nix/Homebrew follow-ups)
-8. CHANGELOG [Unreleased] placeholders verify (Phase 8.1)
-9. Consumer propagation check (go-ecosystem-upgrade, if any consumers)
+5. CHANGELOG [Unreleased] placeholders verify (Phase 8.1)
+6. Consumer propagation check (go-ecosystem-upgrade, if any consumers)
 
 **Docs/truth lane:**
 10. TODO_LIST strikes: race flake, CI gofmt+soak fixes, E6 round 1,

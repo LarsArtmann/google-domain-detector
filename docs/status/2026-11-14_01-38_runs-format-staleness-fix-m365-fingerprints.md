@@ -83,6 +83,7 @@ rank-band calibration (post-B), zone-ch scan (single-flight), owner rows
 ## d) TOTALLY FUCKED UP
 
 **Nothing shipped broken.** Near-misses, owned:
+
 1. Three daemon sweeps bundled my files with sibling content (junk
    messages) — accepted per the mixed-commit policy; no history rewrite
    with a live sibling.

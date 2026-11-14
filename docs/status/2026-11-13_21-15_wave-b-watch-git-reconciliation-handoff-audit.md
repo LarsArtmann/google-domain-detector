@@ -3,7 +3,7 @@
 **Session:** 2026-11-13 19:35 → 21:20 CET (resume after the 17-20 report;
 directive unchanged: execute the whole TODO list). **HEAD moved
 f1d5e37 → 3f0d12d** — four daemon-swept commits produced by the
-*concurrent cqrs-lint sibling session*, reviewed line-by-line, verified,
+_concurrent cqrs-lint sibling session_, reviewed line-by-line, verified,
 and pushed to both remotes. No new code by this session: the session's
 work is reconciliation, verification, and the live wave-B watch.
 
@@ -106,7 +106,7 @@ single-flight-blocked zone-ch scan. None touched; nothing half-edited.
 
 1. **Handoff summaries rot within hours** under concurrent sessions.
    Resume ritual must re-derive state from `git log origin/master..HEAD`
-   + the TODO_LIST itself; the handoff is a lead, never truth.
+   - the TODO_LIST itself; the handoff is a lead, never truth.
 2. **Unpushed-commit check should be a standing ritual step** —
    `git log origin/master..HEAD --stat` at session start; today it
    surfaced a go.mod dependency promotion and two code files that would
@@ -145,7 +145,7 @@ single-flight-blocked zone-ch scan. None touched; nothing half-edited.
 8. Append the whole-census verdict distribution to
    `reports/census/REPORT.md` (T15 final section; pin the replay cmd).
 9. Write the closing status report (B/C/poisonfix outcomes) + index row
-   + push both remotes; watch its CI run green.
+   - push both remotes; watch its CI run green.
 10. Watch CI on tonight's `3f0d12d` push (in flight at report time).
 
 **Unblocked code work (any time, single-flight-independent):**

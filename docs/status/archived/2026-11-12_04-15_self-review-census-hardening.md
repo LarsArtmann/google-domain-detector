@@ -170,32 +170,32 @@ lane, per owner request. Live state embedded at the bottom.
 9. 7 s vs 10 s timeout soak (§f13) — only between waves or after C.
 10. w2 sustained soak (§f14) — only if a wave drifts above bar.
 11. Nightly wave-heartbeat alert job (§f35) — blocked on §g2 channel.
-~~12. audit-freshness into docs-gates proper (CI-only today).~~ **Won't implement — docs-gates was extracted as a standalone binary with its own gates; embedding it into buildflow would duplicate the battery.**
-13. Census db snapshot rotation policy (snapshots dir will grow ~33 MB
+    ~~12. audit-freshness into docs-gates proper (CI-only today).~~ **Won't implement — docs-gates was extracted as a standalone binary with its own gates; embedding it into buildflow would duplicate the battery.**
+12. Census db snapshot rotation policy (snapshots dir will grow ~33 MB
     per wave — fine for 3 waves, needs a policy by E17).
-14. E17 export: compact verdict table + `replay --since` demo (§f31).
-15. README: document `replay --since` (§f32, under-marketed).
-16. Verify tonight's 03:17Z soak run green (third scheduled fire).
-17. Monitor wave B with the NEW wrapper features (WARNING lines,
+13. E17 export: compact verdict table + `replay --since` demo (§f31).
+14. README: document `replay --since` (§f32, under-marketed).
+15. Verify tonight's 03:17Z soak run green (third scheduled fire).
+16. Monitor wave B with the NEW wrapper features (WARNING lines,
     auto-snapshot) — first live exercise of both.
-18. Archive ritual for 20 unarchived reports — BLOCKED on §g3.
+17. Archive ritual for 20 unarchived reports — BLOCKED on §g3.
     <!-- fresh:skip owner-blocked archive ritual, §g3 of 15-27/04-15 -->
-19. 🔀 cli lane: interrupted-run stderr summary fix (TODO row filed).
-20. 🔀 cli/scanstore: runs-table metadata shutdown race (soak-3 row).
+18. 🔀 cli lane: interrupted-run stderr summary fix (TODO row filed).
+19. 🔀 cli/scanstore: runs-table metadata shutdown race (soak-3 row).
     <!-- fresh:skip sibling-scoped pending owner policy -->
-21. 🔀 E29 CSV enrichment; TimeoutMiddleware; describe contract test.
-22. 🔀 Harvest sales-lane 19-27 §f (18 items) — owner policy §g1.
-23. 🔀 Harvest E24 02-00/19-08 §f (8 items) — same.
+20. 🔀 E29 CSV enrichment; TimeoutMiddleware; describe contract test.
+21. 🔀 Harvest sales-lane 19-27 §f (18 items) — owner policy §g1.
+22. 🔀 Harvest E24 02-00/19-08 §f (8 items) — same.
     <!-- fresh:skip sibling-scoped pending owner policy -->
-24. flake vendorHash vs cmdguard v5.1.0: TODO row already struck [x]
+23. flake vendorHash vs cmdguard v5.1.0: TODO row already struck [x]
     by the bumping lane — verify once with `nix build` when a lane
     next touches nix (do not take the strike on trust; see e1).
-25. IPv6 --resolver handling check (§f25).
-~~26. TXT truncation investigation (existing TODO row).~~ **Superseded — closed with live evidence (00-03 §8).**
-27. E28 --pre-filter + .ch SWITCH AXFR tooling (existing rows).
-28. crt.sh .de rate-limit-aware scheduling (routed earlier).
-29. reports/ durability policy beyond local tarballs (§g3).
-30. Sibling 17-43 cqrs-event-sourcing-audit-status: read + route its
+24. IPv6 --resolver handling check (§f25).
+    ~~26. TXT truncation investigation (existing TODO row).~~ **Superseded — closed with live evidence (00-03 §8).**
+25. E28 --pre-filter + .ch SWITCH AXFR tooling (existing rows).
+26. crt.sh .de rate-limit-aware scheduling (routed earlier).
+27. reports/ durability policy beyond local tarballs (§g3).
+28. Sibling 17-43 cqrs-event-sourcing-audit-status: read + route its
     §f when its lane goes quiet (policy §g1).
 
 ## g) QUESTIONS (cannot answer myself)

@@ -26,22 +26,36 @@ T15 final → closing report.
 - [ ] T14 Unknown-cleanup loop per wave (<0.5% unknown), armed
       automatically on a wave-gate FAIL.
 - [~] T15 Census report (journal-derived) — skeleton written:
-      reports/census/REPORT.md (17-run inventory, excluded runs pinned,
-      supersession accounting, wave tallies). Final whole-census
-      distribution section lands after wave C + poisonfix close.
+  reports/census/REPORT.md (17-run inventory, excluded runs pinned,
+  supersession accounting, wave tallies). Final whole-census
+  distribution section lands after wave C + poisonfix close.
 
 ## Whole-TLD coverage (the "all active .de/.ch/.uk" goal)
 
 - [~] .uk (~10.5M): Nominet zone access — draft ready for owner review
-      (docs/zone-data/nominet-uk.md). Sending the email + MiTek ID
-      verification = OWNER action; scanning follows the Files.com
-      credentials.
+  (docs/zone-data/nominet-uk.md). Sending the email + MiTek ID
+  verification = OWNER action; scanning follows the Files.com
+  credentials.
 - [ ] Scan `zone-ch.txt` (2,660,632 unique apexes, sha256 in
       reports/census/zone-data/MANIFEST.sha256) when the Tranco waves
       free the single-flight; gate params per the 00-42 plan (R3).
 
 ## Code & library
 
+- [ ] M365 ruleset provenance + surface (owner decisions, 02-05 report
+      §g1/§g2): the mx_microsoft/spf_microsoft evidence landed under
+      `CurrentRuleset = RulesetV1` with no bump — decide RulesetV2 stamp
+      before wave C (recommendation: yes; A/B journals predate Microsoft
+      evidence) vs V1-extension rationale; and the user-facing surface
+      (evidence-only vs Counts tally / `MicrosoftVerdict()`), plus the
+      DKIM microsoft selector probe (plan or park).
+- [ ] U2/U1 live smoke on a census.db SNAPSHOT (never the live db):
+      `replay --audit-excluded wave:tranco1m-a --format jsonl` vs the
+      ledger's per-run counts, `runs --format jsonl` full IDs, and pin
+      the ULID-vs-lowercase-wave-name edge (02-05 §f7/§f41/§f42).
+- [ ] File-size headroom: scanstore_test.go (346/350) and
+      cli_scan_test.go (344/350) — split before the next addition so the
+      zeroed debt stays zero (02-05 §f43/§f44).
 - [ ] go-cqrs-lite projectionhost: ship a settled/catch-up API (e.g.
       `Host.WaitUntilSettled`) so consumers don't hand-roll poll loops —
       this repo's interim is `scanstore.WaitProjectionsSettled`
@@ -83,10 +97,12 @@ T15 final → closing report.
       plausibility guard must accept a ≥100k-row .de pull
       (reports/census/zone-data/).
 - [ ] Post-B verification bundle (00-42 plan Q4): auto-snapshots flowing
-      into reports/census/snapshots/ post-B; single-flight pgrep holds
-      through C + poisonfix; one full `-race ./...` on the settled HEAD
-      (single lane; wave B running is fine); CI green on every pushed
-      HEAD through the chain (release law).
+      into reports/census/snapshots/ post-B (+ restore-verify one tar:
+      integrity_check + counts); census.db disk headroom for wave C +
+      zone-ch; single-flight pgrep holds through C + poisonfix; one full
+      `-race ./...` on the settled HEAD (single lane; wave B running is
+      fine); CI green on every pushed HEAD through the chain (release
+      law).
 - [ ] BuildFlow#56 fleet fix (owner approval gate): the installed
       buildflow binary still fails valid commits (2026-11-14: its
       embedded older toolchain demands a `go mod tidy` that the repo's
@@ -94,9 +110,9 @@ T15 final → closing report.
       bypassed (--no-verify + direct gate runs) until rebuilt. Verify
       via direct gates.
 - [~] Audit upkeep (2026-11-10 library audit): citation verification
-      green; REMAINING: re-shoot the docs/review/libs index render
-      proof and re-audit the go-cqrs-lite/cqrs-htmx verdicts (their
-      event-store work may flip the premise).
+  green; REMAINING: re-shoot the docs/review/libs index render
+  proof and re-audit the go-cqrs-lite/cqrs-htmx verdicts (their
+  event-store work may flip the premise).
 - [ ] Owner-decision package (00-42 plan R5): ONE doc, one ask, with
       options + recommendation each — attended vs auto-chained wave-C
       launch (open since 21-15 §g1), GPG signing policy for agent

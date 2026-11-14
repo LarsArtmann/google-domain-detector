@@ -250,33 +250,33 @@ push of both remotes.
 11. .ch zone pull via SWITCH public TSIG (docs/zone-data/switch-ch.md;
     once/24h) + corpus build → feeds E28 pre-filter.
 12. NXDOMAIN/A-existence pre-sweep before whole-TLD scale (E28, gated).
-~~13. crt.sh .de extractor rate-limit-aware scheduling (once/day per TLD).~~ done — crtsh-daily.sh + systemd timer (wrong-root fixed same day)
-14. Nominet DAA draft: re-surface + stage for the owner (g3).
-15. cmdguard-lint as a CI step (expect zero findings).
-~~16. golangci-lint + govulncheck CI steps (E25).~~ done — E25 CI lint job green 2026-11-13
-17. Version-freshness guard: flag audit reports whose pinned lib
+    ~~13. crt.sh .de extractor rate-limit-aware scheduling (once/day per TLD).~~ done — crtsh-daily.sh + systemd timer (wrong-root fixed same day)
+13. Nominet DAA draft: re-surface + stage for the owner (g3).
+14. cmdguard-lint as a CI step (expect zero findings).
+    ~~16. golangci-lint + govulncheck CI steps (E25).~~ done — E25 CI lint job green 2026-11-13
+15. Version-freshness guard: flag audit reports whose pinned lib
     released a newer tag (extend scripts/audit-freshness.sh).
-18. Audit upkeep: re-verify docs/review/* citations vs current HEAD;
+16. Audit upkeep: re-verify docs/review/* citations vs current HEAD;
     re-audit go-cqrs-lite/cqrs-htmx verdicts post-scanstore.
-19. `go mod tidy` sweep (post-feature-stabilization — now is that
+17. `go mod tidy` sweep (post-feature-stabilization — now is that
     time).
-20. Input-parser fuzzing (E33; CSV quoting/encoding edges — a fuzz
+18. Input-parser fuzzing (E33; CSV quoting/encoding edges — a fuzz
     corpus stub already exists in internal/input).
-21. cli package coverage 69 % → 90 % (E33; per the coverage-gap list).
-22. Own-resolver guidance doc for whole-zone scale (unbound/knot; the
+19. cli package coverage 69 % → 90 % (E33; per the coverage-gap list).
+20. Own-resolver guidance doc for whole-zone scale (unbound/knot; the
     "public resolvers throttle" row) + buffered-format bulk note
     (jsonl-only at scale) — README/docs lane.
-23. Retract-note dry run (go-release lane; documentation-only
+21. Retract-note dry run (go-release lane; documentation-only
     emergency procedure rehearsal).
-24. README polish: asciinema/GIF + feed-freshness/UA note (E20).
-25. TODO_LIST rewrite: close T16 (verified), T18 (enrich), www-strip,
+22. README polish: asciinema/GIF + feed-freshness/UA note (E20).
+23. TODO_LIST rewrite: close T16 (verified), T18 (enrich), www-strip,
     resume-accounting, summary double-count, TXT truncation, IPv6,
     max-runtime, lint-zero; mark patch status; refresh all sections.
-26. Close decided rows: CAA (→ ROADMAP pointer, no speculative probes),
+24. Close decided rows: CAA (→ ROADMAP pointer, no speculative probes),
     FormatsForShape (superseded by SupportedFormats + E27 test),
     consumer-propagation sweep (no external consumers yet), nxdomain
     re-verify row (superseded by T09 recovery + unbound runs).
-27. Final: status report + push both remotes + AGENTS.md refresh.
+25. Final: status report + push both remotes + AGENTS.md refresh.
 
 ## g) Questions only the owner can answer
 

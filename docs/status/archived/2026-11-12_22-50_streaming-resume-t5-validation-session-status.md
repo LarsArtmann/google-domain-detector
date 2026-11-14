@@ -186,32 +186,32 @@ fuzzing (E33), TimeoutMiddleware (E31).
 8. www-strip normalizes `www.<public-suffix>` inputs (26 known cases).
 9. Buffered formats (table/json/csv) still materialize — document or
    chunk-render (long-tail).
-~~10. Own-resolver guidance doc for whole-zone scale (unbound/knot).~~ done — docs/resolvers.md (throttling ladder, forwarder w4/10s, TCP-upstream variant, lifecycle)
-11. CAA/other record classes — only if a real fingerprint emerges.
-12. CSV enrichment mode (input CSV + appended verdict columns).
-13. Nominet .uk zone-file licence — OWNER sends the ready draft email.
-14. SWITCH .ch zone pull via public TSIG keys + .ch corpus build.
-~~15. crt.sh .de extractor rate-limit-aware scheduling.~~ done — crtsh-daily.sh + systemd timer
-~~16. NXDOMAIN/A-existence pre-sweep before whole-TLD scale.~~ **Superseded — in-scan existence oracle (7b45a1b).**
-17. cmdguard-lint as a CI step (expect zero).
-18. Audit upkeep: re-verify `docs/review/*` citations vs current HEAD;
+   ~~10. Own-resolver guidance doc for whole-zone scale (unbound/knot).~~ done — docs/resolvers.md (throttling ladder, forwarder w4/10s, TCP-upstream variant, lifecycle)
+10. CAA/other record classes — only if a real fingerprint emerges.
+11. CSV enrichment mode (input CSV + appended verdict columns).
+12. Nominet .uk zone-file licence — OWNER sends the ready draft email.
+13. SWITCH .ch zone pull via public TSIG keys + .ch corpus build.
+    ~~15. crt.sh .de extractor rate-limit-aware scheduling.~~ done — crtsh-daily.sh + systemd timer
+    ~~16. NXDOMAIN/A-existence pre-sweep before whole-TLD scale.~~ **Superseded — in-scan existence oracle (7b45a1b).**
+14. cmdguard-lint as a CI step (expect zero).
+15. Audit upkeep: re-verify `docs/review/*` citations vs current HEAD;
     cqrs re-audit post-scanstore.
-19. `go mod tidy` sweep post-feature-stabilization.
-20. Lint cleanup to zero (err113, wrapcheck, errcheck, tagalign,
+16. `go mod tidy` sweep post-feature-stabilization.
+17. Lint cleanup to zero (err113, wrapcheck, errcheck, tagalign,
     varnamelen, cyclop…).
-21. Version-freshness guard for audit reports (pinned-commit staleness).
-22. TimeoutMiddleware whole-run budget (plan v3 E31).
-23. `output.FormatsForShape`-derived `--format` values (drift-proof).
-~~24. Input-parser fuzzing (CSV quoting/encoding, E33).~~ done — internal/input/fuzz_test.go
-~~25. Retract-note dry run for v0.1.0 (documentation-only procedure).~~ done — rehearsed 2026-11-13 (docs/release-recovery.md)
-26. Push posture: keep both remotes in sync at task boundaries (origin
+18. Version-freshness guard for audit reports (pinned-commit staleness).
+19. TimeoutMiddleware whole-run budget (plan v3 E31).
+20. `output.FormatsForShape`-derived `--format` values (drift-proof).
+    ~~24. Input-parser fuzzing (CSV quoting/encoding, E33).~~ done — internal/input/fuzz_test.go
+    ~~25. Retract-note dry run for v0.1.0 (documentation-only procedure).~~ done — rehearsed 2026-11-13 (docs/release-recovery.md)
+21. Push posture: keep both remotes in sync at task boundaries (origin
     was 12 commits behind at one point during this session).
-27. BuildFlow#56: rebuild buildflow with go ≥1.27.2 to un-pre-commit-hook
+22. BuildFlow#56: rebuild buildflow with go ≥1.27.2 to un-pre-commit-hook
     the repo (lives in the BuildFlow repo).
-28. Consider `gdd` short-binary alias / install story polish (README tap
+23. Consider `gdd` short-binary alias / install story polish (README tap
     row if still open).
-29. Post-v0.1.0: pkg.go.dev propagation spot-check on next release. **→ standing go-release ritual step for every future release (AGENTS.md release law)**
-30. Keep AGENTS.md census laws current as waves B/C shift operational
+24. Post-v0.1.0: pkg.go.dev propagation spot-check on next release. **→ standing go-release ritual step for every future release (AGENTS.md release law)**
+25. Keep AGENTS.md census laws current as waves B/C shift operational
     practice.
 
 ## g) Questions only the owner can answer

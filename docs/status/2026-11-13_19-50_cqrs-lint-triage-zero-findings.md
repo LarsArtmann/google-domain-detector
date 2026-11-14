@@ -20,19 +20,19 @@ journal state — no scans launched (wave B single-flight respected).
      the event store with `_ = sys.GracefulClose(...)`, swallowing
      close errors (pending events silently losable). Now reports the
      close error to stderr, mirroring the success path.
-   Twelve justified `//cqrs-lint:ignore(RULE)` suppressions WITH
-   rationale at each firing site: A032 (journal-surface `ResumeSource.RunID`,
-   same precedent as `RunSummary`/`Replay`), B004 ×3 (cqrs-gen
-   constructors are codegen overkill for internal commands built at one
-   call site each), B005 + E003 (the AGENTS.md-documented deliberate
-   non-fixes), C013 ×2 (view timestamps are always UTC — built from
-   `event.Instant.Time()`, verified in event v4.15.2 — so no timezone
-   exists to lose in storage), C015+C023 (read-only `--input` file
-   close after a clean EOF; nothing buffered can be lost and a close
-   failure must not abort a whole-TLD scan), F005 (schema v1 is the
-   INITIAL version; upcasters arrive with the first v2), F007 (commands
-   dispatch in-process, sequentially, single-flight; start/complete
-   handlers are naturally idempotent — no at-least-once bus exists).
+     Twelve justified `//cqrs-lint:ignore(RULE)` suppressions WITH
+     rationale at each firing site: A032 (journal-surface `ResumeSource.RunID`,
+     same precedent as `RunSummary`/`Replay`), B004 ×3 (cqrs-gen
+     constructors are codegen overkill for internal commands built at one
+     call site each), B005 + E003 (the AGENTS.md-documented deliberate
+     non-fixes), C013 ×2 (view timestamps are always UTC — built from
+     `event.Instant.Time()`, verified in event v4.15.2 — so no timezone
+     exists to lose in storage), C015+C023 (read-only `--input` file
+     close after a clean EOF; nothing buffered can be lost and a close
+     failure must not abort a whole-TLD scan), F005 (schema v1 is the
+     INITIAL version; upcasters arrive with the first v2), F007 (commands
+     dispatch in-process, sequentially, single-flight; start/complete
+     handlers are naturally idempotent — no at-least-once bus exists).
 
 2. **Sibling-introduced finding handled.** A concurrent session added
    `internal/scanstore/cborsanitize.go` (16:42, CBOR UTF-8 repair) mid-triage.

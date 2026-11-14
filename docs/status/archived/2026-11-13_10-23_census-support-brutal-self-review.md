@@ -196,57 +196,57 @@ production data get one star.
 6. T15 census report (per-TLD stats, excluded-run pins, supersession
    accounting) archived under reports/census/.
 7. Post-C full-1M coverage reconciliation vs the Tranco freeze.
-~~8. E10 stable-SERVFAIL assessment for the 92 nxfix residuals (owner).~~ **Superseded — nxfix closed the residual question (0.42%, 19/20 NX verified; gate carries --servfail-stable).**
-9. Wave watchdog + heartbeat file (blocked until census-wave.sh is
+   ~~8. E10 stable-SERVFAIL assessment for the 92 nxfix residuals (owner).~~ **Superseded — nxfix closed the residual question (0.42%, 19/20 NX verified; gate carries --servfail-stable).**
+8. Wave watchdog + heartbeat file (blocked until census-wave.sh is
    editable again post-B).
-10. Immutable per-wave script copies at launch (sha256 recorded) — same
-    edit-window as watchdog.
-11. `gdd doctor` as a census-wave.sh pre-flight stage (e4).
-12. `runs --format` (jsonl with FULL run IDs — the truncated 12-char
+9. Immutable per-wave script copies at launch (sha256 recorded) — same
+   edit-window as watchdog.
+10. `gdd doctor` as a census-wave.sh pre-flight stage (e4).
+11. `runs --format` (jsonl with FULL run IDs — the truncated 12-char
     table forced raw SQL during the poisonfix derivation).
-13. `--audit-excluded`: accept wave names, resolve via runs.
-14. Poller per-band unknown-rate expectations (calibrate on B).
-15. Post-correction: re-run CRM delta-rescan on corrected wave-A data.
-16. Regenerate the 150 A+B sales report (verdict counts move ~20k).
-17. `enrich` pass over corrected data for the lead pipeline.
-18. T16 delta query retirement plan per CRM M11 (replay-based deltas).
-19. T17 daily timer; 20. T19 journal-only stats parity; 21. T20 lead
+12. `--audit-excluded`: accept wave names, resolve via runs.
+13. Poller per-band unknown-rate expectations (calibrate on B).
+14. Post-correction: re-run CRM delta-rescan on corrected wave-A data.
+15. Regenerate the 150 A+B sales report (verdict counts move ~20k).
+16. `enrich` pass over corrected data for the lead pipeline.
+17. T16 delta query retirement plan per CRM M11 (replay-based deltas).
+18. T17 daily timer; 20. T19 journal-only stats parity; 21. T20 lead
     scoring (sibling lane, verify after C).
-20. v0.1.1 release consideration (user-facing false-NX fix) — release
+19. v0.1.1 release consideration (user-facing false-NX fix) — release
     law strictly: tag only after CI green on the exact pushed commit.
-21. AGENTS.md diet 308 → ≤220 (gate warning; move war stories out).
-22. Re-pin vendorHash (`buildflow -s nix-hash-fix --fix`) — nix build
+20. AGENTS.md diet 308 → ≤220 (gate warning; move war stories out).
+21. Re-pin vendorHash (`buildflow -s nix-hash-fix --fix`) — nix build
     currently fails.
-23. `buildflow format` re-verify under new formatter fingerprints.
-24. dprint remote plugins → local wasm paths (cold-run hang risk).
-25. io-history-ratchet: `--profile-io` investigation (56 vs median 10).
-~~26. cmdguard-lint + golangci + govulncheck CI steps (E25).~~ done — E25 CI lint job
-27. go mod tidy sweep + govulncheck.
-~~28. Input-parser fuzzing (E33).~~ done — fuzz_test.go
-29. cli coverage 69% → 90% (E33). <!-- fresh:skip already tracked: TODO_LIST E33 row harvested from the 08-57 report -->
-30. Oracle unit test against a REAL resolver in CI (skip offline).
-31. Census binary provenance: consider stamping wave-launched binaries'
+22. `buildflow format` re-verify under new formatter fingerprints.
+23. dprint remote plugins → local wasm paths (cold-run hang risk).
+24. io-history-ratchet: `--profile-io` investigation (56 vs median 10).
+    ~~26. cmdguard-lint + golangci + govulncheck CI steps (E25).~~ done — E25 CI lint job
+25. go mod tidy sweep + govulncheck.
+    ~~28. Input-parser fuzzing (E33).~~ done — fuzz_test.go
+26. cli coverage 69% → 90% (E33). <!-- fresh:skip already tracked: TODO_LIST E33 row harvested from the 08-57 report -->
+27. Oracle unit test against a REAL resolver in CI (skip offline).
+28. Census binary provenance: consider stamping wave-launched binaries'
     sha256 into the wave out-dir automatically (provenance law
     automation).
-32. Census-gate: `--verify-nxdomain N` sampling mode (audit-of-audit).
-33. Snapshot rotation policy (host disk 92%; snapshots are compact but
+29. Census-gate: `--verify-nxdomain N` sampling mode (audit-of-audit).
+30. Snapshot rotation policy (host disk 92%; snapshots are compact but
     journal+extracts are not) + verify-restore line in snapshot output.
-34. Write "census from zero" quickstart (new host, 10-line path).
-35. Dual-instance resolver topology + measured rates into NOTES.md.
-36. Post-mortem synthesis: one canonical false-NX narrative doc.
-37. Oracle error honesty: dialed address standardized in errors (e6).
-~~38. docs-gates audit-all/cadence red items (sibling lane).~~ done (docs-health pass this pass — the 2026-11-14 docs-health AUDIT pulled the audit-all detail and resolved the corpus)
-39. Audit-report freshness sweep (version-freshness guard row).
-~~40. Status-report archive ritual (owner permission pending).~~ done — 2026-11-13 bulk archive (28 reports, manifest in archived/README.md)
-41. TODO_LIST rewrite pass (census section grew mid-war).
-42. AGENTS.md census-lane "after B/C" pointer row (ledger as truth).
-43. `incoming/outgoing-num-tcp` contention measurement post-B (NOTES).
-44. www-strip skip-vs-scan policy decision (owner).
-45. Scan resume-skip accounting print (coverage visibility at source).
-46. README asciinema/GIF + feed-freshness note (E20).
-47. .ch SWITCH TSIG zone pull + corpus build; crt.sh .de scheduling;
+31. Write "census from zero" quickstart (new host, 10-line path).
+32. Dual-instance resolver topology + measured rates into NOTES.md.
+33. Post-mortem synthesis: one canonical false-NX narrative doc.
+34. Oracle error honesty: dialed address standardized in errors (e6).
+    ~~38. docs-gates audit-all/cadence red items (sibling lane).~~ done (docs-health pass this pass — the 2026-11-14 docs-health AUDIT pulled the audit-all detail and resolved the corpus)
+35. Audit-report freshness sweep (version-freshness guard row).
+    ~~40. Status-report archive ritual (owner permission pending).~~ done — 2026-11-13 bulk archive (28 reports, manifest in archived/README.md)
+36. TODO_LIST rewrite pass (census section grew mid-war).
+37. AGENTS.md census-lane "after B/C" pointer row (ledger as truth).
+38. `incoming/outgoing-num-tcp` contention measurement post-B (NOTES).
+39. www-strip skip-vs-scan policy decision (owner).
+40. Scan resume-skip accounting print (coverage visibility at source).
+41. README asciinema/GIF + feed-freshness note (E20).
+42. .ch SWITCH TSIG zone pull + corpus build; crt.sh .de scheduling;
     Nominet DAA draft re-surface (zone-data lane, paperwork-dependent).
-48. Consider `scan --resolver-health` productized preflight for other
+43. Consider `scan --resolver-health` productized preflight for other
     hosts running waves.
 
 ## g) QUESTIONS FOR THE OWNER (3, not self-answerable)
