@@ -176,8 +176,11 @@ dep set changes or a new first-party lib is considered.
   binary (its analyzers run the Go they were built with — 2026-11-10
   toolchain.skew). The floor is `go 1.27.2` and tidy ENFORCES it
   (go-cqrs-lite v4 tags); do NOT follow go-version-auto-configure's
-  "major.minor only" advice. BuildFlow#56: go1.27.0 binaries block the
-  pre-commit hook — verify via direct gates, `--no-verify` for docs-only.
+  "major.minor only" advice. BuildFlow#56: the pre-commit hook still
+  fails valid commits (2026-11-14: its embedded older toolchain demands
+  a `go mod tidy` the repo toolchain proves is a no-op) — verify via
+  direct gates, commit `--no-verify`; the hook's `--fix` mode may also
+  auto-condense AGENTS.md to the 220-line cap (check `git diff` after).
 - docs-gates verdicts can differ between pre-commit hook and direct run (hook
   runs `--build-mode pre-commit --staged-only`) — diagnose with a direct run.
 - Session start: `gh run list --limit 3` before acting (the v0.1.0 tag

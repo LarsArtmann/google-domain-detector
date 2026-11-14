@@ -210,7 +210,11 @@ operator decision, not an accounting default.
   wave-A 2026-11-13 signature: scan done, gate/snapshot never ran) or DEAD
   runner (exit 2), logged as a WATCHDOG ALARM into monitor.log. The
   wrapper's own poller additionally logs HEARTBEAT STALL after 2 stagnant
-  30-min polls (belt to the watchdog's braces). Root cause of the 08:43
+  30-min polls (belt to the watchdog's braces). Liveness signal hierarchy:
+  run1.jsonl GROWTH is the primary signal (the watchdog's axis); the
+  poller's 30-min summary lines lag under load and are secondary — a
+  stale poller line with growing jsonl is benign (2026-11-14, wave B).
+  Root cause of the 08:43
   wedge: census-wave.sh edited on disk mid-run (inode offset shift →
   syntax error at pass-1 completion) — never edit the wrapper or ANY
   running bash script in place; build in /tmp and `install` over the path.
