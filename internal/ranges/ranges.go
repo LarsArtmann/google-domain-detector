@@ -262,8 +262,15 @@ func readCache(path string, maxAge time.Duration, now func() time.Time) (*Set, b
 		return nil, false
 	}
 
-	data, err := os.ReadFile(path)
+	f, err := os.Open(path)
 	if err != nil {
+		return nil, false
+	}
+
+	data, readErr := io.ReadAll(f)
+
+	closeErr := f.Close()
+	if readErr != nil || closeErr != nil {
 		return nil, false
 	}
 
