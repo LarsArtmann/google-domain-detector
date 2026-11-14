@@ -135,9 +135,8 @@ dep set changes or a new first-party lib is considered.
   (a REAL sibling project — never delete that tree). Fixed + plausibility guard
   (de ≥100k rows, `GDD_MIN_ROWS`); real verification = next 04:37 timer in-repo.
   Lesson: test the LITERAL embedded path string, not a canonicalized equivalent.
-- **Snapshot the journal with `sqlite3 <db> ".backup '<dest>'"`**
-  (scripts/census-snapshot.sh) — WAL-consistent mid-run; plain copies
-  miss/stale-read the -wal.
+- **Snapshot the journal with `sqlite3 <db> ".backup '<dest>'"`** (census-snapshot.sh)
+  — WAL-consistent mid-run; plain copies miss/stale-read the -wal.
 - `DomainObservedPayload` carries evidence only, never verdicts — verdicts
   are derived by `classify.Result` methods (split-brain rule for every
   event payload).
@@ -163,24 +162,21 @@ dep set changes or a new first-party lib is considered.
   saw ZERO runs). Every read-model command (runs, show, enrich) MUST call
   `scanstore.WaitProjectionsSettled` after `Open`, before its first
   query; recording paths must NOT. `--resume` is immune (journal walk
-  via Boot). Library-level settled-API is a TODO row, post-census.
-- Event payloads use `event.Instant` (not `time.Time` — CBOR epoch
-  encoding drops timezones, C013) and every `event.New` stamps
-  `event.WithSchemaVersion(1)` (D013). New events must follow both.
+  via Boot).
+- Event payloads use `event.Instant` (CBOR drops timezones, C013); every
+  `event.New` stamps `event.WithSchemaVersion(1)` (D013). New events follow both.
 - Binary flag names: `--ranges-cache` (not `--cache-path`), `--event-store`
   (env `GDD_EVENT_STORE`). `--resume latest` resolves to the most recently
   STARTED run (an aborted soak/pilot counts) and silently skips its
   observed domains — wave A lost 2,731/100,000 to it; waves run fresh or
   `--resume <run-id>`, and `census-gate.sh --manifest` catches gaps (exit 4).
-- Raising the go.mod `go` directive can break the INSTALLED buildflow
-  binary (its analyzers run the Go they were built with — 2026-11-10
-  toolchain.skew). The floor is `go 1.27.2` and tidy ENFORCES it
-  (go-cqrs-lite v4 tags); do NOT follow go-version-auto-configure's
-  "major.minor only" advice. BuildFlow#56: the pre-commit hook still
-  fails valid commits (2026-11-14: its embedded older toolchain demands
-  a `go mod tidy` the repo toolchain proves is a no-op) — verify via
-  direct gates, commit `--no-verify`; the hook's `--fix` mode may also
-  auto-condense AGENTS.md to the 220-line cap (check `git diff` after).
+- Raising the go.mod `go` directive can break the INSTALLED buildflow binary
+  (its analyzers run the Go they were built with). Floor stays `go 1.27.2`
+  (tidy ENFORCES it); do NOT follow go-version-auto-configure's "major.minor
+  only" advice. BuildFlow#56: the pre-commit hook still fails valid commits
+  (2026-11-14: its older embedded toolchain demands a `go mod tidy` the repo
+  toolchain proves is a no-op) — verify via direct gates, commit `--no-verify`;
+  its `--fix` mode may auto-condense this file to the 220-line cap.
 - docs-gates verdicts can differ between pre-commit hook and direct run (hook
   runs `--build-mode pre-commit --staged-only`) — diagnose with a direct run.
 - Session start: `gh run list --limit 3` before acting (the v0.1.0 tag
