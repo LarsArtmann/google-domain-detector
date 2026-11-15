@@ -28,10 +28,10 @@ if [ ! -e "$input" ]; then
 fi
 
 mkdir -p "$work"
-head -60 "$input" > "$work/demo60.txt"
+head -60 "$input" >"$work/demo60.txt"
 
 export GOCACHE=${GOCACHE:-$HOME/.cache/go-build-demo} GOMODCACHE=${GOMODCACHE:-$HOME/go/pkg/mod}
-( cd "$repo" && go build -o "$work/gdd-demo" ./cmd/google-domain-detector )
+(cd "$repo" && go build -o "$work/gdd-demo" ./cmd/google-domain-detector)
 
 GDD="$work/gdd-demo"
 DB="$work/demo.db"
@@ -67,7 +67,7 @@ echo
 echo "Every observation is an immutable event - the report is replayable from the journal alone."
 DEMO
 
-cat > "$work/demo.tape" <<TAPE
+cat >"$work/demo.tape" <<TAPE
 Output $repo/assets/demo.gif
 Set FontSize 20
 Set Width 1200
@@ -91,7 +91,7 @@ Enter
 Sleep 3s
 TAPE
 
-( cd "$repo" && nix shell nixpkgs#vhs nixpkgs#ttyd nixpkgs#ffmpeg -c vhs "$work/demo.tape" )
+(cd "$repo" && nix shell nixpkgs#vhs nixpkgs#ttyd nixpkgs#ffmpeg -c vhs "$work/demo.tape")
 
 echo "cast written: $out_cast"
 echo "gif written:  $repo/assets/demo.gif"
