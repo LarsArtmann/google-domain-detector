@@ -24,7 +24,11 @@ T15 final → closing report.
       an answer the session holds single-flight after B's gate PASS
       (verify gate + snapshot + restore-verify, record, HOLD). The
       pause-vs-push-through decision for the chain rides the same
-      answer: C only, C + poisonfix-25, or C + zone-ch batch 1.
+      answer: C only, C + poisonfix-25, or C + zone-ch batch 1. Launch
+      mechanics when GO: C3 via census-wave.sh with
+      `GDD_PREFLIGHT_TRANSPORT=tcp` — launch after B (T13),
+      chained per plan; ~35 h at the calibrated rate; older reports
+      (08-57 item 7, 11-12 hardening item 8) point at the same launch.
 - [ ] T11-poisonfix Correction pass for the poisoned supersessions —
       READY (audit-derived **25 domains**: c4 10 + c5 15; pilot/soak3 0):
       input = `reports/census/waves/tranco1m-a-poisonfix.txt`, fresh
@@ -163,6 +167,11 @@ T15 final → closing report.
       toolchain proves is a no-op) — the pre-commit hook stays
       bypassed (--no-verify + direct gate runs) until rebuilt. Verify
       via direct gates.
+- [ ] PSI launch gate formalization (2026-11-15 14-37 report §e2):
+      census-wave.sh reads /proc/pressure/memory avg10 before preflight
+      and refuses to launch above `GDD_MIN_PSI` (default 10) — today it
+      is operator discipline only; it worked because this session chose
+      to enforce it.
 - [ ] scripts/census-relaunch.sh ritual encoder (2026-11-15 14-37
       report §e1): the 07:48 env-less launch (preflight correctly
       refused it) showed the operator-error class — encode the whole
