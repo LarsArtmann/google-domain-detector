@@ -26,7 +26,7 @@ T15 final → closing report.
       pause-vs-push-through decision for the chain rides the same
       answer: C only, C + poisonfix-25, or C + zone-ch batch 1. Launch
       mechanics when GO: C3 via census-wave.sh with
-      `GDD_PREFLIGHT_TRANSPORT=tcp` — launch after B (T13),
+      `GDD_PREFLIGHT_TRANSPORT=tcp` — launch after B (T13).
       chained per plan; ~35 h at the calibrated rate; older reports
       (08-57 item 7, 11-12 hardening item 8) point at the same launch.
 - [ ] T11-poisonfix Correction pass for the poisoned supersessions —
