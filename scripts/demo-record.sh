@@ -19,7 +19,7 @@ out_cast=${2:-/tmp/gdd-demo.cast}
 work=/tmp/gdd-demo-$(date '+%H%M%S')
 
 if pgrep -f 'gdd[^ ]* scan' >/dev/null 2>&1; then
-	echo "demo: REFUSED — a census scan is running (single-flight law, docs/census.md)" >&2
+	echo "demo: REFUSED - a census scan is running (single-flight law, docs/census.md)" >&2
 	exit 3
 fi
 if [ ! -e "$input" ]; then
@@ -73,12 +73,13 @@ Set FontSize 20
 Set Width 1200
 Set Height 800
 Set Shell bash
-Type "echo google-domain-detector — 60-domain scan, replayable journal"
+Set TypingSpeed 3ms
+Type "echo google-domain-detector: 60-domain scan, replayable journal"
 Enter
 Sleep 800ms
 Type "$GDD scan --input $work/demo60.txt --no-ranges --workers 4 --timeout 10s --event-store $DB --format table"
 Enter
-Sleep 3s
+Sleep 25s
 Type "$GDD runs --event-store $DB"
 Enter
 Sleep 2s
