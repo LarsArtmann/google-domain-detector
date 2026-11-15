@@ -98,8 +98,17 @@ T15 final → closing report.
       cache-key hashing (the sibling session's uncommitted test splits
       at measurement time), not a memo-layer regression. Expected
       behavior, no fix.
-- [ ] `incoming/outgoing-num-tcp` contention measurement post-B
-      (are 150 ever contended at w8? → reports/census/unbound/NOTES.md).
+- [x] `incoming/outgoing-num-tcp` contention measurement (2026-11-15,
+      live wave B w4 samples + NOTES.md write-up): 150 never contended
+      at w8 — upstream TCP conn population fluctuates 17-44 at w4
+      (linear w8 scaling ≈ 34-88, ≥ 40% headroom under the 150 cap);
+      `incoming-num-tcp` is unused in this topology (scanner hops UDP,
+      0 client-side TCP conns in every sample); fd pressure 134/65536.
+      Caveat flagged in NOTES.md: per-thread cap semantics unverified
+      (would raise effective caps further). Measurement gotcha
+      recorded: anchor port regexes — unanchored `:53` matches counted
+      local ephemeral ports 53xxx as peers (phantom 192.168.1.150:53
+      conns).
 - [x] Poller rank-band expectations CALIBRATED on live wave-B pass-1
       (2026-11-14 02:42, 133k rows joined to input ranks): unknown
       rates 1.09% (50k-100k resumed tail) → 2.28% (100k-150k) → 2.44%

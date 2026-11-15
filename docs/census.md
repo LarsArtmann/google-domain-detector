@@ -369,7 +369,13 @@ row is the relevant bound — workers ≤ 2 plus cleanup loops, always.
 **TCP-upstream forwarder (127.0.0.1:5354), measured 2026-11-13:** the
 nxfix wave sustained 4.0–4.6 dom/s at w4/10s over 22 136 domains, and
 wave B confirmed the same rate early. This is the calibrated bulk path;
-the UDP forwarder rows above are older measurements.
+the UDP forwarder rows above are older measurements. TCP cap
+contention (2026-11-15, live wave B attempt 5): the conf caps
+`incoming/outgoing-num-tcp: 150` are never contended at w8 — upstream
+conn population 17-44 at w4 (linear w8 scaling ≈ 34-88, ≥ 40%
+headroom; incoming side unused, the scanner hops UDP; fd pressure
+134/65536; details + measurement gotcha in
+`reports/census/unbound/NOTES.md`).
 
 ## zone-ch launch prep (R3, drafted 2026-11-14 — slot: post-wave-C + poisonfix)
 
