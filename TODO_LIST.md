@@ -13,11 +13,18 @@ B → B gate → (T14 if FAIL) → wave C → poisonfix-25 → closure audit →
 T15 final → closing report.
 
 - [~] T12–T13 Waves B (100–500k), C (500k–1M) with pilot gates — B
-  attempt 2 RUNNING since 2026-11-13 16:53 (gdd-20261113b, explicit
-  resume of `01M79XW7SF918E61NYVM000001`, expect-skip 96,215,
-  TCP-upstream forwarder 127.0.0.1:5354, w4/10s; watchdog attached,
-  0 alarms through 2026-11-14 01:49; wrapper auto-gates with
-  `--expect-skip 96215` on completion). C launches after B's gate PASS.
+  attempt 5 RUNNING since 2026-11-15 07:50 (gdd-20261113b, explicit
+  resume of attempt-2's `01M7ASTM63TVRJ6RXCGR00EYVQ`, expect-skip
+  228,416, workload 171,584, TCP-upstream forwarder 127.0.0.1:5354,
+  w4/10s; 53.4% at 14:37, ETA ~20:33; attempts 2-4 were killed by host
+  reboots — full history in the census.md wave ledger). Wrapper
+  auto-gates with `--expect-skip 228416` on completion. C launches
+  after B's gate PASS.
+- [ ] Wave C GO/NO-GO (owner, 2026-11-15 14-37 report §g2/§g3): without
+      an answer the session holds single-flight after B's gate PASS
+      (verify gate + snapshot + restore-verify, record, HOLD). The
+      pause-vs-push-through decision for the chain rides the same
+      answer: C only, C + poisonfix-25, or C + zone-ch batch 1.
 - [ ] T11-poisonfix Correction pass for the poisoned supersessions —
       READY (audit-derived **25 domains**: c4 10 + c5 15; pilot/soak3 0):
       input = `reports/census/waves/tranco1m-a-poisonfix.txt`, fresh
@@ -156,6 +163,24 @@ T15 final → closing report.
       toolchain proves is a no-op) — the pre-commit hook stays
       bypassed (--no-verify + direct gate runs) until rebuilt. Verify
       via direct gates.
+- [ ] scripts/census-relaunch.sh ritual encoder (2026-11-15 14-37
+      report §e1): the 07:48 env-less launch (preflight correctly
+      refused it) showed the operator-error class — encode the whole
+      relaunch ritual (archive forensics, restart forwarder, probe,
+      launch with the FULL env prefix, verify the six monitor lines,
+      attach watchdog) into one reviewed script. Implement post-B;
+      never touch live census scripts mid-wave.
+- [ ] NOTES.md backup ritual (2026-11-15 14-37 report §e5): reports/ is
+      gitignored — at census close, sha256-sidecar
+      reports/census/unbound/NOTES.md (the PROVENANCE.md pattern) or
+      copy its durable sections into a tracked doc.
+- [ ] Anchor-regex measurement lesson (2026-11-15 14-37 report §e4):
+      unanchored `:53` patterns match local ephemeral ports 53xxx as
+      peers — phantom 192.168.1.150:53 conns and double-counted TCP
+      samples. Cross-project lesson: record in crush-config
+      references/lessons.md (committed there by policy, never in-session).
+- [ ] GPG signing setup (8-ask #5, owner): commit/tag signing for the
+      fleet.
 - [x] Audit upkeep (2026-11-10 library audit): citation verification
       green (2026-11-13); libs index render proof RE-SHOT 2026-11-14 02:40
       (balanced tags, 22/22 .md links resolve, 43 KB self-contained);
