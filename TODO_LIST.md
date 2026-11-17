@@ -12,21 +12,21 @@ Single-flight law: exactly ONE `gdd scan` at a time
 B → B gate → (T14 if FAIL) → wave C → poisonfix-25 → closure audit →
 T15 final → closing report.
 
-- [~] T12–T13 Waves B (100–500k), C (500k–1M) with pilot gates — B
-  attempt 5 RUNNING since 2026-11-15 07:50 (gdd-20261113b, explicit
-  resume of attempt-2's `01M7ASTM63TVRJ6RXCGR00EYVQ`, expect-skip
-  228,416, workload 171,584, TCP-upstream forwarder 127.0.0.1:5354,
-  w4/10s; 53.4% at 14:37, ETA ~20:33; attempts 2-4 were killed by host
-  reboots — full history in the census.md wave ledger). Wrapper
-  auto-gates with `--expect-skip 228416` on completion. C launches
-  after B's gate PASS.
-- [ ] Wave C GO/NO-GO (owner, 2026-11-15 14-37 report §g2/§g3): without
-      an answer the session holds single-flight after B's gate PASS
-      (verify gate + snapshot + restore-verify, record, HOLD). The
+- [~] T12–T13 Waves B (100–500k), C (500k–1M) with pilot gates — **B DONE**:
+  attempt 5 completed 2026-11-15 20:05 after 12.2 h (zero reboots, zero
+  alarms), pass-1 gate PASS on the FIRST try (no cleanup loop): 171,573
+  scanned + 11 unparseable + 228,416 resume-skipped = 400,000 exactly;
+  workspace certain 28,020 / likely 7,818, gcp 2,269, errors 7,063; run
+  `01M7EZJSEJKXNSPNEQ4401AE3S`; snapshot restore-verified on a copy
+  (sha256 OK, integrity ok, replay reproduces the live summary
+  byte-identically). C launches after owner GO (row below).
+- [ ] Wave C GO/NO-GO (owner, 2026-11-15 14-37 report §g2/§g3): B gate
+      PASS + snapshot restore-verify are DONE — without an answer the
+      session HOLDS single-flight (verified + recorded). The
       pause-vs-push-through decision for the chain rides the same
       answer: C only, C + poisonfix-25, or C + zone-ch batch 1. Launch
       mechanics when GO: C3 via census-wave.sh with
-      `GDD_PREFLIGHT_TRANSPORT=tcp` — launch after B (T13).
+      `GDD_PREFLIGHT_TRANSPORT=tcp`.
       chained per plan; ~35 h at the calibrated rate; older reports
       (08-57 item 7, 11-12 hardening item 8) point at the same launch.
 - [ ] T11-poisonfix Correction pass for the poisoned supersessions —
