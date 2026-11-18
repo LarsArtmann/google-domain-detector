@@ -377,6 +377,18 @@ headroom; incoming side unused, the scanner hops UDP; fd pressure
 134/65536; details + measurement gotcha in
 `reports/census/unbound/NOTES.md`).
 
+**Rank-band recalibration from wave B's final pass-1 (R2, 2026-11-17):**
+error classes split by RANK, not time — unknowns are FLAT across the
+four 50k bands (1.53% / 1.48% / 1.26% / 1.52% of band; 2 459 total =
+1.43%), so the mid-pass poller's declining trend (2.42% → 1.52%) was a
+forwarder-warmup transient, not rank structure; the global 2% D3 budget
+needs no per-band tightening for deeper waves. NXDOMAIN is strongly
+rank-dependent — 0.65% / 0.96% / 6.02% / 3.67% per band (4 604 total,
+domain truth) — and detection declines mildly with rank (workspace
+23.62% → 18.03%, gcp 1.51% → 1.13%): wave C (500k-1M) should expect
+MUCH higher nx (deeper ranks, plausibly 10-15%) at a steady ~1.5%
+unknown; the gate already excludes nx from the unknown budget.
+
 ## zone-ch launch prep (R3, drafted 2026-11-14 — slot: post-wave-C + poisonfix)
 
 Input: `reports/census/zone-data/zone-ch.txt` — 2,660,632 unique
