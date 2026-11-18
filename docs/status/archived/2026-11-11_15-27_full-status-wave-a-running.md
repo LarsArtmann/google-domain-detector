@@ -154,7 +154,7 @@ domains.
 6. Strike T14 per wave as cleanups land (may be zero rounds for A if
    1.75% holds).
    ~~7. Wire audit-freshness.sh into CI or docs-gates.~~ done — CI lib-freshness job (scripts/lib-freshness.sh)
-7. Census journal snapshot routine (destination per §g3).
+7. Census journal snapshot routine (destination per §g3). ~~done 2026-11-13 — census-snapshot.sh (WAL-consistent sqlite .backup, tar + sha256)~~ <!-- fresh:skip: tokens census/journal/snapshot are all DF-generic (>= 8 TODO_LIST lines) and cannot token-match by construction; the routine exists and was proven again 2026-11-15 20:05 (tranco1m-b-complete snapshot) + restore-verified on a copy 2026-11-17 -->
 8. Stamp running binary sha256 + source commit into wave dir/NOTES.
 9. Mid-pass unknown-rate WARNING in census-wave.sh monitor loop.
 10. Verify tonight's 03:17 UTC nightly-soak cron (first scheduled fire
