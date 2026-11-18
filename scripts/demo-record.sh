@@ -68,7 +68,7 @@ echo "Every observation is an immutable event - the report is replayable from th
 DEMO
 
 cat >"$work/demo.tape" <<TAPE
-Output $repo/assets/demo.gif
+Output assets/demo.gif
 Set FontSize 20
 Set Width 1200
 Set Height 800
