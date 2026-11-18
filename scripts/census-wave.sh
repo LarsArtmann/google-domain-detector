@@ -47,7 +47,6 @@ out_dir=$5
 workers=${6:-4}
 timeout_budget=${7:-10s}
 resolver=${GDD_RESOLVER:-127.0.0.1:5353}
-bar=${GDD_CLEANUP_BAR_PCT:-0.5}
 warn_pct=${GDD_WARN_PCT:-2}
 here=$(cd "$(dirname "$0")" && pwd)
 

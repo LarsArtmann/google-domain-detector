@@ -145,7 +145,7 @@ if grep -Eq "$summary_pattern" "$file"; then
 	coverage_check
 elif grep -q '"error_kind"' "$file"; then
 	# jsonl form: count per-line error_kind values
-	read -r total errors nx timeouts servfail canceled other <<<"$(jq -r '[.error_kind // "none"] | @tsv' "$file" | awk -F'\t' '
+	read -r total nx timeouts servfail canceled other <<<"$(jq -r '[.error_kind // "none"] | @tsv' "$file" | awk -F'\t' '
         { total++; k=$1 }
         k=="none"    { ok++ }
         k=="nxdomain" { nx++ }
@@ -153,7 +153,7 @@ elif grep -q '"error_kind"' "$file"; then
         k=="servfail" { s++ }
         k=="canceled" { c++ }
         k=="other"    { o++ }
-        END { printf "%d %d %d %d %d %d %d\n", total, total-(nx+t+s+c+o), nx+0, t+0, s+0, c+0, o+0 }')"
+        END { printf "%d %d %d %d %d %d\n", total, nx+0, t+0, s+0, c+0, o+0 }')"
 	if [ "$sf_stable" = 1 ]; then unknown=$((timeouts + canceled + other)); else unknown=$((timeouts + servfail + canceled + other)); fi
 	pass_fail "$total" "$nx" "$servfail" "$unknown"
 	coverage_check
