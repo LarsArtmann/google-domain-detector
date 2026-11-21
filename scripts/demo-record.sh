@@ -75,8 +75,11 @@ Output assets/demo.gif
 Set FontSize 20
 Set Width 1200
 Set Height 800
-Set Shell bash --noprofile --norc
+Set Shell bash
 Set TypingSpeed 3ms
+Type "clear"
+Enter
+Sleep 300ms
 Type "echo google-domain-detector: 60-domain scan, replayable journal"
 Enter
 Sleep 800ms
