@@ -1,7 +1,7 @@
 # Features
 
 Honest inventory of what google-domain-detector does, by status.
-Last refreshed: 2026-11-14 (post-wave-A, during wave B).
+Last refreshed: 2026-11-21 (wave B complete, post-B bundle landed).
 
 ## FULLY_FUNCTIONAL
 
@@ -100,9 +100,13 @@ Last refreshed: 2026-11-14 (post-wave-A, during wave B).
 - Whole-TLD census (Tranco top-1M): wave A (ranks 1–100k) complete —
   pass-1 health PASS (unknown 1.53%), false-NXDOMAIN correction wave
   (`tranco1m-a-nxfix`) done, supersession audit = 25 poisoned domains
-  queued for the correction pass. Wave B (100k–500k) running since
-  2026-11-13. Wave C, poisonfix-25, and the census report's final
-  distribution section chain behind B's gate (single-flight law).
+  queued for the correction pass. **Wave B (100k–500k) COMPLETE
+  2026-11-15 20:05** — pass-1 gate PASS first try (171,573 scanned +
+  11 unparseable + 228,416 resume-skipped = 400,000 manifest exactly;
+  unknown 1.43%; workspace certain 28,020 / likely 7,818, gcp 2,269);
+  snapshot restore-verified incl. byte-identical journal replay.
+  Wave C, poisonfix-25, and the census report's final
+  distribution section chain behind the owner GO (single-flight law).
   Census report skeleton: reports/census/REPORT.md.
 - `.ch` scanning: zone input ready (2.66M apexes); the scan itself waits
   for the Tranco waves to free the single-flight.
@@ -112,8 +116,9 @@ Last refreshed: 2026-11-14 (post-wave-A, during wave B).
 
 ## PLANNED
 
-- asciinema demo / GIF for the README.
 - Wave C (500k–1M) + poisonfix-25 correction + census closeout report.
+- README embed of the recorded demo GIF (assets/demo.gif exists; the
+  embed decision is the owner's — README is the public sales page).
 
 ## WORTH CONSIDERING (parked)
 
