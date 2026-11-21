@@ -73,8 +73,8 @@ nix shell nixpkgs#asciinema -c asciinema rec --quiet --overwrite --command "bash
 cat >"$work/demo.tape" <<TAPE
 Output assets/demo.gif
 Set FontSize 20
-Set Width 1200
-Set Height 800
+Set Width 1600
+Set Height 900
 Set Shell bash
 Set TypingSpeed 3ms
 Type "clear"
@@ -83,16 +83,19 @@ Sleep 300ms
 Type "echo google-domain-detector: 60-domain scan, replayable journal"
 Enter
 Sleep 800ms
-Type "$GDD scan --input $work/demo60.txt --no-ranges --workers 4 --timeout 10s --event-store $DB --format table"
+Type "cd $work"
+Enter
+Sleep 300ms
+Type "./gdd-demo scan --input demo60.txt --no-ranges --workers 4 --timeout 10s --event-store demo-gif.db --format table"
 Enter
 Sleep 25s
-Type "$GDD runs --event-store $DB"
+Type "./gdd-demo runs --event-store demo-gif.db"
 Enter
 Sleep 2s
-Type "$GDD show $first_domain --event-store $DB"
+Type "./gdd-demo show $first_domain --event-store demo-gif.db"
 Enter
 Sleep 2s
-Type "$GDD replay --event-store $DB"
+Type "./gdd-demo replay --event-store demo-gif.db"
 Enter
 Sleep 3s
 TAPE
