@@ -37,7 +37,7 @@ GDD="$work/gdd-demo"
 DB="$work/demo.db"
 first_domain=$(head -1 "$work/demo60.txt")
 
-nix shell nixpkgs#asciinema -c asciinema rec --quiet --overwrite -c "bash -s" "$out_cast" <<DEMO
+cat >"$work/demo-session.sh" <<DEMO
 set -u
 prompt() { printf '\e[1;32m\$\e[0m %s\n' "\$*"; }
 run() { prompt "\$*"; eval "\$*"; echo; }
@@ -48,8 +48,7 @@ echo
 
 prompt 'cut a 60-domain slice and scan it with an event store'
 echo '\$ gdd scan --input demo60.txt --no-ranges --workers 4 --timeout 10s --event-store demo.db'
-$GDD scan --input "$work/demo60.txt" --no-ranges --workers 4 --timeout 10s \\
-	--event-store "$DB" --format table 2>&1 | head -40
+$GDD scan --input "$work/demo60.txt" --no-ranges --workers 4 --timeout 10s --event-store "$DB" --format table 2>&1 | head -40
 echo "  ... (60 domains total)"
 echo
 
@@ -67,12 +66,16 @@ echo
 echo "Every observation is an immutable event - the report is replayable from the journal alone."
 DEMO
 
+# File-fed session (bash --noprofile --norc): asciinema's stdin relay hangs
+# on heredoc-fed non-tty parents, so the session rides --command instead.
+nix shell nixpkgs#asciinema -c asciinema rec --quiet --overwrite --command "bash --noprofile --norc $work/demo-session.sh" "$out_cast"
+
 cat >"$work/demo.tape" <<TAPE
 Output assets/demo.gif
 Set FontSize 20
 Set Width 1200
 Set Height 800
-Set Shell bash
+Set Shell bash --noprofile --norc
 Set TypingSpeed 3ms
 Type "echo google-domain-detector: 60-domain scan, replayable journal"
 Enter
