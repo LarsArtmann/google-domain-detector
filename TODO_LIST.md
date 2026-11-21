@@ -102,7 +102,15 @@ T15 final → closing report.
       at latest. The foldByEvent last-fold-wins re-verify obligation on
       any future bump stays in AGENTS.md (go-ecosystem-upgrade owns it;
       the journal-touching bump itself waits for post-census).
-- [ ] asciinema demo / GIF for the README (plan v3 E20).
+- [x] asciinema demo / GIF for the README (plan v3 E20) — DONE
+      2026-11-17: scripts/demo-record.sh runs end-to-end (single-flight
+      guard, 60-domain slice, asciinema cast + vhs GIF); assets/demo.gif
+      (1.1 MB, 1600x900, ~35 s: live scan with verdict colors → runs →
+      show → replay from a self-contained demo-gif.db). Gotchas fixed
+      en route: asciinema's stdin relay hangs on heredoc-fed non-tty
+      parents (session rides --command + --noprofile --norc), vhs
+      `Set Shell` takes no arguments, `Output` needs a relative path.
+      README embed held on owner question §g3.
 - [x] io-history-ratchet `--profile-io` investigation (2026-11-14
       ~09:00): full-gate profile on a CLEAN tree = 27 spawns, 3 files
       hashed, 49 writes — normal. The 56-file measurement was dirty-tree
