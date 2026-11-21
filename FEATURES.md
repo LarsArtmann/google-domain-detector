@@ -88,6 +88,9 @@ Last refreshed: 2026-11-21 (wave B complete, post-B bundle landed).
   cleanup + snapshots), external watchdog + heartbeat (`census-watchdog.sh`),
   manifest-coverage gate (`census-gate.sh --manifest`), unbound resolver
   lifecycle (`scripts/unbound.sh`, forwarder + TCP-upstream variants).
+- Demo recorder: `scripts/demo-record.sh` — single-flight-guarded
+  60-domain live scan recorded to an asciinema cast + a vhs-rendered
+  GIF (`assets/demo.gif`: scan → runs → show → replay).
 - Zone inputs: `.ch` zone pulled via public SWITCH TSIG keys (2,660,632
   apexes, sha256-pinned); daily crt.sh fallback for `.de` (systemd timer,
   plausibility-guarded).
