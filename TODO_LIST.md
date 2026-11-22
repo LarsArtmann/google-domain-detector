@@ -196,6 +196,57 @@ T15 final → closing report.
       peers — phantom 192.168.1.150:53 conns and double-counted TCP
       samples. Cross-project lesson: record in crush-config
       references/lessons.md (committed there by policy, never in-session).
+- [ ] census-gate.sh arg-parser hardening (2026-11-22 14-08 report §d3):
+      the parser `break`s on the first non-flag, so flags placed AFTER
+      the file positional are read as positionals — `--manifest` became
+      the budget and awk coerced it to 0.00% (spurious FAIL, found live
+      during the H2 smoke). Keep parsing flags until `--` or error
+      loudly; add a pinning test.
+- [ ] Demo tape poll-for-completion (2026-11-22 14-08 report §e4):
+      demo-record.sh's vhs tape hardcodes `Sleep 25s` for the scan —
+      replace with a poll on the scan progress footer so GIF timing
+      survives resolver slowness; also note the GIF tail-frame eyeball
+      check into the script comments (verified at frame 840 this time).
+- [ ] Manifest hygiene: 11 unparseable tranco1m-b entries (2026-11-22
+      14-08 report §e7, first `_wildcard_.net.ph`) are permanently
+      unscanned and gate-accepted — decide sanitize-for-future-waves
+      (provenance sha changes, ledger pin breaks) vs byte-immutability
+      with a carried hole (owner call).
+- [ ] Host clock/NTP check (2026-11-22 14-08 report §e6): metadata.yaml
+      wrote future timestamps and session dates jumped (Nov 17 → 21 →
+      22) — check timesyncd before the next provenance-sensitive run
+      (binary stamps, snapshot names).
+- [ ] Snapshot restore-verify as a NAMED census.md exit step
+      (2026-11-22 14-08 report §e8): proven twice (20261113 + 20261115
+      snapshots) — promote from report prose to the exit checklist so
+      it never depends on operator memory.
+- [ ] T15 TLD + M365 breakdown columns (2026-11-22 14-08 report §f10):
+      compute wave-B TLD distribution (.de/.ch/.uk/.co …) and the
+      M365-class count from the rank-ordered run1.jsonl for the final
+      census report (fingerprints are evidence-only today).
+- [ ] crt.sh daily timer in-repo landing verification (2026-11-22
+      14-08 report §f20): the provenance-fix verification was "the next
+      04:37 timer" (2026-11-13) — many fires have passed since; confirm
+      zone-data lands INSIDE the repo with the plausibility guard.
+- [ ] Status-README archive pass (2026-11-22 14-08 report §f38): 14
+      unarchived reports (cadence threshold 15) — reports whose items
+      are all resolved (2026-11-10/11-11 era) move to archived/ with
+      fresh:skip/harvest annotations.
+- [ ] DOMAIN_LANGUAGE.md "unparseable input" term (2026-11-22 14-08
+      report §f39): distinct from unknown — a manifest row that never
+      entered any denominator; add to the census-ops table.
+- [ ] AGENTS.md two-line additions (2026-11-22 14-08 report §f29/§f42):
+      tmp-staging law (staged fixes live in the worktree, never /tmp —
+      eaten twice by the tmp cleaner) and the single-flight law naming
+      the demo recorder as a scan (it has its own pgrep guard).
+- [ ] Skip-union design prework + the §g1 multi-run skip-union
+      authorization ask (2026-11-22 14-08 report §f13/§f14): IF the
+      owner GO is likely — journal-side union of N runs'
+      observed streams + resume CLI shape, designed BEFORE wave C so a
+      mid-C death resumes cheap.
+- [ ] ROADMAP.md refresh (2026-11-22 14-08 report §f40): wave-B-complete
+      reality, wave C / zone-ch / .uk slots, skip-union and demo-GIF
+      outcomes folded into the raw-ideas vs committed structure.
 - [ ] GPG signing setup (8-ask #5, owner): commit/tag signing for the
       fleet.
 - [x] Audit upkeep (2026-11-10 library audit): citation verification
