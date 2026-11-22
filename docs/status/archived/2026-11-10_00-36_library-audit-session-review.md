@@ -183,7 +183,7 @@ headless Chromium render (palette/structure verified programmatically).
 19. Re-verify all project-side citations after the concurrent session lands; annotate drift.
 20. Re-run go-cqrs-lite + cqrs-htmx verdicts post-scanstore (premise may flip).
 21. Re-shoot the render proof after final index edits; re-run the full href check.
-22. Add a "verified against commit X" line to every report header.
+22. ~~harvested 2026-11-22 — TODO_LIST row "report header verified-against-commit"~~ Add a "verified against commit X" line to every report header.
 23. Check/stop subagents akiko + celeste; diff their (late) reports against mine.
 24. Add stack-drift-check exception note if go-atomic-write becomes direct (STACK.md row required by the drift gate).
 25. Version-freshness guard: a tiny CI/docs step flagging reports whose pinned lib released a newer tag.

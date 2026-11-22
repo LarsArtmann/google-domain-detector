@@ -250,7 +250,7 @@ blocky).
 23. Nominet DAA application (.uk).
 ~~24. SWITCH terms (.ch).~~ done — verified terms + public TSIG in docs/zone-data/switch-ch.md (07-46)
 25. Parked-domain pre-filter pass (A-existence sweep) before deep scan.
-26. Streaming/chunked input for 30M domains.
+26. ~~done — chunked streaming input SHIPPED (4096/chunk; FEATURES FULLY_FUNCTIONAL "million-row lists never load whole"); the census ran 400k-row manifests through it~~ Streaming/chunked input for 30M domains. <!-- fresh:skip: done-at; the mechanism exists and proved itself on the tranco census; 30M remains a scale headroom note, not a missing feature -->
 27. Throughput benchmark harness + a measured qps budget document
 (politeness engineering).
 

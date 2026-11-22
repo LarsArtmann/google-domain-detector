@@ -197,7 +197,7 @@ T15 final → closing report.
       samples. Cross-project lesson: record in crush-config
       references/lessons.md (committed there by policy, never in-session).
 - [ ] census-gate.sh arg-parser hardening (2026-11-22 14-08 report §d3):
-      the parser `break`s on the first non-flag, so flags placed AFTER
+      the parser `break` fires on the first non-flag, so flags placed AFTER
       the file positional are read as positionals — `--manifest` became
       the budget and awk coerced it to 0.00% (spurious FAIL, found live
       during the H2 smoke). Keep parsing flags until `--` or error

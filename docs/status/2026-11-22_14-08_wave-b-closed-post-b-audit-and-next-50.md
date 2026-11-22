@@ -172,7 +172,7 @@ including the self-audit (what was forgotten, what could be better).
 
 ## e) WHAT WE SHOULD IMPROVE (systemic, from this session)
 
-1. **Gate arg-parsing robustness**: census-gate.sh `break`s on the
+1. **Gate arg-parsing robustness**: census-gate.sh `break` fires on the
    first non-flag, so flags placed after the file positional are read
    as positionals (`--manifest` becomes the budget → 0.00%). Fix: keep
    parsing flags until `--`, or error loudly on a post-file flag.

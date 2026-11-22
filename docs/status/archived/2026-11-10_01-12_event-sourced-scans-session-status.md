@@ -206,7 +206,7 @@ is designed but untested); SQLite journal behavior at whole-TLD scale
     ~~40. TimeoutMiddleware whole-run budget.~~ done — `--max-runtime` (plan v3 E31): aborts at the budget, partial results render/journal/count
     ~~41. FormatsForShape auto-enum (kills enum-drift class).~~ **Superseded — render.SupportedFormats() + TestFormatEnumsMatchRegistry (T22, plan v3) — explicit product contract over auto-generation.**
 30. Re-run go-cqrs-lite/cqrs-htmx audit verdicts post-scanstore.
-31. "Verified against commit X" header line on every report.
+31. ~~harvested 2026-11-22 — TODO_LIST row "report header verified-against-commit"~~ "Verified against commit X" header line on every report.
 32. Batch-retry-once for transient resolver failures.
 33. `--jsonl` streaming scan output. — RESOLVED-DONE (landed as render
     JSONLStream + scan/replay streaming paths; struck row in TODO_LIST

@@ -234,7 +234,7 @@ was fixed before this report (build green at write time).
 4. ~~gocognit `TestQueryReadModelsRoundTrip` 30: table/subtest split.~~ done at `399385a` (golangci-lint driven to zero)
 5. ~~wsl_v5 ×7 (doctor_test ×3, render_test ×2, render.go, doctor.go).~~ done at `399385a` (golangci-lint driven to zero)
 6. ~~embeddedstructfieldcheck cli_test:257.~~ done at `399385a` (golangci-lint driven to zero)
-7. makezero scan.go:47 / cli_test:659 (verify FP vs real after format).
+7. ~~done — verified-nonexistent: the fleet golangci-lint (makezero included) is green on EVERY pushed commit since (CI law: tag only after green); cited line numbers pre-date the 2026-11-14 scan/cli_test file splits~~ makezero scan.go:47 / cli_test:659 (verify FP vs real after format). <!-- fresh:skip: done-at; CI lint green across all subsequent pushes; line anchors stale after the file-size splits -->
 8. Final `buildflow format` + authoritative findings run → 0 remaining
    or documented nolint set.
 9. Full `-race` suite ×1 post-batch (fast now, ~55s, soak opt-in).
