@@ -13,11 +13,11 @@ require (
 	github.com/larsartmann/go-cqrs-lite/event/v4 v4.15.2
 	github.com/larsartmann/go-cqrs-lite/id/v4 v4.7.5
 	github.com/larsartmann/go-cqrs-lite/metaengine/projectionadapter/v4 v4.6.2
-	github.com/larsartmann/go-cqrs-lite/metaengine/sqliteengine/v4 v4.8.0
-	github.com/larsartmann/go-cqrs-lite/metaengine/v4 v4.23.0
+	github.com/larsartmann/go-cqrs-lite/metaengine/sqliteengine/v4 v4.9.1
+	github.com/larsartmann/go-cqrs-lite/metaengine/v4 v4.24.0
 	github.com/larsartmann/go-cqrs-lite/projectionhost/v4 v4.7.1
 	github.com/larsartmann/go-cqrs-lite/record/v4 v4.6.2
-	github.com/larsartmann/go-cqrs-lite/system/v4 v4.18.0
+	github.com/larsartmann/go-cqrs-lite/system/v4 v4.19.0
 	github.com/larsartmann/go-cqrs-lite/systemscenario/v4 v4.3.0
 	github.com/larsartmann/go-output v0.38.7
 	github.com/larsartmann/go-output/delimited v0.38.7
